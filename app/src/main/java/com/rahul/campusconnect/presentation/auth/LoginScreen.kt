@@ -22,11 +22,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.rahul.campusconnect.R
-import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 import com.rahul.campusconnect.ui.components.AppTextField
 import com.rahul.campusconnect.ui.components.PasswordTextField
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.SocialButton
+import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 
 @Composable
 fun LoginScreen() {
@@ -50,7 +50,7 @@ fun LoginScreen() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .padding(bottom = 45.dp)
+                    .padding(bottom = 54.dp)
 
                     .offset(y = (-45).dp)
                     .zIndex(1f),

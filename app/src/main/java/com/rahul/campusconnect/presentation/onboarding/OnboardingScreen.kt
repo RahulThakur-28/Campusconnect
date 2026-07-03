@@ -47,6 +47,8 @@ import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 fun OnboardingScreen(
     page: OnboardingPage,
     currentPage: Int,
+    onNextClick: () -> Unit,
+    onSkipClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -57,7 +59,7 @@ fun OnboardingScreen(
     ) {
         // Skip button at the top right
         TextButton(
-            onClick = { /* TODO: Implement skip logic */ },
+            onClick = onSkipClick,
             modifier = Modifier.align(Alignment.TopEnd)
         ) {
             Text(
@@ -132,7 +134,7 @@ fun OnboardingScreen(
 
         // Fixed "Next" button at the bottom
         Button(
-            onClick = { /* TODO: Implement next logic */ },
+            onClick = onNextClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -216,9 +218,13 @@ private fun OnboardingScreenPreview() {
         description = "Meet students, join study groups, and build meaningful connections."
     )
     CampusconnectTheme {
+
         OnboardingScreen(
             page = samplePage,
-            currentPage = 0
+            currentPage = 0,
+            onNextClick = {},
+            onSkipClick = {}
         )
+
     }
 }

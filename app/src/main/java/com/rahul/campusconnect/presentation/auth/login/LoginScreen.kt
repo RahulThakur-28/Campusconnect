@@ -1,5 +1,6 @@
-package com.rahul.campusconnect.presentation.auth
+package com.rahul.campusconnect.presentation.auth.login
 
+import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.R
 import com.rahul.campusconnect.ui.components.AppTextField
 import com.rahul.campusconnect.ui.components.PasswordTextField
@@ -28,15 +31,49 @@ import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.SocialButton
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.CircularProgressIndicator
+import com.rahul.campusconnect.navigation.AppRoutes
+
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    navController: NavController
+
+) {
 
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
+    var emailError by rememberSaveable { mutableStateOf("") }
+    var passwordError by rememberSaveable { mutableStateOf("") }
+    val viewModel: LoginViewModel = hiltViewModel()
+
+    LaunchedEffect(viewModel.loginSuccess) {
+
+        if (viewModel.loginSuccess) {
+
+            navController.navigate(AppRoutes.Home.route) {
+
+                popUpTo(AppRoutes.Login.route) {
+                    inclusive = true
+                }
+
+            }
+
+        }
+
+    }
+
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        if (viewModel.isLoading) {
+
+            CircularProgressIndicator()
+
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,12 +140,15 @@ fun LoginScreen() {
                         value = email,
                         onValueChange = {
                             email = it
+                            emailError = ""
                         },
                         placeholder = "Enter your email",
                         leadingIcon = Icons.Default.Email,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email
-                        )
+                        ),
+                        isError = emailError.isNotEmpty(),
+                        errorMessage = emailError
                     )
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -125,8 +165,11 @@ fun LoginScreen() {
                         value = password,
                         onValueChange = {
                             password = it
+                            passwordError = ""
                         },
-                        placeholder = "Enter your password"
+                        placeholder = "Enter your password",
+                        isError = passwordError.isNotEmpty(),
+                        errorMessage = passwordError
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -139,11 +182,50 @@ fun LoginScreen() {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    PrimaryButton(
 
+                    PrimaryButton(
                         text = "Sign In",
-                        onClick = { }
+                        onClick = {
+
+                            var isValid = true
+
+                            if (email.isBlank()) {
+                                emailError = "Email is required"
+                                isValid = false
+                            } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                                emailError = "Enter a valid email"
+                                isValid = false
+                            }
+
+                            if (password.isBlank()) {
+                                passwordError = "Password is required"
+                                isValid = false
+                            } else if (password.length < 6) {
+                                passwordError = "Password must be at least 6 characters"
+                                isValid = false
+                            }
+
+                            if (isValid) {
+                                        viewModel.login(
+                                            email = email.trim(),
+                                            password = password
+                                        )
+                            }
+
+                        }
                     )
+                    viewModel.errorMessage?.let {
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+
 
                     Spacer(modifier = Modifier.height(22.dp))
 
@@ -160,7 +242,11 @@ fun LoginScreen() {
                     Spacer(modifier = Modifier.height(28.dp))
 
                     RegisterText(
-                        onRegisterClick = { }
+
+                            onRegisterClick = {
+                                navController.navigate(AppRoutes.RegisterGraph.route)
+                            }
+
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -170,7 +256,10 @@ fun LoginScreen() {
             }
 
         }
+
     }
+
+
 
 }
 @Composable
@@ -294,7 +383,10 @@ private fun LoginScreenPreview() {
 
     CampusconnectTheme {
 
-        LoginScreen()
+        LoginScreen(
+            navController = rememberNavController()
+
+        )
 
     }
 

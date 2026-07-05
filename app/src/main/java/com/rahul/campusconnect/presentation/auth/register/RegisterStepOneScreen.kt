@@ -1,4 +1,4 @@
-package com.rahul.campusconnect.presentation.auth
+package com.rahul.campusconnect.presentation.auth.register
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +30,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 import com.rahul.campusconnect.ui.components.AppTextField
 import com.rahul.campusconnect.ui.components.PrimaryButton
@@ -40,15 +44,17 @@ import com.rahul.campusconnect.ui.components.PrimaryButton
  */
 @Composable
 fun RegisterStepOneScreen(
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    // Local state for UI components
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var studentId by remember { mutableStateOf("") }
-    var department by remember { mutableStateOf("") }
+
 
     val scrollState = rememberScrollState()
+    val viewModel: RegisterViewModel = hiltViewModel()
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var studentIdError by remember { mutableStateOf<String?>(null) }
+    var departmentError by remember { mutableStateOf<String?>(null) }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -91,20 +97,30 @@ fun RegisterStepOneScreen(
 
                         // 3. Fields
                         AppTextField(
-                            value = fullName,
-                            onValueChange = { fullName = it },
+                            value = viewModel.fullName,
+                            onValueChange = {
+                                viewModel.fullName = it
+                                nameError = null
+                            },
                             label = "Full Name",
                             placeholder = "Enter your full name",
+                            isError = nameError != null,
+                            errorMessage = nameError,
                             leadingIcon = Icons.Default.Person
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         AppTextField(
-                            value = email,
-                            onValueChange = { email = it },
+                            value = viewModel.email,
+                            onValueChange = {
+                                viewModel.email = it
+                                emailError = null;
+                            },
                             label = "College Email Address",
                             placeholder = "example@college.edu",
+                            isError = emailError != null,
+                            errorMessage = emailError,
                             leadingIcon = Icons.Default.Email,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                         )
@@ -112,20 +128,30 @@ fun RegisterStepOneScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         AppTextField(
-                            value = studentId,
-                            onValueChange = { studentId = it },
+                            value = viewModel.studentId,
+                            onValueChange = {
+                                viewModel.studentId = it
+                                studentIdError = null
+                            },
                             label = "Student ID",
                             placeholder = "Enter your ID number",
+                            isError = studentIdError != null,
+                            errorMessage = studentIdError,
                             leadingIcon = Icons.Default.Badge
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         AppTextField(
-                            value = department,
-                            onValueChange = { department = it },
+                            value = viewModel.department,
+                            onValueChange = {
+                                viewModel.department = it
+                                departmentError = null
+                            },
                             label = "Department",
                             placeholder = "e.g. Computer Science",
+                            isError = departmentError != null,
+                            errorMessage = departmentError,
                             leadingIcon = Icons.Default.Business
                         )
 
@@ -134,16 +160,49 @@ fun RegisterStepOneScreen(
                         // 4. Continue Button
                         PrimaryButton(
                             text = "Continue",
-                            onClick = { /* TODO: Navigate to Step 2 */ }
+                            onClick = { nameError = ValidationUtils.validateName(viewModel.fullName)
+                                emailError = ValidationUtils.validateEmail(viewModel.email)
+                                studentIdError = ValidationUtils.validateStudentId(viewModel.studentId)
+                                departmentError = ValidationUtils.validateDepartment(viewModel.department)
+
+                                if (
+                                    nameError == null &&
+                                    emailError == null &&
+                                    studentIdError == null &&
+                                    departmentError == null
+                                ) {
+
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        "fullName",
+                                        viewModel.fullName
+                                    )
+
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        "email",
+                                        viewModel.email
+                                    )
+
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        "studentId",
+                                        viewModel.studentId
+                                    )
+
+                                    navController.currentBackStackEntry?.savedStateHandle?.set(
+                                        "department",
+                                        viewModel.department
+                                    )
+
+                                    navController.navigate(AppRoutes.RegisterStepTwo.route)
+                                }
+
+                            }
                         )
                         Spacer(Modifier.height(10.dp))
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // 5. Bottom Text
-                        BottomLoginText(
-                            onLoginClick = { /* TODO: Navigate to LoginScreen */ }
-                        )
+                        BottomLoginText(onLoginClick = { navController.navigate(AppRoutes.RegisterStepTwo.route) })
 
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -259,6 +318,8 @@ private fun BottomLoginText(onLoginClick: () -> Unit) {
 @Composable
 private fun RegisterStepOneScreenPreview() {
     CampusconnectTheme {
-        RegisterStepOneScreen()
+        RegisterStepOneScreen(
+            navController = rememberNavController()
+        )
     }
 }

@@ -4,10 +4,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.navigation.NavController
+import com.rahul.campusconnect.navigation.AppRoutes
 import kotlinx.coroutines.launch
 
 @Composable
-fun OnboardingRoute() {
+fun OnboardingRoute(
+    navController: NavController
+) {
 
     val pagerState = rememberPagerState {
         onboardingPages.size
@@ -34,9 +38,12 @@ fun OnboardingRoute() {
                         if (nextPage < pagerState.pageCount) {
                             pagerState.animateScrollToPage(nextPage)
                         } else {
-                            // Navigate Login
+                            navController.navigate(AppRoutes.Login.route) {
+                                popUpTo(AppRoutes.Onboarding.route) {
+                                    inclusive = true
+                                }
+                            }
                         }
-
                     }
 
 

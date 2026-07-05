@@ -1,8 +1,8 @@
-package com.rahul.campusconnect.presentation.auth
+package com.rahul.campusconnect.presentation.auth.register
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,26 +20,70 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.rahul.campusconnect.ui.components.PasswordTextField
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
+import androidx.navigation.compose.rememberNavController
+import com.rahul.campusconnect.navigation.AppRoutes
 
 @Composable
-fun RegisterStepTwoScreen() {
+fun RegisterStepTwoScreen(
+    navController: NavController
+) {
 
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+
     var checked by remember { mutableStateOf(false) }
+    val viewModel: RegisterViewModel = hiltViewModel()
+    val savedStateHandle = navController.previousBackStackEntry?.savedStateHandle
+
+    LaunchedEffect(Unit) {
+        viewModel.fullName = savedStateHandle?.get<String>("fullName") ?: ""
+        viewModel.email = savedStateHandle?.get<String>("email") ?: ""
+        viewModel.studentId = savedStateHandle?.get<String>("studentId") ?: ""
+        viewModel.department = savedStateHandle?.get<String>("department") ?: ""
+    }
+
+    LaunchedEffect(viewModel.registerSuccess) {
+
+        if (viewModel.registerSuccess) {
+
+            navController.navigate(AppRoutes.Home.route) {
+
+                popUpTo(AppRoutes.RegisterStepOne.route) {
+                    inclusive = true
+                }
+
+            }
+
+        }
+
+    }
+
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+//    var profileImageError by remember { mutableStateOf<String?>(null) }
+
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        if (viewModel.isLoading) {
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+
+        }
 
         HeaderSection()
 
@@ -82,11 +126,14 @@ fun RegisterStepTwoScreen() {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PasswordTextField(
-                    value = password,
+                    value = viewModel.password,
                     onValueChange = {
-                        password = it
+                        viewModel.password = it
+                        passwordError = null
                     },
-                    placeholder = "Create Password"
+                    placeholder = "Create Password" ,
+                    isError = passwordError != null,
+                    errorMessage = passwordError
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -100,16 +147,20 @@ fun RegisterStepTwoScreen() {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PasswordTextField(
-                    value = confirmPassword,
+                    value = viewModel.confirmPassword,
                     onValueChange = {
-                        confirmPassword = it
+                        viewModel.confirmPassword = it
                     },
-                    placeholder = "Confirm Password"
+                    placeholder = "Confirm Password",
+                    isError = confirmPasswordError != null,
+                    errorMessage = confirmPasswordError
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                UploadPhotoCard()
+                UploadPhotoCard(
+
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -161,8 +212,44 @@ fun RegisterStepTwoScreen() {
 
                 PrimaryButton(
                     text = "Create Account",
-                    onClick = { }
+                    onClick = {
+
+                        passwordError =
+                            ValidationUtils.validatePassword(viewModel.password)
+
+                        confirmPasswordError =
+                            ValidationUtils.validateConfirmPassword(
+                                viewModel.password,
+                                viewModel.confirmPassword
+                            )
+
+                        if (
+                            passwordError == null &&
+                            confirmPasswordError == null
+                        ) {
+
+                            Log.d("REGISTER", "Name = ${viewModel.fullName}")
+                            Log.d("REGISTER", "Email = ${viewModel.email}")
+                            Log.d("REGISTER", "StudentId = ${viewModel.studentId}")
+                            Log.d("REGISTER", "Department = ${viewModel.department}")
+                            Log.d("REGISTER", "Password = ${viewModel.password}")
+                            viewModel.registerUser()
+
+                        }
+                    }
                 )
+
+                viewModel.errorMessage?.let {
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -175,7 +262,16 @@ fun RegisterStepTwoScreen() {
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                BottomLoginText()
+                BottomLoginText(
+                    onLoginClick = {
+                        navController.navigate(AppRoutes.Login.route) {
+                            popUpTo(AppRoutes.Login.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -342,7 +438,9 @@ private fun UploadPhotoCard() {
 }
 
 @Composable
-private fun BottomLoginText() {
+private fun BottomLoginText(
+    onLoginClick: () -> Unit
+) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -360,7 +458,9 @@ private fun BottomLoginText() {
             text = "Login",
             color = Color(0xFF2563EB),
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.clickable { }
+            modifier = Modifier.clickable {
+                onLoginClick()
+            }
         )
 
     }
@@ -376,7 +476,9 @@ private fun RegisterStepTwoPreview() {
 
     CampusconnectTheme {
 
-        RegisterStepTwoScreen()
+        RegisterStepTwoScreen(
+            navController = rememberNavController()
+        )
 
     }
 

@@ -1,6 +1,7 @@
 package com.rahul.campusconnect.ui.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -42,7 +43,9 @@ fun PasswordTextField(
         keyboardType = KeyboardType.Password,
         imeAction = ImeAction.Done
     ),
-    keyboardActions: KeyboardActions = KeyboardActions.Default
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    isError: Boolean = false,
+    errorMessage: String? = null
 ) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
@@ -97,7 +100,18 @@ fun PasswordTextField(
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            ),
+                    isError = isError
         )
+        if (errorMessage?.isNotEmpty() == true) {
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
     }
 }

@@ -6,6 +6,5 @@ data class User(
     val email: String = "",
     val collegeId: String = "",
     val branch: String = "",
-    val profileImage: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    val profileImage: String = ""
 )

@@ -67,12 +67,21 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // hilt view model
+//     hilt view model
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // firebase dependency
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+
+    // coroutines
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    implementation("com.google.android.material:material:1.12.0")
 }

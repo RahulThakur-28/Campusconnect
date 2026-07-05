@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.rahul.campusconnect" />
+                  <option name="mobileSdkAppId" value="1:995135769616:android:13e6052e37b73334494e95" />
+                  <option name="projectId" value="campusconnect-4ccee" />
+                  <option name="projectNumber" value="995135769616" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

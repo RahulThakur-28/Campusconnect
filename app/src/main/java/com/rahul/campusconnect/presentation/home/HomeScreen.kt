@@ -11,12 +11,12 @@ import androidx.compose.ui.Modifier
 fun HomeScreen() {
 
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+
     ) {
         Text(
             text = "Welcome to CampusConnect 🎉"
         )
+
     }
 
 }

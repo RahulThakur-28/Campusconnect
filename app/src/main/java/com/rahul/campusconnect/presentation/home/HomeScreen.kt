@@ -17,6 +17,11 @@ fun HomeScreen() {
             text = "Welcome to CampusConnect 🎉"
         )
 
+
+        scaffolfd {
+
+
+        }
     }
 
 }

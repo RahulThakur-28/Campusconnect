@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.rahul.campusconnect.model.Announcement
 import com.rahul.campusconnect.ui.components.*
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -148,7 +149,7 @@ private fun dummyHomeState() = HomeUiState(
             "1",
             "End Semester Examination Schedule",
             "The end semester examination for 3rd year students will commence from June 15th. Detailed schedule attached.",
-            timestamp = "2 hours ago"
+            "Placements"
         )
     ),
     events = listOf(

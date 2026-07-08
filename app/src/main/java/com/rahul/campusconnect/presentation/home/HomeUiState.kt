@@ -1,6 +1,7 @@
 package com.rahul.campusconnect.presentation.home
 
 import androidx.compose.runtime.Immutable
+import com.rahul.campusconnect.model.Announcement
 
 @Immutable
 data class HomeUiState(
@@ -14,14 +15,6 @@ data class HomeUiState(
     val placements: List<Placement> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
-)
-
-data class Announcement(
-    val id: String,
-    val title: String,
-    val description: String,
-    val imageUrl: String? = null,
-    val timestamp: String
 )
 
 data class Event(

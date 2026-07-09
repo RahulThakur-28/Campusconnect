@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
@@ -49,6 +50,7 @@ fun AnnouncementCard(
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
+            .wrapContentHeight()
             .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(
@@ -62,7 +64,7 @@ fun AnnouncementCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(140.dp)
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
@@ -89,7 +91,7 @@ fun AnnouncementCard(
 
                 // Category Chip
                 Surface(
-                    shape = RoundedCornerShape(50.dp),
+                    shape = RoundedCornerShape(100.dp),
                     color = Color(0xFFEFF4FF)
                 ) {
 
@@ -170,7 +172,7 @@ fun AnnouncementCard(
                         Spacer(modifier = Modifier.width(2.dp))
 
                         Icon(
-                            imageVector = Icons.Rounded.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
                             tint = Color(0xFF2563EB),
                             modifier = Modifier.size(16.dp)

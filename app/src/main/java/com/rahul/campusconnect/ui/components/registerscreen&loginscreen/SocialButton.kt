@@ -1,4 +1,4 @@
-package com.rahul.campusconnect.ui.components
+package com.rahul.campusconnect.ui.components.`registerscreen&loginscreen`
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth

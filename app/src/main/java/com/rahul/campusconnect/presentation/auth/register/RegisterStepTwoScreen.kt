@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.rahul.campusconnect.ui.components.PasswordTextField
+import com.rahul.campusconnect.ui.components.`registerscreen&loginscreen`.PasswordTextField
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 import androidx.navigation.compose.rememberNavController

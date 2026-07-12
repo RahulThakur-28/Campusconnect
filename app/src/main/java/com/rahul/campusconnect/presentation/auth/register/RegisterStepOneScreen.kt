@@ -35,7 +35,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
-import com.rahul.campusconnect.ui.components.`registerscreen&loginscreen`.AppTextField
+import com.rahul.campusconnect.ui.components.auth.AppTextField
 import com.rahul.campusconnect.ui.components.PrimaryButton
 
 /**

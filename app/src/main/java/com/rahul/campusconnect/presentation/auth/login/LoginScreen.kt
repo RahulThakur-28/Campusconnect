@@ -25,10 +25,10 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.R
-import com.rahul.campusconnect.ui.components.`registerscreen&loginscreen`.AppTextField
-import com.rahul.campusconnect.ui.components.`registerscreen&loginscreen`.PasswordTextField
+import com.rahul.campusconnect.ui.components.auth.AppTextField
+import com.rahul.campusconnect.ui.components.auth.PasswordTextField
 import com.rahul.campusconnect.ui.components.PrimaryButton
-import com.rahul.campusconnect.ui.components.`registerscreen&loginscreen`.SocialButton
+import com.rahul.campusconnect.ui.components.auth.SocialButton
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 
 import androidx.hilt.navigation.compose.hiltViewModel

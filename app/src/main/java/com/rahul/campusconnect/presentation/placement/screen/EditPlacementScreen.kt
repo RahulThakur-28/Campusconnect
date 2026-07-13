@@ -22,7 +22,7 @@ fun EditPlacementScreen(
         id = placementId,
         companyName = "Google",
         role = "Software Engineer",
-        packageAmount = "45 LPA",
+        packageAmount = "45 lp",
         location = "Bangalore",
         jobType = "Full-time",
         openings = 10,

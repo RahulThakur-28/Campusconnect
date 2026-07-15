@@ -34,4 +34,22 @@ sealed class AppRoutes(val route: String) {
     object AnnouncementDetails : AppRoutes("announcement_details/{announcementId}")
 
     object CreateAnnouncement : AppRoutes("create_announcement")
+
+    object Profile : AppRoutes("profile")
+
+    object EditProfile : AppRoutes("edit_profile")
+
+    object MyActivity : AppRoutes("my_activity/{category}")
+
+    object Settings : AppRoutes("settings")
+
+    object NotificationSettings : AppRoutes("notification_settings")
+
+    object About : AppRoutes("about")
+
+    object PrivacyPolicy : AppRoutes("privacy_policy")
+
+    object TermsConditions : AppRoutes("terms_conditions")
+
+    object HelpSupport : AppRoutes("help_support")
 }

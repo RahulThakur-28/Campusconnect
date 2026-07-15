@@ -14,8 +14,14 @@ import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDeta
 import com.rahul.campusconnect.presentation.announcement.navigation.announcementGraph
 import com.rahul.campusconnect.presentation.home.HomeScreen
 import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
+import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostFoundDetails
 import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
+import com.rahul.campusconnect.presentation.notes.navigation.navigateToNoteDetails
 import com.rahul.campusconnect.presentation.onboarding.OnboardingRoute
+import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
+import com.rahul.campusconnect.presentation.profile.navigation.profileGraph
+import com.rahul.campusconnect.presentation.settings.navigation.navigateToSettings
+import com.rahul.campusconnect.presentation.settings.navigation.settingsGraph
 import com.rahul.campusconnect.presentation.splash.SplashScreen
 
 @Composable
@@ -27,7 +33,7 @@ fun AppNavGraph() {
         navController = navController,
 
         // Change this back to Splash later
-        startDestination = AppRoutes.Announcements.route
+        startDestination =AppRoutes.Settings.route
         // startDestination = AppRoutes.Splash.route
     ) {
 
@@ -89,5 +95,22 @@ fun AppNavGraph() {
 
         // ---------------- Announcements ----------------
         announcementGraph(navController)
+
+        // ---------------- Profile ----------------
+        profileGraph(
+            navController = navController,
+            onLogoutClick = { /* TODO */ },
+            onSettingsClick = { navController.navigate(AppRoutes.Settings.route) },
+            onNoteClick = { noteId -> navController.navigateToNoteDetails(noteId) },
+            onEventClick = { eventId -> navController.navigateToEventDetails(eventId) },
+            onPlacementClick = { placementId -> navController.navigateToPlacementDetails(placementId) },
+            onLostFoundClick = { itemId -> navController.navigateToLostFoundDetails(itemId) }
+        )
+
+        // ---------------- Settings ----------------
+        settingsGraph(
+            navController = navController,
+            onEditProfileClick = { navController.navigate(AppRoutes.EditProfile.route) }
+        )
     }
 }

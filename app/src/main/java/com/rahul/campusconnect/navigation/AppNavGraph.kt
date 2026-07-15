@@ -16,4 +16,16 @@ sealed class AppRoutes(val route: String) {
     object RegisterStepTwo : AppRoutes("register_step_two")
 
     object Home : AppRoutes("home")
+
+    object Notes : AppRoutes("notes")
+
+    object NoteDetails : AppRoutes("note_details/{noteId}")
+
+    object UploadNote : AppRoutes("upload_note")
+
+    object LostFound : AppRoutes("lost_found")
+
+    object LostFoundDetails : AppRoutes("lost_found_details/{itemId}")
+
+    object ReportLostFound : AppRoutes("report_lost_found")
 }

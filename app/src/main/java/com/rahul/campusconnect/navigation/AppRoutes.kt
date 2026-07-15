@@ -12,6 +12,8 @@ import com.rahul.campusconnect.presentation.event.navigation.EVENTS_ROUTE
 import com.rahul.campusconnect.presentation.event.navigation.eventGraph
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
 import com.rahul.campusconnect.presentation.home.HomeScreen
+import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
+import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
 import com.rahul.campusconnect.presentation.onboarding.OnboardingRoute
 import com.rahul.campusconnect.presentation.splash.SplashScreen
 
@@ -24,7 +26,7 @@ fun AppNavGraph() {
         navController = navController,
 
         // Change this back to Splash later
-        startDestination = EVENTS_ROUTE
+        startDestination = AppRoutes.LostFound.route
         // startDestination = AppRoutes.Splash.route
     ) {
 
@@ -77,5 +79,11 @@ fun AppNavGraph() {
         composable(AppRoutes.Home.route) {
             HomeScreen()
         }
+
+        // ---------------- Notes ----------------
+        notesGraph(navController)
+
+        // ---------------- Lost & Found ----------------
+        lostFoundGraph(navController)
     }
 }

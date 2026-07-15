@@ -64,7 +64,7 @@ class FakeEventQARepository @Inject constructor() : EventQARepository {
             userName = "Prof. Rajesh",
             userRole = UserRole.VERIFIED_TEACHER,
             content = "Yes, all participants will receive e-certificates via email after the event.",
-            timestamp = System.currentTimeMillis() - 1800000,
+//            timestamp = System.currentTimeMillis() - 1800000,
             isOfficial = true,
             likeCount = 10
         )

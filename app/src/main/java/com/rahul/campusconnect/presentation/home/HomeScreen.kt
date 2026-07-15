@@ -36,9 +36,9 @@ import com.rahul.campusconnect.ui.components.EventCard
 import com.rahul.campusconnect.ui.components.HomeHeader
 import com.rahul.campusconnect.ui.components.HomeSection
 import com.rahul.campusconnect.ui.components.LostFoundCard
+import com.rahul.campusconnect.ui.components.NoteCard
 import com.rahul.campusconnect.ui.components.PlacementCard
 import com.rahul.campusconnect.ui.components.SearchBar
-import com.rahul.campusconnect.ui.components.TrendingNotesCard
 
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -259,7 +259,7 @@ fun HomeScreen(
                                 key = { it.id }
                             ) { note ->
 
-                                TrendingNotesCard(
+                                NoteCard(
                                     note = note
                                 )
 

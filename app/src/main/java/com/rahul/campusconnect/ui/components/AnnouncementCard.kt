@@ -1,48 +1,22 @@
 package com.rahul.campusconnect.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Campaign
+import androidx.compose.material.icons.rounded.Attachment
 import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.rounded.Verified
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.Surface
 import com.rahul.campusconnect.model.Announcement
 
 @Composable
@@ -55,69 +29,43 @@ fun AnnouncementCard(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(horizontal = 24.dp),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 4.dp
-        )
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
     ) {
-
         Column {
-
-            // Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF2563EB),
-                                Color(0xFF1D4ED8),
-                                Color(0xFF312E81)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-
-                Icon(
-                    imageVector = Icons.Rounded.Campaign,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(52.dp)
+            // Optional Banner Image
+            if (announcement.imageUrl != null) {
+                CardImageHeader(
+                    imageUrl = announcement.imageUrl,
+                    category = announcement.category,
+                    categoryColor = Color(0xFF2563EB),
+                    height = 140.dp
                 )
+            } else {
+                // Category Chip when no image
+                Row(modifier = Modifier.padding(start = 16.dp, top = 16.dp)) {
+                    Surface(
+                        shape = RoundedCornerShape(100.dp),
+                        color = Color(0xFFEFF4FF)
+                    ) {
+                        Text(
+                            text = announcement.category,
+                            color = Color(0xFF2563EB),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                    }
+                }
             }
 
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-
-                // Category Chip
-                Surface(
-                    shape = RoundedCornerShape(100.dp),
-                    color = Color(0xFFEFF4FF)
-                ) {
-
-                    Text(
-                        text = announcement.category,
-                        color = Color(0xFF2563EB),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(
-                            horizontal = 12.dp,
-                            vertical = 6.dp
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
+            Column(modifier = Modifier.padding(16.dp)) {
                 // Title
                 Text(
                     text = announcement.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -125,119 +73,90 @@ fun AnnouncementCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Description
+                // Short Description
                 Text(
                     text = announcement.description,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        lineHeight = 22.sp
-                    ),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                // Posted By & Date
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Rounded.Schedule,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(16.dp)
-                        )
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = announcement.timestamp,
-                            color = Color.Gray,
-                            fontSize = 13.sp
+                            text = announcement.postedBy,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    }
-
-                    TextButton(
-                        contentPadding = PaddingValues(0.dp),
-                        onClick = onReadMoreClick
-                    ) {
-
+                        if (announcement.isVerified) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Rounded.Verified,
+                                contentDescription = "Verified",
+                                tint = Color(0xFF2563EB),
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Read More",
-                            color = Color(0xFF2563EB),
-                            fontWeight = FontWeight.SemiBold
-                        )
-
-                        Spacer(modifier = Modifier.width(2.dp))
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                            contentDescription = null,
-                            tint = Color(0xFF2563EB),
-                            modifier = Modifier.size(16.dp)
+                            text = "• ${announcement.timestamp}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
                         )
                     }
                 }
-            }
-        }
-    }
-}
 
-/**
- * A reusable primary action button following Material 3 design guidelines.
- *
- * @param text The label text to display inside the button.
- * @param onClick Lambda to be invoked when the button is clicked.
- * @param modifier Modifier to be applied to the button.
- * @param enabled Whether the button is clickable and enabled.
- */
-@Composable
-fun PrimaryButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
-        ),
-        contentPadding = PaddingValues(0.dp)
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF2563EB),
-                            Color(0xFF1D4ED8)
+                if (announcement.hasAttachment) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.Attachment,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(14.dp)
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Attachment Available",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Read More Button
+                TextButton(
+                    contentPadding = PaddingValues(0.dp),
+                    onClick = onReadMoreClick,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(
+                        text = "Read More",
+                        color = Color(0xFF2563EB),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
                     )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-
-            Text(
-                text = text,
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                        contentDescription = null,
+                        tint = Color(0xFF2563EB),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }

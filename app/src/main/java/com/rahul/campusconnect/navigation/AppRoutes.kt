@@ -11,6 +11,7 @@ import com.rahul.campusconnect.presentation.auth.register.RegisterStepTwoScreen
 import com.rahul.campusconnect.presentation.event.navigation.EVENTS_ROUTE
 import com.rahul.campusconnect.presentation.event.navigation.eventGraph
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
+import com.rahul.campusconnect.presentation.announcement.navigation.announcementGraph
 import com.rahul.campusconnect.presentation.home.HomeScreen
 import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
 import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
@@ -26,7 +27,7 @@ fun AppNavGraph() {
         navController = navController,
 
         // Change this back to Splash later
-        startDestination = AppRoutes.LostFound.route
+        startDestination = AppRoutes.Announcements.route
         // startDestination = AppRoutes.Splash.route
     ) {
 
@@ -85,5 +86,8 @@ fun AppNavGraph() {
 
         // ---------------- Lost & Found ----------------
         lostFoundGraph(navController)
+
+        // ---------------- Announcements ----------------
+        announcementGraph(navController)
     }
 }

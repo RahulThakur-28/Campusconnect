@@ -28,4 +28,10 @@ sealed class AppRoutes(val route: String) {
     object LostFoundDetails : AppRoutes("lost_found_details/{itemId}")
 
     object ReportLostFound : AppRoutes("report_lost_found")
+
+    object Announcements : AppRoutes("announcements")
+
+    object AnnouncementDetails : AppRoutes("announcement_details/{announcementId}")
+
+    object CreateAnnouncement : AppRoutes("create_announcement")
 }

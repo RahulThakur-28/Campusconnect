@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.presentation.placement.screen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +35,16 @@ fun PlacementsScreen(
     viewModel: PlacementsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val filteredPlacements = uiState.placements.filter { placement ->
+
+        val query = uiState.searchQuery.trim()
+
+        query.isBlank() ||
+                placement.companyName.contains(query, ignoreCase = true) ||
+                placement.role.contains(query, ignoreCase = true) ||
+                placement.location.contains(query, ignoreCase = true)
+    }
 
 
     Scaffold(
@@ -78,7 +89,9 @@ fun PlacementsScreen(
             }
         },
         floatingActionButton = {
-            if (uiState.canCreatePlacement) {
+            AnimatedVisibility(
+                visible = uiState.canCreatePlacement
+            ) {
                 FloatingActionButton(
                     onClick = onCreatePlacementClick,
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -145,7 +158,7 @@ fun PlacementsScreen(
                 item {
                     SectionHeader(title = "Ongoing Drives", actionText = null)
                 }
-                items(uiState.placements) { placement ->
+                items(filteredPlacements) { placement ->
                     PlacementCard(
                         placement = placement,
                         onClick = { onPlacementClick(placement.id) },

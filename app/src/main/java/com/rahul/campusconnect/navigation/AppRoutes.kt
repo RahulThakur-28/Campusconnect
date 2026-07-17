@@ -109,4 +109,8 @@ sealed class AppRoutes(val route: String) {
     object Search : AppRoutes("search")
 
     object Main : AppRoutes("main")
+
+    object UpcomingEvents : AppRoutes("upcoming_events")
+
+    object PastEvents : AppRoutes("past_events")
 }

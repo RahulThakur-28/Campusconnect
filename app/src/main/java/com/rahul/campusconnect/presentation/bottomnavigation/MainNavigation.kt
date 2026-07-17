@@ -11,6 +11,8 @@ import com.rahul.campusconnect.presentation.announcement.navigation.announcement
 import com.rahul.campusconnect.presentation.event.navigation.eventGraph
 import com.rahul.campusconnect.presentation.event.navigation.navigateToCreateEvent
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
+import com.rahul.campusconnect.presentation.event.navigation.navigateToPastEvents
+import com.rahul.campusconnect.presentation.event.navigation.navigateToUpcomingEvents
 import com.rahul.campusconnect.presentation.home.HomeScreen
 import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
 import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostFoundDetails
@@ -70,6 +72,15 @@ fun MainNavigation(
             onEventCreated = {
                 navController.popBackStack()
             }
+            ,
+            onUpcomingEventsClick = {
+                navController.navigateToUpcomingEvents()
+            },
+
+            onPastEventsClick = {
+                navController.navigateToPastEvents()
+            }
+
         )
 
 

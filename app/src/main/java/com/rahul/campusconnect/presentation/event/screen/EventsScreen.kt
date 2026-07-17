@@ -32,34 +32,53 @@ import com.rahul.campusconnect.ui.components.SectionHeader
 fun EventsScreen(
     onEventClick: (String) -> Unit,
     onCreateEventClick: () -> Unit,
-    viewModel: EventsViewModel = hiltViewModel()
+    viewModel: EventsViewModel = hiltViewModel(),
+            onUpcomingEventsClick: () -> Unit,
+onPastEventsClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val filteredEvents = uiState.events.filter { event ->
+
+        val query = uiState.searchQuery.trim()
+
+        query.isBlank() ||
+                event.title.contains(query, ignoreCase = true) ||
+                event.description.contains(query, ignoreCase = true) ||
+                event.category.contains(query, ignoreCase = true) ||
+                event.venue.contains(query, ignoreCase = true)
+    }
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = "Events",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO */ }) {
+                    IconButton(
+                        onClick = {
+                            // TODO: Navigate to Notifications
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.NotificationsNone,
                             contentDescription = "Notifications"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
 
+
+
         floatingActionButton = {
+
             AnimatedVisibility(
                 visible = uiState.canCreateEvent
             ) {
@@ -92,7 +111,7 @@ fun EventsScreen(
                     onValueChange = viewModel::onSearchQueryChanged,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                     placeholder = {
                         Text("Search events...")
                     },
@@ -165,6 +184,9 @@ fun EventsScreen(
                                 event = featured,
                                 onClick = {
                                     onEventClick(featured.id)
+                                },
+                                onRegisterClick = {
+                                    viewModel.onRegisterEvent(featured.id)
                                 }
                             )
 
@@ -173,7 +195,7 @@ fun EventsScreen(
 
                     // Registered Events
                     val registeredEvents =
-                        uiState.events.filter {
+                        filteredEvents.filter {
                             uiState.registeredEventIds.contains(it.id)
                         }
 
@@ -216,8 +238,7 @@ fun EventsScreen(
                     }
 
                     // Upcoming Events
-                    val upcomingEvents =
-                        uiState.events.filter { !it.isFeatured }
+                val upcomingEvents = filteredEvents.filter { !it.isFeatured }
 
                     if (upcomingEvents.isNotEmpty()) {
 
@@ -226,7 +247,9 @@ fun EventsScreen(
                             Spacer(Modifier.height(24.dp))
 
                             SectionHeader(
-                                title = "Upcoming Events"
+                                title = "Upcoming Events",
+                                actionText = "See All",
+                                onActionClick = onUpcomingEventsClick
                             )
 
                         }
@@ -260,7 +283,9 @@ fun EventsScreen(
                         Spacer(Modifier.height(24.dp))
 
                         SectionHeader(
-                            title = "Past Events"
+                            title = "Past Events",
+                            actionText = "See All",
+                            onActionClick = onPastEventsClick
                         )
 
                     }
@@ -274,13 +299,19 @@ fun EventsScreen(
 
                             items(3) {
 
+                                val pastEvent = Event(
+                                    id = "past_1",
+                                    title = "Hackathon 2023",
+                                    category = "Technical",
+                                    date = "Dec 10, 2023",
+                                    isRegistrationOpen = false
+                                )
+
                                 EventCard(
-                                    event = Event(
-                                        title = "Hackathon 2023",
-                                        category = "Technical",
-                                        date = "Dec 10, 2023",
-                                        isRegistrationOpen = false
-                                    ),
+                                    event = pastEvent,
+                                    onClick = {
+                                        onEventClick(pastEvent.id)
+                                    },
                                     cardStyle = EventCardStyle.Small,
                                     showRegisterButton = false,
                                     showAttendance = false

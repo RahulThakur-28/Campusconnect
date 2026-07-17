@@ -17,21 +17,59 @@ import javax.inject.Inject
 class EventsViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow(EventsUiState())
-    val uiState: StateFlow<EventsUiState> = _uiState.asStateFlow()
+
+    val uiState: StateFlow<EventsUiState> =
+        _uiState.asStateFlow()
+
 
     init {
+
+        // Temporary role for UI testing.
+        // Later this will come from AuthRepository / UserRepository.
+        setUserRole(UserRole.ADMIN)
+
         loadEvents()
-        // For demonstration, setting a default role. 
-        // In a real app, this would come from an AuthRepository.
-        _uiState.update { it.copy(userRole = UserRole.ADMIN) } 
     }
 
+
+    /**
+     * Updates current user role and event creation permission.
+     */
+    private fun setUserRole(role: UserRole) {
+
+        val canCreateEvent = when (role) {
+
+            UserRole.ADMIN,
+            UserRole.VERIFIED_TEACHER -> true
+
+            else -> false
+        }
+
+        _uiState.update { currentState ->
+
+            currentState.copy(
+                userRole = role
+            )
+        }
+    }
+
+
+    /**
+     * Loads events.
+     * Currently using dummy data.
+     * Later replace with repository / Firestore.
+     */
     private fun loadEvents() {
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            
-            // Simulating API call/Firestore fetch
+
+            _uiState.update {
+                it.copy(isLoading = true)
+            }
+
+
             val dummyEvents = listOf(
+
                 Event(
                     id = "1",
                     title = "TechQuest 2024",
@@ -43,6 +81,7 @@ class EventsViewModel @Inject constructor() : ViewModel() {
                     registeredCount = 245,
                     isFeatured = true
                 ),
+
                 Event(
                     id = "2",
                     title = "AI Workshop",
@@ -53,6 +92,7 @@ class EventsViewModel @Inject constructor() : ViewModel() {
                     time = "11:30 AM",
                     registeredCount = 180
                 ),
+
                 Event(
                     id = "3",
                     title = "Cultural Fest 2024",
@@ -65,33 +105,71 @@ class EventsViewModel @Inject constructor() : ViewModel() {
                 )
             )
 
-            _uiState.update { 
-                it.copy(
+
+            _uiState.update { currentState ->
+
+                currentState.copy(
                     isLoading = false,
                     events = dummyEvents,
-                    featuredEvent = dummyEvents.find { e -> e.isFeatured }
-                ) 
+                    featuredEvent = dummyEvents.find { event ->
+                        event.isFeatured
+                    }
+                )
             }
         }
     }
 
+
+    /**
+     * Changes selected event category.
+     */
     fun onCategorySelected(category: String) {
-        _uiState.update { it.copy(selectedCategory = category) }
+
+        _uiState.update {
+            it.copy(
+                selectedCategory = category
+            )
+        }
     }
 
+
+    /**
+     * Updates event search query.
+     */
     fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+
+        _uiState.update {
+            it.copy(
+                searchQuery = query
+            )
+        }
     }
 
+
+    /**
+     * Registers or unregisters the user from an event.
+     */
     fun onRegisterEvent(eventId: String) {
+
         _uiState.update { state ->
-            val isRegistered = state.registeredEventIds.contains(eventId)
-            val newRegisteredIds = if (isRegistered) {
+
+            val isAlreadyRegistered =
+                state.registeredEventIds.contains(eventId)
+
+
+            val updatedRegisteredIds = if (isAlreadyRegistered) {
+
                 state.registeredEventIds - eventId
+
             } else {
+
                 state.registeredEventIds + eventId
             }
-            state.copy(registeredEventIds = newRegisteredIds)
+
+
+            state.copy(
+                registeredEventIds = updatedRegisteredIds
+            )
         }
     }
 }

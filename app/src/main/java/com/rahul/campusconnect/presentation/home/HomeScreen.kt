@@ -17,7 +17,9 @@ import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.announcement.navigation.navigateToAnnouncementDetails
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
+import com.rahul.campusconnect.presentation.notification.navigation.navigateToNotifications
 import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
+import com.rahul.campusconnect.presentation.search.navigation.navigateToSearch
 import com.rahul.campusconnect.ui.components.AnnouncementCard
 import com.rahul.campusconnect.ui.components.EmptyState
 import com.rahul.campusconnect.ui.components.EventCard
@@ -48,7 +50,9 @@ fun HomeScreen(
                 academicYear = state.academicYear,
                 isVerified = state.isVerified,
                 notificationCount = state.notificationCount,
-                onNotificationClick = {}
+                onNotificationClick = {
+                    navController.navigateToNotifications()
+                }
             )
         }
 
@@ -60,7 +64,11 @@ fun HomeScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            SearchBar()
+            SearchBar(
+                onClick = {
+                    navController.navigateToSearch()
+                }
+            )
         }
 
 

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SearchBar(
-    hint: String = "Search CampusConnect",
+    hint: String = "Search CampusConnect........",
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {

@@ -104,7 +104,9 @@ sealed class AppRoutes(val route: String) {
     object More : AppRoutes("more")
 
 
+    object Notifications : AppRoutes("notifications")
 
+    object Search : AppRoutes("search")
 
     object Main : AppRoutes("main")
 }

@@ -17,10 +17,12 @@ import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostF
 import com.rahul.campusconnect.presentation.more.navigation.moreGraph
 import com.rahul.campusconnect.presentation.notes.navigation.navigateToNoteDetails
 import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
+import com.rahul.campusconnect.presentation.notification.navigation.notificationGraph
 import com.rahul.campusconnect.presentation.placement.navigation.navigateToCreatePlacement
 import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
 import com.rahul.campusconnect.presentation.placement.navigation.placementGraph
 import com.rahul.campusconnect.presentation.profile.navigation.profileGraph
+import com.rahul.campusconnect.presentation.search.navigation.searchGraph
 import com.rahul.campusconnect.presentation.settings.navigation.settingsGraph
 
 @Composable
@@ -154,9 +156,11 @@ fun MainNavigation(
             onEditProfileClick = { navController.navigate(AppRoutes.EditProfile.route) }
         )
 
+        // ---------------- Notifications ----------------
+        notificationGraph(navController)
 
-
-
+        // ---------------- Search ----------------
+        searchGraph(navController)
 
     }
 

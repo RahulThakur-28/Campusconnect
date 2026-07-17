@@ -1,116 +1,110 @@
 package com.rahul.campusconnect.navigation
+//here are all screen connects
 
-import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
-import androidx.navigation.compose.rememberNavController
-import com.rahul.campusconnect.presentation.auth.login.LoginScreen
-import com.rahul.campusconnect.presentation.auth.register.RegisterStepOneScreen
-import com.rahul.campusconnect.presentation.auth.register.RegisterStepTwoScreen
-import com.rahul.campusconnect.presentation.event.navigation.EVENTS_ROUTE
-import com.rahul.campusconnect.presentation.event.navigation.eventGraph
-import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
-import com.rahul.campusconnect.presentation.announcement.navigation.announcementGraph
-import com.rahul.campusconnect.presentation.home.HomeScreen
-import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
-import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostFoundDetails
-import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
-import com.rahul.campusconnect.presentation.notes.navigation.navigateToNoteDetails
-import com.rahul.campusconnect.presentation.onboarding.OnboardingRoute
-import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
-import com.rahul.campusconnect.presentation.profile.navigation.profileGraph
-import com.rahul.campusconnect.presentation.settings.navigation.navigateToSettings
-import com.rahul.campusconnect.presentation.settings.navigation.settingsGraph
-import com.rahul.campusconnect.presentation.splash.SplashScreen
+sealed class AppRoutes(val route: String) {
 
-@Composable
-fun AppNavGraph() {
 
-    val navController = rememberNavController()
+    //-----routes for authentication--------------------------------------------
 
-    NavHost(
-        navController = navController,
+    object Splash : AppRoutes("splash")
 
-        // Change this back to Splash later
-        startDestination =AppRoutes.Settings.route
-        // startDestination = AppRoutes.Splash.route
-    ) {
+    object Onboarding : AppRoutes("onboarding")
 
-        // ---------------- Events ----------------
-        eventGraph(
-            onBackClick = {
-                navController.popBackStack()
-            },
+    object Login : AppRoutes("login")
 
-            onViewDiscussionClick = { },
+    object RegisterGraph : AppRoutes("register_graph")
 
-            onCreateEventClick = { },
+    object RegisterStepOne : AppRoutes("register_step_one")
 
-            onEventClick = { eventId ->
-                navController.navigateToEventDetails(eventId)
-            }
-        )
+    object RegisterStepTwo : AppRoutes("register_step_two")
 
-        // ---------------- Splash ----------------
-        composable(AppRoutes.Splash.route) {
-            SplashScreen(navController)
-        }
 
-        // ---------------- Onboarding ----------------
-        composable(AppRoutes.Onboarding.route) {
-            OnboardingRoute(navController)
-        }
 
-        // ---------------- Login ----------------
-        composable(AppRoutes.Login.route) {
-            LoginScreen(navController)
-        }
+    //---------------------------routes for Home ----------------------------------------------------------
 
-        // ---------------- Register ----------------
-        navigation(
-            startDestination = AppRoutes.RegisterStepOne.route,
-            route = AppRoutes.RegisterGraph.route
-        ) {
 
-            composable(AppRoutes.RegisterStepOne.route) {
-                RegisterStepOneScreen(navController)
-            }
+    object Home : AppRoutes("home")
 
-            composable(AppRoutes.RegisterStepTwo.route) {
-                RegisterStepTwoScreen(navController)
-            }
-        }
 
-        // ---------------- Home ----------------
-        composable(AppRoutes.Home.route) {
-            HomeScreen()
-        }
+// --------------------------- Events ---------------------------
 
-        // ---------------- Notes ----------------
-        notesGraph(navController)
+    object Events : AppRoutes("events")
 
-        // ---------------- Lost & Found ----------------
-        lostFoundGraph(navController)
+    object EventDetails : AppRoutes("event_details/{eventId}")
 
-        // ---------------- Announcements ----------------
-        announcementGraph(navController)
+    object CreateEvent : AppRoutes("create_event")
 
-        // ---------------- Profile ----------------
-        profileGraph(
-            navController = navController,
-            onLogoutClick = { /* TODO */ },
-            onSettingsClick = { navController.navigate(AppRoutes.Settings.route) },
-            onNoteClick = { noteId -> navController.navigateToNoteDetails(noteId) },
-            onEventClick = { eventId -> navController.navigateToEventDetails(eventId) },
-            onPlacementClick = { placementId -> navController.navigateToPlacementDetails(placementId) },
-            onLostFoundClick = { itemId -> navController.navigateToLostFoundDetails(itemId) }
-        )
+    object EditEvent : AppRoutes("edit_event/{eventId}")
 
-        // ---------------- Settings ----------------
-        settingsGraph(
-            navController = navController,
-            onEditProfileClick = { navController.navigate(AppRoutes.EditProfile.route) }
-        )
-    }
+// --------------------------- Placements ---------------------------
+
+    object Placements : AppRoutes("placements")
+
+    object PlacementDetails : AppRoutes("placement_details/{placementId}")
+
+    object CreatePlacement : AppRoutes("create_placement")
+
+    object EditPlacement : AppRoutes("edit_placement/{placementId}")
+
+
+
+    //---------------------------routes for Notes section ----------------------------------------------------------
+
+    object Notes : AppRoutes("notes")
+
+    object NoteDetails : AppRoutes("note_details/{noteId}")
+
+    object UploadNote : AppRoutes("upload_note")
+
+
+
+
+
+    //---------------------------routes for Lost Found section----------------------------------------------------------
+
+    object LostFound : AppRoutes("lost_found")
+
+    object LostFoundDetails : AppRoutes("lost_found_details/{itemId}")
+
+    object ReportLostFound : AppRoutes("report_lost_found")
+
+
+    //---------------------------routes for Announcement section ----------------------------------------------------------
+
+    object Announcements : AppRoutes("announcements")
+
+    object AnnouncementDetails : AppRoutes("announcement_details/{announcementId}")
+
+    object CreateAnnouncement : AppRoutes("create_announcement")
+
+
+    //---------------------------routes for Profile section ----------------------------------------------------------
+
+    object Profile : AppRoutes("profile")
+
+    object EditProfile : AppRoutes("edit_profile")
+
+
+    //---------------------------routes for settings ----------------------------------------------------------
+
+    object MyActivity : AppRoutes("my_activity/{category}")
+
+    object Settings : AppRoutes("settings")
+
+    object NotificationSettings : AppRoutes("notification_settings")
+
+    object About : AppRoutes("about")
+
+    object PrivacyPolicy : AppRoutes("privacy_policy")
+
+    object TermsConditions : AppRoutes("terms_conditions")
+
+    object HelpSupport : AppRoutes("help_support")
+
+    object More : AppRoutes("more")
+
+
+
+
+    object Main : AppRoutes("main")
 }

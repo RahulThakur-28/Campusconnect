@@ -1,6 +1,7 @@
 package com.rahul.campusconnect.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,13 +24,19 @@ import com.rahul.campusconnect.model.Announcement
 fun AnnouncementCard(
     announcement: Announcement,
     modifier: Modifier = Modifier,
-    onReadMoreClick: () -> Unit = {}
+    onCardClick: () -> Unit = {},
+    onReadMoreClick: () -> Unit = onCardClick
 ) {
     ElevatedCard(
+        onClick =  onCardClick,
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+           .clickable {
+            onCardClick()
+                      },
+
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = Color.White)

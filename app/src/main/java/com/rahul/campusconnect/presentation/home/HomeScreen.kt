@@ -5,31 +5,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Work
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.rahul.campusconnect.navigation.AppRoutes
+import com.rahul.campusconnect.presentation.announcement.navigation.navigateToAnnouncementDetails
+import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
+import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
 import com.rahul.campusconnect.ui.components.AnnouncementCard
 import com.rahul.campusconnect.ui.components.EmptyState
 import com.rahul.campusconnect.ui.components.EventCard
@@ -40,303 +28,279 @@ import com.rahul.campusconnect.ui.components.NoteCard
 import com.rahul.campusconnect.ui.components.PlacementCard
 import com.rahul.campusconnect.ui.components.SearchBar
 
-
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreen(
-    state: HomeUiState =dummyHomeState()
+    navController: NavController,
+    state: HomeUiState = dummyHomeState()
 ) {
 
-    var selectedTab by remember { mutableIntStateOf(0) }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 32.dp)
+    ) {
 
-    val tabs = listOf(
-        NavigationItem("Home", Icons.Default.Home),
-        NavigationItem("Placements", Icons.Default.Work),
-        NavigationItem("Events", Icons.Default.Event),
-        NavigationItem("Announcements", Icons.Default.Campaign),
-        NavigationItem("More", Icons.Default.MoreHoriz)
-    )
+        // ---------------- Header ----------------
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
+        item {
+            HomeHeader(
+                userName = state.userName,
+                department = state.department,
+                academicYear = state.academicYear,
+                isVerified = state.isVerified,
+                notificationCount = state.notificationCount,
+                onNotificationClick = {}
+            )
+        }
 
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp
-            ) {
 
-                tabs.forEachIndexed { index, item ->
+        // ---------------- Search ----------------
 
-                    NavigationBarItem(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.title
+        item {
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            SearchBar()
+        }
+
+
+        // ---------------- Latest Announcement ----------------
+
+        item {
+            HomeSection(
+                title = "Latest Announcement",
+                onSeeAllClick = {
+                    navController.navigate(
+                        AppRoutes.Announcements.route
+                    )
+                }
+            )  {
+
+                if (state.announcements.isNotEmpty()) {
+
+                    val announcement = state.announcements.first()
+
+                    AnnouncementCard(
+                        announcement = announcement,
+                        onCardClick = {
+                            navController.navigateToAnnouncementDetails(
+                                announcement.id
                             )
                         },
-                        label = {
-                            Text(
-                                text = item.title,
-                                style = MaterialTheme.typography.labelSmall
+                        onReadMoreClick = {
+                            navController.navigateToAnnouncementDetails(
+                                announcement.id
                             )
                         }
                     )
 
+                } else {
+
+                    EmptyState(
+                        message = "No announcements yet"
+                    )
                 }
-
             }
-
         }
 
-    ) { innerPadding ->
 
-        LazyColumn(
+        // ---------------- Upcoming Events ----------------
 
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-
-            contentPadding = PaddingValues(bottom = 32.dp)
-
-        ) {
-
-            // Header
-
-            item {
-
-                HomeHeader(
-                    userName = state.userName,
-                    department = state.department,
-                    academicYear = state.academicYear,
-                    isVerified = state.isVerified,
-                    notificationCount = state.notificationCount,
-                    onNotificationClick = {}
-                )
-
-            }
-
-            // Search
-
-            item {
-
-                Spacer(Modifier.height(8.dp))
-
-                SearchBar()
-
-            }
-
-            // Announcement
-
-            item {
-
-                HomeSection(
-                    title = "Latest Announcement"
-                ) {
-
-                    if (state.announcements.isNotEmpty()) {
-
-                        AnnouncementCard(
-                            announcement = state.announcements.first()
-                        )
-
-                    } else {
-
-                        EmptyState(
-                            message = "No announcements yet"
-                        )
-
-                    }
-
+        item {
+            HomeSection(
+                title = "Upcoming Events",
+                onSeeAllClick = {
+                    navController.navigate(
+                        AppRoutes.Events.route
+                    )
                 }
+            ) {
 
-            }
+                if (state.events.isNotEmpty()) {
 
-            // Events
+                    LazyRow(
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
 
-            item {
+                        items(
+                            items = state.events,
+                            key = { event -> event.id }
+                        ) { event ->
 
-                HomeSection(
-                    title = "Upcoming Events"
-                ) {
-
-                    if (state.events.isNotEmpty()) {
-
-                        LazyRow(
-
-                            contentPadding = PaddingValues(horizontal = 20.dp),
-
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-
-                        ) {
-
-                            items(
-                                items = state.events,
-                                key = { it.id }
-                            ) { event ->
-
-                                EventCard(
-                                    event = event
-                                )
-
-                            }
-
+                            EventCard(
+                                event = event,
+                                onClick = {
+                                    navController.navigateToEventDetails(event.id)
+                                }
+                            )
                         }
-
-                    } else {
-
-                        EmptyState(
-                            "No upcoming events"
-                        )
-
                     }
 
+                } else {
+
+                    EmptyState(
+                        message = "No upcoming events"
+                    )
                 }
-
             }
-
-            // Placements
-
-            item {
-
-                HomeSection(
-                    title = "Placement Updates"
-                ) {
-
-                    if (state.placements.isNotEmpty()) {
-
-                        LazyRow(
-
-                            contentPadding = PaddingValues(horizontal = 20.dp),
-
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-
-                        ) {
-
-                            items(
-                                state.placements,
-                                key = { it.id }
-                            ) { placement ->
-
-                                PlacementCard(
-                                    placement = placement
-                                )
-
-                            }
-
-                        }
-
-                    } else {
-
-                        EmptyState(
-                            "No placement drives active"
-                        )
-
-                    }
-
-                }
-
-            }
-            // Trending Notes
-
-            item {
-
-                HomeSection(
-                    title = "Trending Notes"
-                ) {
-
-                    if (state.notes.isNotEmpty()) {
-
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-
-                            items(
-                                items = state.notes,
-                                key = { it.id }
-                            ) { note ->
-
-                                NoteCard(
-                                    note = note
-                                )
-
-                            }
-
-                        }
-
-                    } else {
-
-                        EmptyState(
-                            message = "No trending notes"
-                        )
-
-                    }
-
-                }
-
-            }
-
-            // Lost & Found
-
-            item {
-
-                HomeSection(
-                    title = "Lost & Found"
-                ) {
-
-                    if (state.lostFoundItems.isNotEmpty()) {
-
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-
-                            items(
-                                items = state.lostFoundItems,
-                                key = { it.id }
-                            ) { item ->
-
-                                LostFoundCard(
-                                    item = item
-                                )
-
-                            }
-
-                        }
-
-                    } else {
-
-                        EmptyState(
-                            message = "No items reported"
-                        )
-
-                    }
-
-                }
-
-            }
-
-            // Bottom Space
-
-            item {
-
-                Spacer(
-                    modifier = Modifier.height(32.dp)
-                )
-
-            }
-
         }
 
+
+        // ---------------- Placement Updates ----------------
+
+        item {
+            HomeSection(
+                title = "Placement Updates",
+                onSeeAllClick = {
+                    navController.navigate(
+                        AppRoutes.Placements.route
+                    )
+                }
+            ) {
+
+                if (state.placements.isNotEmpty()) {
+
+                    LazyRow(
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+
+                        items(
+                            items = state.placements,
+                            key = { placement -> placement.id }
+                        ) { placement ->
+
+                            PlacementCard(
+                                placement = placement,
+                                onClick = {
+                                    navController.navigateToPlacementDetails(placementId = placement.id)
+                                }
+                            )
+                        }
+                    }
+
+                } else {
+
+                    EmptyState(
+                        message = "No placement drives active"
+                    )
+                }
+            }
+        }
+
+
+        // ---------------- Trending Notes ----------------
+
+        item {
+            HomeSection(
+                title = "Trending Notes",
+                onSeeAllClick ={
+                    navController.navigate(AppRoutes.Notes.route)
+
+                }
+
+            ) {
+
+                if (state.notes.isNotEmpty()) {
+
+                    LazyRow(
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+
+                        items(
+                            items = state.notes,
+                            key = { note -> note.id }
+                        ) { note ->
+
+                            NoteCard(
+                                note = note,
+                                onClick = {
+                                    navController.navigate(AppRoutes.NoteDetails.route)
+                                }
+                            )
+                        }
+                    }
+
+                } else {
+
+                    EmptyState(
+                        message = "No trending notes"
+                    )
+                }
+            }
+        }
+
+
+        // ---------------- Lost & Found ----------------
+
+        item {
+            HomeSection(
+                title = "Lost & Found",
+                onSeeAllClick = {
+                    navController.navigate(AppRoutes.LostFound.route)
+                }
+            ) {
+
+                if (state.lostFoundItems.isNotEmpty()) {
+
+                    LazyRow(
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+
+                        items(
+                            items = state.lostFoundItems,
+                            key = { item -> item.id }
+                        ) { item ->
+
+                            LostFoundCard(
+                                item = item,
+                                onClick ={
+                                    navController.navigate(AppRoutes.LostFoundDetails.route)
+                                }
+                            )
+                        }
+                    }
+
+                } else {
+
+                    EmptyState(
+                        message = "No items reported"
+                    )
+                }
+            }
+        }
+
+
+        // ---------------- Bottom Spacing ----------------
+
+        item {
+            Spacer(
+                modifier = Modifier.height(32.dp)
+            )
+        }
     }
-
 }
 
-data class NavigationItem(
-    val title: String,
-    val icon: ImageVector
-)
 
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+fun HomeScreenPreview() {
+
+    HomeScreen(
+        navController = rememberNavController()
+    )
+}

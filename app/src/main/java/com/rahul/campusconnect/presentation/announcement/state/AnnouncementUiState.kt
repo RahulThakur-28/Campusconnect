@@ -12,4 +12,6 @@ data class AnnouncementUiState(
     val userRole: UserRole = UserRole.STUDENT,
     val error: String? = null,
     val categories: List<String> = listOf("All", "Academic", "Exam", "Holiday", "General", "Placement", "Events")
+
+
 )

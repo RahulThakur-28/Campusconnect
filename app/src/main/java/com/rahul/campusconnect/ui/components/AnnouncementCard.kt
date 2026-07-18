@@ -26,16 +26,13 @@ fun AnnouncementCard(
     modifier: Modifier = Modifier,
     onCardClick: () -> Unit = {},
     onReadMoreClick: () -> Unit = onCardClick
-) {
+){
     ElevatedCard(
-        onClick =  onCardClick,
+        onClick = onCardClick,
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(horizontal = 16.dp)
-           .clickable {
-            onCardClick()
-                      },
+            .padding(horizontal = 16.dp),
 
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
@@ -155,7 +152,9 @@ fun AnnouncementCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
+
                     Spacer(modifier = Modifier.width(4.dp))
+
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                         contentDescription = null,

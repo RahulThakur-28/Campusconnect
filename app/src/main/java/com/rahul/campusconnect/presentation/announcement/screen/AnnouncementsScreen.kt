@@ -26,6 +26,8 @@ fun AnnouncementsScreen(
     onCreateAnnouncementClick: () -> Unit,
     viewModel: AnnouncementViewModel = hiltViewModel()
 ) {
+
+
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -55,8 +57,10 @@ fun AnnouncementsScreen(
                 .padding(padding)
         ) {
             // Search Bar
-            SearchBar(
-                hint = "Search announcements...",
+            SearchTextField(
+                value = uiState.searchQuery,
+                onValueChange = viewModel::onSearchQueryChanged,
+                placeholder = "Search announcements...",
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -93,7 +97,9 @@ fun AnnouncementsScreen(
                     items(uiState.filteredAnnouncements) { announcement ->
                         AnnouncementCard(
                             announcement = announcement,
-                            onReadMoreClick = { onAnnouncementClick(announcement.id) }
+                            onCardClick = {
+                                onAnnouncementClick(announcement.id)
+                            }
                         )
                     }
                 }

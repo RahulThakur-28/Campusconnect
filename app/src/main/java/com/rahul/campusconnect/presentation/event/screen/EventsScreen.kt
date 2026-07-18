@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.presentation.event.screen
 
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -171,7 +172,14 @@ onPastEventsClick: () -> Unit,
                 else -> {
 
                     // Featured Event
-                    uiState.featuredEvent?.let { featured ->
+                    val filteredFeaturedEvent =
+                        uiState.featuredEvent?.takeIf { featured ->
+                            filteredEvents.any { event ->
+                                event.id == featured.id
+                            }
+                        }
+
+                    filteredFeaturedEvent?.let { featured ->
 
                         item {
 
@@ -202,23 +210,23 @@ onPastEventsClick: () -> Unit,
                     if (registeredEvents.isNotEmpty()) {
 
                         item {
-
                             Spacer(Modifier.height(24.dp))
 
                             SectionHeader(
                                 title = "My Registered Events"
                             )
-
                         }
 
                         item {
-
                             LazyRow(
                                 contentPadding = PaddingValues(horizontal = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
 
-                                items(registeredEvents) { event ->
+                                items(
+                                    items = registeredEvents,
+                                    key = { it.id }
+                                ) { event ->
 
                                     EventCard(
                                         event = event,
@@ -228,15 +236,10 @@ onPastEventsClick: () -> Unit,
                                             onEventClick(event.id)
                                         }
                                     )
-
                                 }
-
                             }
-
                         }
-
                     }
-
                     // Upcoming Events
                 val upcomingEvents = filteredEvents.filter { !it.isFeatured }
 

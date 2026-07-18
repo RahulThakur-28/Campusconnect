@@ -73,9 +73,10 @@ class AnnouncementViewModel @Inject constructor() : ViewModel() {
             }
         }
     }
-
     fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+        _uiState.update {
+            it.copy(searchQuery = query)
+        }
         applyFilters()
     }
 
@@ -86,13 +87,25 @@ class AnnouncementViewModel @Inject constructor() : ViewModel() {
 
     private fun applyFilters() {
         val currentState = _uiState.value
+
         val filtered = currentState.announcements.filter { announcement ->
-            val matchesSearch = announcement.title.contains(currentState.searchQuery, ignoreCase = true) ||
-                    announcement.description.contains(currentState.searchQuery, ignoreCase = true)
-            val matchesCategory = currentState.selectedCategory == "All" || announcement.category == currentState.selectedCategory
-            
+
+            val matchesSearch =
+                currentState.searchQuery.isBlank() ||
+                        announcement.title.contains(currentState.searchQuery, ignoreCase = true) ||
+                        announcement.description.contains(currentState.searchQuery, ignoreCase = true) ||
+                        announcement.category.contains(currentState.searchQuery, ignoreCase = true) ||
+                        announcement.postedBy.contains(currentState.searchQuery, ignoreCase = true)
+
+            val matchesCategory =
+                currentState.selectedCategory == "All" ||
+                        announcement.category == currentState.selectedCategory
+
             matchesSearch && matchesCategory
         }
-        _uiState.update { it.copy(filteredAnnouncements = filtered) }
+
+        _uiState.update {
+            it.copy(filteredAnnouncements = filtered)
+        }
     }
 }

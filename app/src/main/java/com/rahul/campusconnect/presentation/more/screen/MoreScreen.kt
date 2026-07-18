@@ -59,6 +59,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.more.viewmodel.MoreViewModel
+import com.rahul.campusconnect.presentation.notification.navigation.navigateToNotifications
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -190,17 +191,15 @@ fun MoreScreen(
             MoreMenuCard {
 
                 MoreMenuItem(
-                    title = "My Notes",
-                    subtitle = "Access your uploaded study materials",
+                    title = "Notes",
+                    subtitle = "Browse and upload study materials",
                     icon = Icons.Outlined.Description,
                     iconContainerColor =
                         MaterialTheme.colorScheme.primaryContainer,
                     iconColor =
                         MaterialTheme.colorScheme.primary,
                     onClick = {
-                        navController.navigate(
-                            AppRoutes.Notes.route
-                        )
+                       navController.navigate(AppRoutes.Notes.route)
                     }
                 )
 
@@ -225,16 +224,15 @@ fun MoreScreen(
 
                 MoreMenuItem(
                     title = "Notifications",
-                    subtitle = "Manage your campus alerts",
+                    subtitle = "Stay updated with campus announcements",
                     icon = Icons.Outlined.Notifications,
                     iconContainerColor =
                         MaterialTheme.colorScheme.secondaryContainer,
                     iconColor =
                         MaterialTheme.colorScheme.secondary,
                     onClick = {
-                        navController.navigate(
-                            AppRoutes.NotificationSettings.route
-                        )
+                        navController.navigateToNotifications()
+
                     }
                 )
             }

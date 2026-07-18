@@ -11,6 +11,11 @@ import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.profile.screen.EditProfileScreen
 import com.rahul.campusconnect.presentation.profile.screen.MyActivityScreen
 import com.rahul.campusconnect.presentation.profile.screen.ProfileScreen
+import com.rahul.campusconnect.presentation.settings.navigation.navigateToAbout
+import com.rahul.campusconnect.presentation.settings.navigation.navigateToHelpSupport
+import com.rahul.campusconnect.presentation.settings.navigation.navigateToNotificationSettings
+import com.rahul.campusconnect.presentation.settings.navigation.navigateToPrivacyPolicy
+import com.rahul.campusconnect.presentation.settings.navigation.navigateToTerms
 
 fun NavController.navigateToProfile(navOptions: NavOptions? = null) {
     this.navigate(AppRoutes.Profile.route, navOptions)
@@ -36,9 +41,16 @@ fun NavGraphBuilder.profileGraph(
     composable(route = AppRoutes.Profile.route) {
         ProfileScreen(
             onEditProfileClick = { navController.navigateToEditProfile() },
-            onMyActivityClick = { category -> navController.navigateToMyActivity(category) },
+            onMyActivityClick = { category ->
+                navController.navigateToMyActivity(category)
+            },
             onSettingsClick = onSettingsClick,
-            onLogoutClick = onLogoutClick
+
+            onAboutClick = { navController.navigateToAbout() },
+            onPrivacyPolicyClick = { navController.navigateToPrivacyPolicy() },
+            onHelpSupportClick = { navController.navigateToHelpSupport() },
+            onLogoutClick = onLogoutClick,
+            onNotificationSettingsClick = { navController.navigateToNotificationSettings() }
         )
     }
 

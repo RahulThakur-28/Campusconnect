@@ -8,6 +8,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.rahul.campusconnect.navigation.AppRoutes
+import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostFoundDetails
+import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToReportLostFound
+import com.rahul.campusconnect.presentation.lostfound.screen.LostFoundScreen
 import com.rahul.campusconnect.presentation.notes.screen.NoteDetailsScreen
 import com.rahul.campusconnect.presentation.notes.screen.NotesScreen
 import com.rahul.campusconnect.presentation.notes.screen.UploadNoteScreen
@@ -27,8 +30,11 @@ fun NavController.navigateToUploadNote() {
 fun NavGraphBuilder.notesGraph(
     navController: NavHostController
 ) {
-    composable(AppRoutes.Notes.route) {
+    composable(route = AppRoutes.Notes.route) {
         NotesScreen(
+            onBackClick = {
+                navController.popBackStack()
+            },
             onNoteClick = { noteId ->
                 navController.navigateToNoteDetails(noteId)
             },

@@ -87,7 +87,9 @@ class LostFoundViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+        _uiState.update {
+            it.copy(searchQuery = query)
+        }
         applyFilters()
     }
 
@@ -97,16 +99,25 @@ class LostFoundViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun applyFilters() {
-        val currentState = _uiState.value
-        val filtered = currentState.items.filter { item ->
-            val matchesSearch = item.title.contains(currentState.searchQuery, ignoreCase = true) ||
-                    item.description.contains(currentState.searchQuery, ignoreCase = true)
-            
-            val statusToMatch = if (currentState.selectedTab == LostFoundTab.LOST) "Lost" else "Found"
-            val matchesTab = item.status == statusToMatch
-            
+
+        val state = _uiState.value
+
+        val filtered = state.items.filter { item ->
+
+            val matchesSearch =
+                state.searchQuery.isBlank() ||
+                        item.title.contains(state.searchQuery, ignoreCase = true) ||
+                        item.description.contains(state.searchQuery, ignoreCase = true) ||
+                        item.location.contains(state.searchQuery, ignoreCase = true)
+
+            val matchesTab =
+                item.status.equals(state.selectedTab.name, ignoreCase = true)
+
             matchesSearch && matchesTab
         }
-        _uiState.update { it.copy(filteredItems = filtered) }
+
+        _uiState.update {
+            it.copy(filteredItems = filtered)
+        }
     }
 }

@@ -29,6 +29,9 @@ fun NavGraphBuilder.lostFoundGraph(
 ) {
     composable(route = AppRoutes.LostFound.route) {
         LostFoundScreen(
+            onBackClick = {
+                navController.popBackStack()
+            },
             onItemClick = { itemId ->
                 navController.navigateToLostFoundDetails(itemId)
             },

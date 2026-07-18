@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,22 +28,42 @@ import com.rahul.campusconnect.ui.components.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LostFoundScreen(
+    onBackClick: () -> Unit,
     onItemClick: (String) -> Unit,
     onReportClick: () -> Unit,
     viewModel: LostFoundViewModel = hiltViewModel()
-) {
+){
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Lost & Found", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Lost & Found",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBackClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+
                 actions = {
-                    TextButton(onClick = onReportClick) {
+                    TextButton(
+                        onClick = onReportClick
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Report Items")
+                        Text("Report Item")
                     }
                 }
             )
@@ -54,8 +75,10 @@ fun LostFoundScreen(
                 .padding(padding)
         ) {
             // Search Bar
-            SearchBar(
-                hint = "Search lost or found items...",
+            SearchTextField(
+                value = uiState.searchQuery,
+                onValueChange = viewModel::onSearchQueryChanged,
+                placeholder = "Search lost or found items...",
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 

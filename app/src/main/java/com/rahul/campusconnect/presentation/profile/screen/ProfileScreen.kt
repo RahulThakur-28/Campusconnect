@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.profile.components.SettingsRow
 import com.rahul.campusconnect.presentation.profile.components.StatCard
 import com.rahul.campusconnect.presentation.profile.viewmodel.ProfileViewModel
@@ -35,7 +36,12 @@ fun ProfileScreen(
     onMyActivityClick: (String) -> Unit, // category: Notes, Events, etc.
     onSettingsClick: () -> Unit,
     onLogoutClick: () -> Unit,
-    viewModel: ProfileViewModel = hiltViewModel()
+
+    onPrivacyPolicyClick: () -> Unit,
+    onAboutClick :()->Unit,
+    onHelpSupportClick: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel(),
+    onNotificationSettingsClick:() -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val user = uiState.user
@@ -168,10 +174,12 @@ fun ProfileScreen(
             SettingsRow(
                 icon = Icons.Outlined.Search,
                 title = "My Lost & Found Posts",
-                onClick = { onMyActivityClick("LostFound") }
+                onClick = { onMyActivityClick("Lost & Found") }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+
+
 
             // 4. Account Settings
             SectionHeader(title = "Account Settings", actionText = null)
@@ -188,7 +196,7 @@ fun ProfileScreen(
             SettingsRow(
                 icon = Icons.Outlined.Notifications,
                 title = "Notifications",
-                onClick = { /* TODO */ }
+                onClick =onNotificationSettingsClick
             )
             SettingsRow(
                 icon = Icons.Outlined.Settings,
@@ -203,17 +211,17 @@ fun ProfileScreen(
             SettingsRow(
                 icon = Icons.Outlined.PrivacyTip,
                 title = "Privacy Policy",
-                onClick = { /* TODO */ }
+                onClick = onPrivacyPolicyClick
             )
             SettingsRow(
                 icon = Icons.Outlined.HelpOutline,
                 title = "Help & Support",
-                onClick = { /* TODO */ }
+                onClick =onHelpSupportClick
             )
             SettingsRow(
                 icon = Icons.Outlined.Info,
                 title = "About CampusConnect",
-                onClick = { /* TODO */ }
+                onClick =onAboutClick
             )
 
             Spacer(modifier = Modifier.height(32.dp))

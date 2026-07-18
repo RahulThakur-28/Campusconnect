@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,10 +26,11 @@ import com.rahul.campusconnect.ui.components.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
+    onBackClick: () -> Unit,
     onNoteClick: (String) -> Unit,
     onUploadClick: () -> Unit,
     viewModel: NotesViewModel = hiltViewModel()
-) {
+){
     val uiState by viewModel.uiState.collectAsState()
 
     val semesters = listOf("All", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th")
@@ -37,7 +39,22 @@ fun NotesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Study Notes", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Study Notes",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBackClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -71,8 +88,10 @@ fun NotesScreen(
 
             // Search
             item {
-                SearchBar(
-                    hint = "Search by subject or title..."
+                SearchTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = viewModel::onSearchQueryChanged,
+                    placeholder = "Search by subject or title..."
                 )
             }
 

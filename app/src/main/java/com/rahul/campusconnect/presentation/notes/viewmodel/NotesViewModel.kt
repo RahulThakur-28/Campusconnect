@@ -81,7 +81,9 @@ class NotesViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+        _uiState.update {
+            it.copy(searchQuery = query)
+        }
         applyFilters()
     }
 
@@ -96,15 +98,35 @@ class NotesViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun applyFilters() {
-        val currentState = _uiState.value
-        val filtered = currentState.notes.filter { note ->
-            val matchesSearch = note.title.contains(currentState.searchQuery, ignoreCase = true) ||
-                    note.subject.contains(currentState.searchQuery, ignoreCase = true)
-            val matchesSemester = currentState.selectedSemester == "All" || note.semester == currentState.selectedSemester
-            val matchesDept = currentState.selectedDepartment == "All" || note.department == currentState.selectedDepartment
-            
-            matchesSearch && matchesSemester && matchesDept
+
+        val state = _uiState.value
+
+        val filtered = state.notes.filter { note ->
+
+            val matchesSearch =
+                state.searchQuery.isBlank() ||
+
+                        note.title.contains(state.searchQuery, true) ||
+
+                        note.subject.contains(state.searchQuery, true) ||
+
+                        note.department.contains(state.searchQuery, true)
+
+            val matchesSemester =
+                state.selectedSemester == "All" ||
+                        note.semester == state.selectedSemester
+
+            val matchesDepartment =
+                state.selectedDepartment == "All" ||
+                        note.department == state.selectedDepartment
+
+            matchesSearch &&
+                    matchesSemester &&
+                    matchesDepartment
         }
-        _uiState.update { it.copy(filteredNotes = filtered) }
+
+        _uiState.update {
+            it.copy(filteredNotes = filtered)
+        }
     }
 }

@@ -2,8 +2,8 @@ package com.rahul.campusconnect.presentation.notes.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.Note
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Note
+import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.presentation.notes.state.NotesUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay

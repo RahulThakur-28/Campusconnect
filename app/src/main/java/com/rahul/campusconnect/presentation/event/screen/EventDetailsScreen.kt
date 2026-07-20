@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rahul.campusconnect.model.Event
+import com.rahul.campusconnect.domain.model.Event
 import com.rahul.campusconnect.presentation.event.components.RegisterButton
 
 @OptIn(ExperimentalMaterial3Api::class)

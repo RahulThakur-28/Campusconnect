@@ -2,8 +2,8 @@ package com.rahul.campusconnect.presentation.event.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.Event
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Event
+import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.presentation.event.state.EventsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

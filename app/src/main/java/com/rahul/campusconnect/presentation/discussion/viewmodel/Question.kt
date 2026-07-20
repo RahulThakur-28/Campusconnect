@@ -1,7 +1,7 @@
 package com.rahul.campusconnect.presentation.discussion.viewmodel
 
-import com.rahul.campusconnect.model.DiscussionParentType
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.DiscussionParentType
+import com.rahul.campusconnect.domain.model.UserRole
 
 data class Question(
     val id: String = "",

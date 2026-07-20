@@ -1,7 +1,7 @@
 package com.rahul.campusconnect.presentation.announcement.state
 
-import com.rahul.campusconnect.model.Announcement
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Announcement
+import com.rahul.campusconnect.domain.model.UserRole
 
 data class AnnouncementUiState(
     val announcements: List<Announcement> = emptyList(),

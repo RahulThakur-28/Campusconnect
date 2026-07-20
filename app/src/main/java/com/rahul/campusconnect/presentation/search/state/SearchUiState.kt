@@ -1,6 +1,6 @@
 package com.rahul.campusconnect.presentation.search.state
 
-import com.rahul.campusconnect.model.SearchResult
+import com.rahul.campusconnect.domain.model.SearchResult
 
 data class SearchUiState(
     val query: String = "",

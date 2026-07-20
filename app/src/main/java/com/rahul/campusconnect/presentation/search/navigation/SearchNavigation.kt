@@ -5,7 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.rahul.campusconnect.model.SearchResultType
+import com.rahul.campusconnect.domain.model.SearchResultType
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.announcement.navigation.navigateToAnnouncementDetails
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails

@@ -50,7 +50,11 @@ fun RegisterStepOneScreen(
 
 
     val scrollState = rememberScrollState()
-    val viewModel: RegisterViewModel = hiltViewModel()
+    val parentEntry = remember(navController.currentBackStackEntry) {
+        navController.getBackStackEntry(AppRoutes.RegisterGraph.route)
+    }
+
+    val viewModel: RegisterViewModel = hiltViewModel(parentEntry)
     var nameError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var studentIdError by remember { mutableStateOf<String?>(null) }
@@ -202,7 +206,7 @@ fun RegisterStepOneScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // 5. Bottom Text
-                        BottomLoginText(onLoginClick = { navController.navigate(AppRoutes.RegisterStepTwo.route) })
+                        BottomLoginText(onLoginClick = { navController.navigate(AppRoutes.Login.route) })
 
                         Spacer(modifier = Modifier.height(16.dp))
                     }

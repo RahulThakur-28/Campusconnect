@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rahul.campusconnect.model.Note
+import com.rahul.campusconnect.domain.model.Note
 import java.util.Locale
 
 @Composable

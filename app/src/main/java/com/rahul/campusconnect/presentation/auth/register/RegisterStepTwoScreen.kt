@@ -40,6 +40,7 @@ fun RegisterStepTwoScreen(
     var checked by remember { mutableStateOf(false) }
     val viewModel: RegisterViewModel = hiltViewModel()
     val savedStateHandle = navController.previousBackStackEntry?.savedStateHandle
+    var termsError by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.fullName = savedStateHandle?.get<String>("fullName") ?: ""
@@ -52,7 +53,7 @@ fun RegisterStepTwoScreen(
 
         if (viewModel.registerSuccess) {
 
-            navController.navigate(AppRoutes.Home.route) {
+            navController.navigate(AppRoutes.Login.route) {
 
                 popUpTo(AppRoutes.RegisterStepOne.route) {
                     inclusive = true
@@ -207,6 +208,14 @@ fun RegisterStepTwoScreen(
                     )
 
                 }
+                if (termsError) {
+                    Text(
+                        text = "Please accept the Terms of Service and Privacy Policy.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 48.dp, top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(28.dp))
 
@@ -223,6 +232,14 @@ fun RegisterStepTwoScreen(
                                 viewModel.confirmPassword
                             )
 
+                        // Checkbox validation
+                        if (!checked) {
+                            termsError = true
+                            return@PrimaryButton
+                        }
+
+                        termsError = false
+
                         if (
                             passwordError == null &&
                             confirmPasswordError == null
@@ -233,8 +250,8 @@ fun RegisterStepTwoScreen(
                             Log.d("REGISTER", "StudentId = ${viewModel.studentId}")
                             Log.d("REGISTER", "Department = ${viewModel.department}")
                             Log.d("REGISTER", "Password = ${viewModel.password}")
-                            viewModel.registerUser()
 
+                            viewModel.registerUser()
                         }
                     }
                 )
@@ -254,7 +271,7 @@ fun RegisterStepTwoScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 TextButton(
-                    onClick = { },
+                    onClick = {navController.popBackStack() },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text("← Back")

@@ -2,7 +2,7 @@ package com.rahul.campusconnect.presentation.discussion.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.DiscussionParentType
+import com.rahul.campusconnect.domain.model.DiscussionParentType
 import com.rahul.campusconnect.data.repository.FakeEventQARepository
 import com.rahul.campusconnect.presentation.discussion.state.EventQAUiState
 import dagger.hilt.android.lifecycle.HiltViewModel

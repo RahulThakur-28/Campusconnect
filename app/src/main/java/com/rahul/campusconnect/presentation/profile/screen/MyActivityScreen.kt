@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.presentation.profile.viewmodel.ProfileViewModel
+import com.rahul.campusconnect.presentation.profile.ProfileViewModel
 import com.rahul.campusconnect.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)

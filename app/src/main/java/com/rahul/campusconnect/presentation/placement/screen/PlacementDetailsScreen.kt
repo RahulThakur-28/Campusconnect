@@ -20,8 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.rahul.campusconnect.model.Placement
+import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.ui.components.PrimaryButton
 
 @OptIn(ExperimentalMaterial3Api::class)

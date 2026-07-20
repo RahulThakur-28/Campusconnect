@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
 import kotlinx.coroutines.delay
@@ -39,12 +40,29 @@ fun SplashScreen(
 
         delay(500)
 
-        navController.navigate(AppRoutes.Onboarding.route) {
-            popUpTo(AppRoutes.Splash.route) {
-                inclusive = true
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+
+            navController.navigate(AppRoutes.Main.route) {
+                popUpTo(AppRoutes.Splash.route) {
+                    inclusive = true
+                }
             }
+
+        } else {
+
+            navController.navigate(AppRoutes.Login.route) {
+                popUpTo(AppRoutes.Splash.route) {
+                    inclusive = true
+                }
+            }
+
         }
     }
+
+
+
     // Defining consistent blue gradient colors
     val gradientColors = listOf(
         Color(0xFF2563EB),

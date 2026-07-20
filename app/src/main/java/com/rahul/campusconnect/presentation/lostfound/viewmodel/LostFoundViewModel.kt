@@ -2,7 +2,7 @@ package com.rahul.campusconnect.presentation.lostfound.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.LostFoundItem
+import com.rahul.campusconnect.domain.model.LostFoundItem
 import com.rahul.campusconnect.presentation.lostfound.state.LostFoundTab
 import com.rahul.campusconnect.presentation.lostfound.state.LostFoundUiState
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -8,23 +8,8 @@ import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.presentation.auth.login.LoginScreen
 import com.rahul.campusconnect.presentation.auth.register.RegisterStepOneScreen
 import com.rahul.campusconnect.presentation.auth.register.RegisterStepTwoScreen
-import com.rahul.campusconnect.presentation.event.navigation.eventGraph
-import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
-import com.rahul.campusconnect.presentation.announcement.navigation.announcementGraph
 import com.rahul.campusconnect.presentation.bottomnavigation.MainScreen
-import com.rahul.campusconnect.presentation.event.navigation.navigateToCreateEvent
-import com.rahul.campusconnect.presentation.home.HomeScreen
-import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
-import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostFoundDetails
-import com.rahul.campusconnect.presentation.more.navigation.moreGraph
-import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
-import com.rahul.campusconnect.presentation.notes.navigation.navigateToNoteDetails
 import com.rahul.campusconnect.presentation.onboarding.OnboardingRoute
-import com.rahul.campusconnect.presentation.placement.navigation.navigateToCreatePlacement
-import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
-import com.rahul.campusconnect.presentation.placement.navigation.placementGraph
-import com.rahul.campusconnect.presentation.profile.navigation.profileGraph
-import com.rahul.campusconnect.presentation.settings.navigation.settingsGraph
 import com.rahul.campusconnect.presentation.splash.SplashScreen
 
 @Composable
@@ -36,7 +21,7 @@ fun AppNavGraph() {
         navController = navController,
 
         // Change this back to Splash later
-        startDestination = AppRoutes.Main.route
+        startDestination = AppRoutes.Splash.route
         // startDestination = AppRoutes.Splash.route
     ) {
 

@@ -1,8 +1,7 @@
 package com.rahul.campusconnect.presentation.placement.state
 
-import com.rahul.campusconnect.model.Placement
-import com.rahul.campusconnect.model.UserRole
-import kotlin.coroutines.EmptyCoroutineContext.get
+import com.rahul.campusconnect.domain.model.Placement
+import com.rahul.campusconnect.domain.model.UserRole
 
 data class PlacementsUiState(
     val placements: List<Placement> = emptyList(),

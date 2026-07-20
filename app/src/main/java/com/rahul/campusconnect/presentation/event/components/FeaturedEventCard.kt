@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rahul.campusconnect.model.Event
+import com.rahul.campusconnect.domain.model.Event
 import com.rahul.campusconnect.ui.components.EventCard
 import com.rahul.campusconnect.ui.components.EventCardStyle
 

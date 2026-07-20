@@ -1,6 +1,6 @@
 package com.rahul.campusconnect.presentation.notification.state
 
-import com.rahul.campusconnect.model.Notification
+import com.rahul.campusconnect.domain.model.Notification
 
 data class NotificationUiState(
     val notifications: List<Notification> = emptyList(),

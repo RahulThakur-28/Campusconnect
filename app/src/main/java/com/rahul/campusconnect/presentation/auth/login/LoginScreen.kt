@@ -53,7 +53,7 @@ fun LoginScreen(
 
         if (viewModel.loginSuccess) {
 
-            navController.navigate(AppRoutes.Home.route) {
+            navController.navigate(AppRoutes.Main.route) {
 
                 popUpTo(AppRoutes.Login.route) {
                     inclusive = true
@@ -244,7 +244,7 @@ fun LoginScreen(
                     RegisterText(
 
                             onRegisterClick = {
-                                navController.navigate(AppRoutes.RegisterGraph.route)
+                                navController.navigate(AppRoutes.RegisterStepOne.route)
                             }
 
                     )

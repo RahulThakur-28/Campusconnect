@@ -2,8 +2,7 @@ package com.rahul.campusconnect.presentation.placement.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.Placement
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.presentation.placement.state.PlacementsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay

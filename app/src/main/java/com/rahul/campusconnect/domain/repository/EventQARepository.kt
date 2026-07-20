@@ -1,6 +1,6 @@
 package com.rahul.campusconnect.domain.repository
 
-import com.rahul.campusconnect.model.DiscussionParentType
+import com.rahul.campusconnect.domain.model.DiscussionParentType
 import com.rahul.campusconnect.presentation.discussion.viewmodel.Answer
 import com.rahul.campusconnect.presentation.discussion.viewmodel.Question
 import kotlinx.coroutines.flow.Flow

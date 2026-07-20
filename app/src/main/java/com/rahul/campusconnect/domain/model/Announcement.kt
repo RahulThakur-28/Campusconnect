@@ -1,4 +1,4 @@
-package com.rahul.campusconnect.model
+package com.rahul.campusconnect.domain.model
 
 data class Announcement(
     val id: String = "",

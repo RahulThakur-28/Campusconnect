@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rahul.campusconnect.presentation.discussion.viewmodel.Question
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.UserRole
 
 @Composable
 fun QuestionCard(

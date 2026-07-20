@@ -1,6 +1,5 @@
 package com.rahul.campusconnect.presentation.announcement.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rahul.campusconnect.model.Announcement
+import com.rahul.campusconnect.domain.model.Announcement
 import com.rahul.campusconnect.ui.components.CardImageHeader
 import com.rahul.campusconnect.ui.components.PrimaryButton
 

@@ -1,4 +1,4 @@
-package com.rahul.campusconnect.model
+package com.rahul.campusconnect.domain.model
 
 enum class SearchResultType(val label: String) {
     ANNOUNCEMENT("Announcement"),

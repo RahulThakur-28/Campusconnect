@@ -1,7 +1,7 @@
 package com.rahul.campusconnect.presentation.event.state
 
-import com.rahul.campusconnect.model.Event
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Event
+import com.rahul.campusconnect.domain.model.UserRole
 
 data class EventsUiState(
     val isLoading: Boolean = false,

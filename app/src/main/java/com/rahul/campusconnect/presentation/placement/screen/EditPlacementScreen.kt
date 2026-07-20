@@ -7,7 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import com.rahul.campusconnect.model.Placement
+import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.presentation.placement.components.PlacementForm
 
 @OptIn(ExperimentalMaterial3Api::class)

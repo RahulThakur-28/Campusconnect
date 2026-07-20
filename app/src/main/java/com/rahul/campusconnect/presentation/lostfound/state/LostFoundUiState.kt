@@ -1,6 +1,6 @@
 package com.rahul.campusconnect.presentation.lostfound.state
 
-import com.rahul.campusconnect.model.LostFoundItem
+import com.rahul.campusconnect.domain.model.LostFoundItem
 
 data class LostFoundUiState(
     val items: List<LostFoundItem> = emptyList(),

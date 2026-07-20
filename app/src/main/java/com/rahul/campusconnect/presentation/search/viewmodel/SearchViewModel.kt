@@ -2,8 +2,8 @@ package com.rahul.campusconnect.presentation.search.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.SearchResult
-import com.rahul.campusconnect.model.SearchResultType
+import com.rahul.campusconnect.domain.model.SearchResult
+import com.rahul.campusconnect.domain.model.SearchResultType
 import com.rahul.campusconnect.presentation.search.state.SearchFilter
 import com.rahul.campusconnect.presentation.search.state.SearchUiState
 import dagger.hilt.android.lifecycle.HiltViewModel

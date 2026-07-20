@@ -2,7 +2,9 @@ package com.rahul.campusconnect.di
 
 
 import com.rahul.campusconnect.data.repository.AuthRepositoryImpl
+import com.rahul.campusconnect.data.repository.UserRepositoryImpl
 import com.rahul.campusconnect.domain.repository.AuthRepository
+import com.rahul.campusconnect.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,4 +20,14 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        impl: UserRepositoryImpl
+    ): UserRepository
+
+
+
+
 }

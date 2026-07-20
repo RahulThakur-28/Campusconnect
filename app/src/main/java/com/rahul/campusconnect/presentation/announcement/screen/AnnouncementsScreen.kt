@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.presentation.announcement.viewmodel.AnnouncementViewModel
 import com.rahul.campusconnect.presentation.event.components.CategoryChip
 import com.rahul.campusconnect.ui.components.*

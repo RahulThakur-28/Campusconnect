@@ -2,8 +2,8 @@ package com.rahul.campusconnect.presentation.notification.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.Notification
-import com.rahul.campusconnect.model.NotificationType
+import com.rahul.campusconnect.domain.model.Notification
+import com.rahul.campusconnect.domain.model.NotificationType
 import com.rahul.campusconnect.presentation.notification.state.NotificationFilter
 import com.rahul.campusconnect.presentation.notification.state.NotificationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel

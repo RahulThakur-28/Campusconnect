@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.model.Event
 import com.rahul.campusconnect.presentation.event.viewmodel.EventListType
 import com.rahul.campusconnect.presentation.event.viewmodel.EventsViewModel
 import com.rahul.campusconnect.ui.components.EventCard

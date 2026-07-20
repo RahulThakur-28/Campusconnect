@@ -3,7 +3,6 @@ package com.rahul.campusconnect.presentation.placement.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -11,9 +10,8 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.rahul.campusconnect.model.Placement
+import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.auth.AppTextField
 import java.text.SimpleDateFormat

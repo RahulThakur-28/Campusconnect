@@ -57,6 +57,7 @@ fun NavGraphBuilder.notesGraph(
         )
     }
 
+
     composable(AppRoutes.UploadNote.route) {
         UploadNoteScreen(
             onBackClick = {

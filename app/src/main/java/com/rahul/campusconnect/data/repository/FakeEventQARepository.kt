@@ -1,10 +1,10 @@
 package com.rahul.campusconnect.data.repository
 
 import com.rahul.campusconnect.domain.repository.EventQARepository
-import com.rahul.campusconnect.model.DiscussionParentType
+import com.rahul.campusconnect.domain.model.DiscussionParentType
 import com.rahul.campusconnect.presentation.discussion.viewmodel.Answer
 import com.rahul.campusconnect.presentation.discussion.viewmodel.Question
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.UserRole
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

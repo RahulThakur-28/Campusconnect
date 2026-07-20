@@ -2,8 +2,8 @@ package com.rahul.campusconnect.presentation.announcement.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.model.Announcement
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Announcement
+import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.presentation.announcement.state.AnnouncementUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay

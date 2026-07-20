@@ -1,6 +1,5 @@
 package com.rahul.campusconnect.presentation.profile.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,145 +12,347 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.presentation.profile.viewmodel.ProfileViewModel
+import com.rahul.campusconnect.presentation.profile.ProfileViewModel
+import com.rahul.campusconnect.ui.components.DropdownField
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.auth.AppTextField
+import com.rahul.campusconnect.constant.Constants
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
-    onBackClick: () -> Unit,
-    viewModel: ProfileViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsState()
-    val user = uiState.user
 
-    var name by remember { mutableStateOf(user.name) }
-    var department by remember { mutableStateOf(user.department) }
-    var semester by remember { mutableStateOf(user.semester) }
-    var phoneNumber by remember { mutableStateOf(user.phoneNumber) }
-    var bio by remember { mutableStateOf(user.bio) }
+    onBackClick: () -> Unit,
+
+    viewModel: ProfileViewModel = hiltViewModel()
+
+) {
+
+    val profileState by viewModel.uiState.collectAsState()
+    val editState by viewModel.editProfileState.collectAsState()
+
+    val user = profileState.user
 
     val scrollState = rememberScrollState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit Profile", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+    if (profileState.isLoading) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            CircularProgressIndicator()
+
         }
-    ) { padding ->
+
+        return
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+
+        topBar = {
+
+            TopAppBar(
+
+                title = {
+                    Text(
+                        "Edit Profile",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+
+                navigationIcon = {
+
+                    IconButton(
+                        onClick = onBackClick
+                    ) {
+
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
+
+                    }
+
+                }
+
+            )
+
+        }
+
+    )
+    { padding ->
+
+        LaunchedEffect(editState.isSuccess) {
+
+            if (editState.isSuccess) {
+
+                snackbarHostState.showSnackbar(
+                    message = "Profile updated successfully"
+                )
+
+                onBackClick()
+
+                viewModel.onSuccessConsumed() // success flag reset
+            }
+        }
         Column(
+
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(scrollState)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(20.dp),
+
             horizontalAlignment = Alignment.CenterHorizontally
+
         ) {
-            // Profile Picture Edit
-            Box(contentAlignment = Alignment.BottomEnd) {
+            Box(
+                contentAlignment = Alignment.BottomEnd
+            ) {
+
                 Surface(
+
                     modifier = Modifier.size(120.dp),
+
                     shape = CircleShape,
+
                     color = MaterialTheme.colorScheme.primaryContainer
+
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+
                         Icon(
+
                             imageVector = Icons.Default.CameraAlt,
+
                             contentDescription = null,
-                            modifier = Modifier.size(40.dp),
+
+                            modifier = Modifier.size(42.dp),
+
                             tint = MaterialTheme.colorScheme.primary
+
                         )
+
                     }
+
                 }
+
                 Surface(
+
                     modifier = Modifier
                         .size(36.dp)
-                        .clickable { /* TODO: Pick Image */ },
+                        .clickable {
+
+                            // TODO
+                            // Image Picker
+
+                        },
+
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    tonalElevation = 4.dp
+
+                    color = MaterialTheme.colorScheme.primary
+
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+
                         Icon(
+
                             imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Change Photo",
-                            modifier = Modifier.size(18.dp),
-                            tint = Color.White
+
+                            contentDescription = null,
+
+                            tint = Color.White,
+
+                            modifier = Modifier.size(18.dp)
+
                         )
+
                     }
+
                 }
+
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            AppTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = "Full Name",
-                placeholder = "Enter your name"
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                AppTextField(
-                    value = department,
-                    onValueChange = { department = it },
-                    label = "Department",
-                    placeholder = "e.g. CSE",
-                    modifier = Modifier.weight(1f)
-                )
-                AppTextField(
-                    value = semester,
-                    onValueChange = { semester = it },
-                    label = "Semester",
-                    placeholder = "e.g. 4th",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            AppTextField(
-                value = phoneNumber,
-                onValueChange = { phoneNumber = it },
-                label = "Phone Number",
-                placeholder = "Enter phone number"
-            )
-
-            AppTextField(
-                value = bio,
-                onValueChange = { bio = it },
-                label = "Bio (Optional)",
-                placeholder = "Tell us about yourself",
-                singleLine = false,
-                modifier = Modifier.height(100.dp)
-            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            PrimaryButton(
-                text = "Save Changes",
-                onClick = {
-                    viewModel.updateProfile(name, department, semester, phoneNumber, bio)
-                    onBackClick()
-                }
-            )
-            
-            TextButton(onClick = onBackClick) {
-                Text("Cancel", color = Color.Gray)
-            }
 
+        AppTextField(
+
+            value = editState.fullName,
+
+            onValueChange = viewModel::onFullNameChange,
+
+            label = "Full Name",
+
+            placeholder = "Enter your full name"
+
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AppTextField(
+
+            value = editState.phoneNumber,
+
+            onValueChange = viewModel::onPhoneNumberChange,
+
+            label = "Phone Number",
+
+            placeholder = "Enter phone number"
+
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AppTextField(
+            value = user.email,
+            onValueChange = {},
+            label = "Email",
+            placeholder = "",
+            enabled = false
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AppTextField(
+            value = user.studentId,
+            onValueChange = {},
+            label = "Student ID",
+            placeholder = "",
+            enabled = false
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AppTextField(
+            value = user.collegeId,
+            onValueChange = {},
+            label = "College ID",
+            placeholder = "",
+            enabled = false
+        )
+
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        DropdownField(
+            label = "Branch",
+            selectedItem = editState.branch,
+            items = Constants.BRANCHES,
+            onItemSelected = viewModel::onBranchChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        DropdownField(
+            label = "Year",
+            selectedItem = editState.year,
+            items = Constants.YEARS,
+            onItemSelected = viewModel::onYearChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        DropdownField(
+            label = "Section",
+            selectedItem = editState.section,
+            items = Constants.SECTIONS,
+            onItemSelected = viewModel::onSectionChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AppTextField(
+            value = editState.bio,
+            onValueChange = viewModel::onBioChange,
+            label = "Bio",
+            placeholder = "Tell us something about yourself",
+            singleLine = false,
+            modifier = Modifier.height(120.dp)
+        )
+
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "Role",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.Gray,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = user.role.replace("_", " "),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Verification Status",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.Gray,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = user.verificationStatus,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (user.verificationStatus == Constants.STATUS_VERIFIED)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.error,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Column() {
             Spacer(modifier = Modifier.height(32.dp))
-        }
+
+            PrimaryButton(
+
+                text = if (editState.isSaving) {
+                    "Saving..."
+                } else {
+                    "Save Changes"
+                },
+
+                onClick = {
+
+                    viewModel.saveProfile()
+
+                },
+
+                enabled = !editState.isSaving
+
+            )
+
+            if (editState.isSaving) {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                CircularProgressIndicator()
+
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+
+        }   }
     }
+
 }

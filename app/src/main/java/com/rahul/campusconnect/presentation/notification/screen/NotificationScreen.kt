@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.model.Notification
-import com.rahul.campusconnect.model.NotificationType
+import com.rahul.campusconnect.domain.model.Notification
+import com.rahul.campusconnect.domain.model.NotificationType
 import com.rahul.campusconnect.presentation.notification.components.NotificationFilterChips
 import com.rahul.campusconnect.presentation.notification.components.NotificationItem
 import com.rahul.campusconnect.presentation.notification.state.NotificationFilter

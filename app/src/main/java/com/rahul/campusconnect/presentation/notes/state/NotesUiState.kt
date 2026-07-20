@@ -1,7 +1,7 @@
 package com.rahul.campusconnect.presentation.notes.state
 
-import com.rahul.campusconnect.model.Note
-import com.rahul.campusconnect.model.UserRole
+import com.rahul.campusconnect.domain.model.Note
+import com.rahul.campusconnect.domain.model.UserRole
 
 data class NotesUiState(
     val notes: List<Note> = emptyList(),

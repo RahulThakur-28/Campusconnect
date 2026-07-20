@@ -1,7 +1,11 @@
 package com.rahul.campusconnect.presentation.home
 
 
-import com.rahul.campusconnect.model.*
+import com.rahul.campusconnect.domain.model.Announcement
+import com.rahul.campusconnect.domain.model.Event
+import com.rahul.campusconnect.domain.model.LostFoundItem
+import com.rahul.campusconnect.domain.model.Note
+import com.rahul.campusconnect.domain.model.Placement
 
 fun dummyHomeState() = HomeUiState(
 

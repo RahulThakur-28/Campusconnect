@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.model.DiscussionParentType
+import com.rahul.campusconnect.domain.model.DiscussionParentType
 import com.rahul.campusconnect.presentation.discussion.components.EmptyQuestionState
 import com.rahul.campusconnect.presentation.discussion.components.QuestionCard
 import com.rahul.campusconnect.presentation.discussion.components.QuestionLoadingShimmer

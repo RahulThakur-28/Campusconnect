@@ -20,7 +20,13 @@ import com.rahul.campusconnect.presentation.profile.ProfileViewModel
 import com.rahul.campusconnect.ui.components.DropdownField
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.auth.AppTextField
-import com.rahul.campusconnect.constant.Constants
+import com.rahul.campusconnect.common.constant.Constants
+
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +60,20 @@ fun EditProfileScreen(
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedImageUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+
+        uri?.let {
+            selectedImageUri = it
+            viewModel.uploadProfileImage(it)
+        }
+    }
 
     Scaffold(
         snackbarHost = {
@@ -122,30 +142,35 @@ fun EditProfileScreen(
             ) {
 
                 Surface(
-
                     modifier = Modifier.size(120.dp),
-
                     shape = CircleShape,
-
                     color = MaterialTheme.colorScheme.primaryContainer
-
                 ) {
 
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
+                    if (profileState.user.profileImage.isNotBlank()) {
 
-                        Icon(
-
-                            imageVector = Icons.Default.CameraAlt,
-
-                            contentDescription = null,
-
-                            modifier = Modifier.size(42.dp),
-
-                            tint = MaterialTheme.colorScheme.primary
-
+                        AsyncImage(
+                            model = profileState.user.profileImage,
+                            contentDescription = "Profile Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
+
+                    } else {
+
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(42.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+
+                        }
 
                     }
 
@@ -156,10 +181,7 @@ fun EditProfileScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clickable {
-
-                            // TODO
-                            // Image Picker
-
+                            launcher.launch("image/*")
                         },
 
                     shape = CircleShape,

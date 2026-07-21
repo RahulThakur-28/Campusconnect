@@ -1,4 +1,4 @@
-package com.rahul.campusconnect.constant
+package com.rahul.campusconnect.common.constant
 
 object StorageConstants {
 

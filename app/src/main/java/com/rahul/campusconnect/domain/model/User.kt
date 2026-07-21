@@ -18,7 +18,7 @@ data class User(
     val section: String = "",
 
 // Permissions
-    val role: String = "STUDENT",
+    val role: UserRole = UserRole.STUDENT,
     val verificationStatus: String = "PENDING",
 
 // Status
@@ -28,6 +28,6 @@ data class User(
 // Metadata
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
 
 )

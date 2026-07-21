@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.data.repository
 
+import android.net.Uri
 import com.rahul.campusconnect.data.remote.UserRemoteDataSource
 import com.rahul.campusconnect.domain.model.User
 import com.rahul.campusconnect.domain.repository.UserRepository
@@ -15,5 +16,17 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun updateUser(user: User): Result<Unit> {
         return remoteDataSource.updateUser(user)
+    }
+
+    override suspend fun uploadProfileImage(
+        imageUri: Uri
+    ): Result<String> {
+        return remoteDataSource.uploadProfileImage(imageUri)
+    }
+
+    override suspend fun updateProfileImage(
+        imageUrl: String
+    ): Result<Unit> {
+        return remoteDataSource.updateProfileImage(imageUrl)
     }
 }

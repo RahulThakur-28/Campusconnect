@@ -11,6 +11,7 @@ data class ProfileUiState(
 
     val isLoading: Boolean = false,
     val error: String? = null,
+    val successMessage: String? = null,
 
     val myNotes: List<Note> = emptyList(),
     val myEvents: List<Event> = emptyList(),

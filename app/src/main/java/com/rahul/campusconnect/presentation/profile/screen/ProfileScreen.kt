@@ -21,6 +21,15 @@ import com.rahul.campusconnect.presentation.profile.components.SettingsRow
 import com.rahul.campusconnect.presentation.profile.components.StatCard
 import com.rahul.campusconnect.ui.components.SectionHeader
 
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil.compose.AsyncImage
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -38,7 +47,26 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     val user = uiState.user
+
+    Log.d("PROFILE_DEBUG", "UI URL = ${user.profileImage}")
     val scrollState = rememberScrollState()
+
+    var selectedImageUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+
+        uri?.let {
+            viewModel.uploadProfileImage(it)
+        }
+    }
+
+
+
 
     if (uiState.isLoading) {
         Box(
@@ -49,6 +77,14 @@ fun ProfileScreen(
         }
         return
     }
+
+
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+
+
+
 
     Scaffold(
         topBar = {
@@ -77,17 +113,37 @@ fun ProfileScreen(
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
                     Surface(
-                        modifier = Modifier.size(100.dp),
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clickable {
+                                imagePickerLauncher.launch("image/*")
+                            },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.primary
+
+                        if (user.profileImage.isNotBlank()) {
+
+                            AsyncImage(
+                                model = user.profileImage,
+                                contentDescription = "Profile Image",
+                                modifier = Modifier.fillMaxSize()
                             )
+
+                        } else {
+
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(60.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                     Surface(
@@ -117,6 +173,10 @@ fun ProfileScreen(
                         text = user.fullName,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = user.profileImage,
+                        style = MaterialTheme.typography.bodySmall
                     )
                     if (user.verificationStatus == "VERIFIED") {
                         Spacer(modifier = Modifier.width(6.dp))

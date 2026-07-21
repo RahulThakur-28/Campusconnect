@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.net.Uri
+import android.util.Log
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -29,6 +34,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun getCurrentUser() {
+
 
         viewModelScope.launch {
 
@@ -166,6 +172,154 @@ class ProfileViewModel @Inject constructor(
         )
     }
 
+
+    fun uploadProfileImage(imageUri: Uri) {
+
+        viewModelScope.launch {
+
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null
+                )
+            }
+
+            try {
+
+                // Upload image to Supabase
+                val uploadResult = userRepository.uploadProfileImage(imageUri)
+
+                uploadResult.fold(
+
+                    onSuccess = { imageUrl ->
+
+                        // Save image URL in Firestore
+                        val updateResult =
+                            userRepository.updateProfileImage(imageUrl)
+
+                        updateResult.fold(
+
+                            onSuccess = {
+
+                                Log.d("PROFILE_DEBUG", "Uploaded URL = $imageUrl")
+
+                                val updateResult = userRepository.updateProfileImage(imageUrl)
+
+                                _editProfileState.update {
+                                    it.copy(profileImage = imageUrl)
+                                }
+
+
+                                _uiState.update { state ->
+                                    state.copy(
+                                        user = state.user.copy(
+                                            profileImage = imageUrl
+                                        )
+                                    )
+                                }
+
+                                loadUserProfile(forceRefresh = true)
+
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        successMessage = "Profile image updated successfully."
+                                    )
+                                }
+                            },
+
+                            onFailure = { exception ->
+
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        error = exception.message
+                                            ?: "Failed to update profile image."
+                                    )
+                                }
+                            }
+                        )
+                    },
+
+                    onFailure = { exception ->
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = exception.message
+                                    ?: "Image upload failed."
+                            )
+                        }
+                    }
+                )
+
+            } catch (e: Exception) {
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Something went wrong."
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadUserProfile(forceRefresh: Boolean = false) {
+
+        if (!forceRefresh && _uiState.value.user != null) {
+            return
+        }
+
+        viewModelScope.launch {
+
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null
+                )
+            }
+
+            val result = userRepository.getCurrentUser()
+
+            result.fold(
+
+                onSuccess = { user ->
+
+
+                    Log.d("PROFILE_DEBUG", "loadUserProfile = ${user.profileImage}")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            user = user
+                        )
+                    }
+
+                    _editProfileState.update {
+                        it.copy(
+                            fullName = user.fullName,
+                            phoneNumber = user.phoneNumber,
+                            bio = user.bio,
+                            branch = user.branch,
+                            year = user.year,
+                            section = user.section,
+                            profileImage = user.profileImage
+                        )
+                    }
+                },
+
+                onFailure = { exception ->
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message
+                        )
+                    }
+                }
+            )
+        }
+    }
     fun saveProfile() {
 
         val form = editProfileState.value
@@ -196,7 +350,7 @@ class ProfileViewModel @Inject constructor(
                 branch = form.branch,
                 year = form.year,
                 section = form.section,
-                profileImage = form.profileImage,
+                profileImage = currentUser.profileImage,
                 updatedAt = System.currentTimeMillis()
             )
 

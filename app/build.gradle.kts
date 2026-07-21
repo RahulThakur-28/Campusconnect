@@ -1,3 +1,9 @@
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,13 +30,13 @@ android {
         buildConfigField(
             "String",
             "SUPABASE_URL",
-            "\"${project.findProperty("SUPABASE_URL")}\""
+            "\"${localProperties.getProperty("SUPABASE_URL")}\""
         )
 
         buildConfigField(
             "String",
             "SUPABASE_PUBLISHABLE_KEY",
-            "\"${project.findProperty("SUPABASE_PUBLISHABLE_KEY")}\""
+            "\"${localProperties.getProperty("SUPABASE_PUBLISHABLE_KEY")}\""
         )
     }
 
@@ -99,9 +105,13 @@ dependencies {
 
     implementation("com.google.android.material:material:1.12.0")
 
+    implementation(platform(libs.supabase.bom))
 
-
-    implementation(libs.supabase.storage)
     implementation(libs.supabase.auth)
+    implementation(libs.supabase.storage)
+
     implementation(libs.ktor.client.okhttp)
+
+    implementation(libs.coil.compose)
+
 }

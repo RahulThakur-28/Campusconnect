@@ -19,5 +19,7 @@ data class Event(
     val isFeatured: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val isRegistrationOpen: Boolean = true,
-    val registrationLink: String = ""
+    val registrationLink: String = "",
+    val updatedAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false
 )

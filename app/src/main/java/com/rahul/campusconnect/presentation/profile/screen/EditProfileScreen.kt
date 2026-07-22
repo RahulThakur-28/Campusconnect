@@ -319,11 +319,11 @@ fun EditProfileScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Text(
-            text = user.role.replace("_", " "),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth()
-        )
+            Text(
+                text = user.role.displayName,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth()
+            )
 
         Spacer(modifier = Modifier.height(12.dp))
 

@@ -7,7 +7,7 @@ data class Event(
     val imageUrl: String = "",
     val organizerId: String = "",
     val organizerName: String = "",
-    val organizerRole: String = "",
+    val organizerRole: UserRole = UserRole.STUDENT,
     val venue: String = "",
     val category: String = "",
     val startDate: Long = 0L,

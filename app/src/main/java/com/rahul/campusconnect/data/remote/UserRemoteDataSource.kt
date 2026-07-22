@@ -7,7 +7,7 @@ interface UserRemoteDataSource {
 
     suspend fun getCurrentUser(): User
 
-    suspend fun updateUser(user: User)
+    suspend fun updateUser(user: User): Result<Unit>
 
     suspend fun uploadProfileImage(
         imageUri: Uri

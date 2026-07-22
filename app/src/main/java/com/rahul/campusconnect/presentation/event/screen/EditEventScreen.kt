@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.presentation.event.screen
 
+import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -7,18 +8,35 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.presentation.event.components.EventForm
+import com.rahul.campusconnect.presentation.event.viewmodel.EditEventViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditEventScreen(
     eventId: String,
     onBackClick: () -> Unit,
-    onEventUpdated: () -> Unit
-) {
+    onEventUpdated: () -> Unit,
+    viewModel: EditEventViewModel = hiltViewModel(),
+
+){
 
     // Dummy data for now.
-    // Later load event using eventId from ViewModel / Repository.
+    // Later load event using eventId from ViewModel / Repository
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(eventId) {
+        viewModel.loadEvent(eventId)
+    }
+
+
+
+    var bannerUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
 
     var title by remember {
         mutableStateOf("TechQuest 2024")
@@ -54,6 +72,31 @@ fun EditEventScreen(
     // ------------------------------------------------
     // Validation
     // ------------------------------------------------
+
+    LaunchedEffect(uiState.event) {
+
+        uiState.event?.let { event ->
+
+            title = event.title
+            description = event.description
+            category = event.category
+            date = event.date
+            time = event.time
+            venue = event.venue
+
+        }
+    }
+
+    LaunchedEffect(uiState.isSuccess) {
+
+        if (uiState.isSuccess) {
+
+            onEventUpdated()
+
+            viewModel.clearSuccess()
+        }
+    }
+
 
     val titleError = when {
         !showErrors -> null
@@ -225,7 +268,19 @@ fun EditEventScreen(
 
 
             // Button
+            // Button
             buttonText = "Update Event",
+
+            imageUri = bannerUri,
+            imageUrl = uiState.event?.imageUrl,
+
+            onImageSelected = { uri ->
+                bannerUri = uri
+            },
+
+            onRemoveImage = {
+                bannerUri = null
+            },
 
             onSubmit = {
 
@@ -233,13 +288,25 @@ fun EditEventScreen(
 
                 if (isFormValid) {
 
-                    // Later:
-                    // viewModel.updateEvent(
-                    //     eventId = eventId,
-                    //     ...
-                    // )
+                    uiState.event?.let { currentEvent ->
 
-                    onEventUpdated()
+                        viewModel.updateEvent(
+
+                            event = currentEvent.copy(
+
+                                title = title,
+                                description = description,
+                                category = category,
+                                date = date,
+                                time = time,
+                                venue = venue
+
+                            ),
+
+                            imageUri = bannerUri
+
+                        )
+                    }
                 }
             }
         )

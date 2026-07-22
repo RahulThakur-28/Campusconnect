@@ -2,6 +2,7 @@ package com.rahul.campusconnect.presentation.event.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.domain.repository.EventRepository
 import com.rahul.campusconnect.domain.repository.UserRepository
@@ -17,8 +18,13 @@ import javax.inject.Inject
 @HiltViewModel
 class EventsViewModel @Inject constructor(
     private val eventRepository: EventRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
+
+    private val currentUserId: String?
+        get() = firebaseAuth.currentUser?.uid
+
 
     private val _uiState = MutableStateFlow(EventsUiState())
     val uiState: StateFlow<EventsUiState> = _uiState.asStateFlow()
@@ -35,28 +41,18 @@ class EventsViewModel @Inject constructor(
     }
 
     private fun loadCurrentUser() {
-
         viewModelScope.launch {
-
             userRepository.getCurrentUser()
                 .onSuccess { user ->
-
                     setUserRole(user.role)
-
                 }
                 .onFailure { exception ->
-
                     _uiState.update {
-                        it.copy(
-                            error = exception.message
-                        )
+                        it.copy(error = exception.message)
                     }
-
                 }
-
         }
     }
-
 
     fun loadEvents() {
         viewModelScope.launch {
@@ -107,10 +103,9 @@ class EventsViewModel @Inject constructor(
         }
     }
 
-    fun onRegisterEvent(
-        eventId: String,
-        userId: String
-    ) {
+    fun onRegisterEvent(eventId: String) {
+
+        val userId = currentUserId ?: return
 
         viewModelScope.launch {
 
@@ -136,10 +131,9 @@ class EventsViewModel @Inject constructor(
         }
     }
 
-    fun onUnregisterEvent(
-        eventId: String,
-        userId: String
-    ) {
+    fun onUnregisterEvent(eventId: String) {
+
+        val userId = currentUserId ?: return
 
         viewModelScope.launch {
 

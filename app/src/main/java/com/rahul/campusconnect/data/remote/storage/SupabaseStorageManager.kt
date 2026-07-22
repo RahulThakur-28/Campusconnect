@@ -23,18 +23,23 @@ class SupabaseStorageManager @Inject constructor(
 
         return try {
 
-            Log.d("SUPABASE", "Reading image...")
+            Log.d("SUPABASE_DEBUG", "===================================")
+            Log.d("SUPABASE_DEBUG", "Bucket = $bucket")
+            Log.d("SUPABASE_DEBUG", "Path = $path")
+            Log.d("SUPABASE_DEBUG", "Image Uri = $imageUri")
+            Log.d("SUPABASE_DEBUG", "Reading image...")
 
             val bytes = context.contentResolver
                 .openInputStream(imageUri)
                 ?.use { it.readBytes() }
                 ?: return Result.failure(IOException("Unable to read image"))
 
-            Log.d("SUPABASE", "Bytes = ${bytes.size}")
+            Log.d("SUPABASE_DEBUG", "Bytes = ${bytes.size}")
 
             val storage = supabaseClient.storage.from(bucket)
 
-            Log.d("SUPABASE", "Uploading to $bucket/$path")
+            Log.d("SUPABASE_DEBUG", "Using bucket = $bucket")
+            Log.d("SUPABASE_DEBUG", "Uploading to -> $bucket/$path")
 
             storage.upload(
                 path = path,
@@ -45,13 +50,18 @@ class SupabaseStorageManager @Inject constructor(
 
             val url = storage.publicUrl(path)
 
-            Log.d("SUPABASE", "Success: $url")
+            Log.d("SUPABASE_DEBUG", "Public URL = $url")
+            Log.d("SUPABASE_DEBUG", "===================================")
 
             Result.success(url)
 
         } catch (e: Exception) {
 
-            Log.e("SUPABASE", "Upload failed", e)
+            Log.e("SUPABASE_DEBUG", "===================================")
+            Log.e("SUPABASE_DEBUG", "Bucket = $bucket")
+            Log.e("SUPABASE_DEBUG", "Path = $path")
+            Log.e("SUPABASE_DEBUG", "Exception = ${e.message}", e)
+            Log.e("SUPABASE_DEBUG", "===================================")
 
             Result.failure(e)
         }

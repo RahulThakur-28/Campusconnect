@@ -1,11 +1,12 @@
 package com.rahul.campusconnect.presentation.placement.viewmodel
 
+import PlacementsUiState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.campusconnect.domain.model.Placement
-import com.rahul.campusconnect.presentation.placement.state.PlacementsUiState
+import com.rahul.campusconnect.domain.repository.PlacementRepository
+import com.rahul.campusconnect.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,74 +15,134 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PlacementsViewModel @Inject constructor() : ViewModel() {
+class PlacementsViewModel @Inject constructor(
+    private val placementRepository: PlacementRepository,
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlacementsUiState())
     val uiState: StateFlow<PlacementsUiState> = _uiState.asStateFlow()
 
+    private var allPlacements: List<Placement> = emptyList()
+
     init {
+        loadUserRole()
         loadPlacements()
+    }
+
+    private fun loadUserRole() {
+        viewModelScope.launch {
+            userRepository.getCurrentUser()
+                .onSuccess { user ->
+                    _uiState.update {
+                        it.copy(userRole = user.role)
+                    }
+                }
+        }
     }
 
     fun loadPlacements() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            
-            // Simulating API delay
-            delay(1000)
 
-            val fakePlacements = listOf(
-                Placement(
-                    id = "p1",
-                    companyName = "Google",
-                    role = "Software Engineer",
-                    packageAmount = "45 LPA",
-                    location = "Bangalore",
-                    jobType = "Full-time",
-                    openings = 10,
-                    deadline = "30 Oct 2024",
-                    applyLink = "https://google.com/careers",
-                    logoUrl = "",
-                    eligibility = "7.5 CGPA+",
-                    category = "IT",
-                    description = "Join Google's dynamic engineering team to build scalable systems.",
-                    requiredSkills = listOf("Kotlin", "Java", "System Design"),
-                    applicationProcess = "Online Assessment -> Technical Interview -> HR Interview"
-                ),
-                Placement(
-                    id = "p2",
-                    companyName = "Goldman Sachs",
-                    role = "Analyst",
-                    packageAmount = "32 LPA",
-                    location = "Hyderabad",
-                    jobType = "Full-time",
-                    openings = 5,
-                    deadline = "15 Nov 2024",
-                    applyLink = "https://goldmansachs.com",
-                    logoUrl = "",
-                    eligibility = "8.0 CGPA+",
-                    category = "Finance",
-                    description = "Work in the heart of financial technology and analysis.",
-                    requiredSkills = listOf("Data Analysis", "Python", "SQL"),
-                    applicationProcess = "Resume Screening -> Aptitude Test -> Technical Interview"
-                )
-            )
-
-            _uiState.update { 
+            _uiState.update {
                 it.copy(
-                    isLoading = false,
-                    placements = fakePlacements,
-                    featuredPlacement = fakePlacements.firstOrNull()
-                ) 
+                    isLoading = true,
+                    error = null
+                )
             }
+
+            placementRepository.getPlacements()
+                .onSuccess { placements ->
+
+                    allPlacements = placements
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            placements = placements,
+                            featuredPlacement = placements.firstOrNull(),
+                            activeDrives = placements.count { placement ->
+                                placement.status.equals("Active", true)
+                            },
+                            isEmpty = placements.isEmpty()
+                        )
+                    }
+                }
+
+                .onFailure { exception ->
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message
+                                ?: "Unable to load placements.",
+                            isEmpty = true
+                        )
+                    }
+                }
         }
     }
 
     fun searchPlacements(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+
+        _uiState.update {
+            it.copy(searchQuery = query)
+        }
+
+        applyFilters()
     }
 
     fun filterCategory(category: String) {
-        _uiState.update { it.copy(selectedCategory = category) }
+
+        _uiState.update {
+            it.copy(selectedCategory = category)
+        }
+
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+
+        val state = _uiState.value
+
+        var filtered = allPlacements
+
+        if (state.selectedCategory != "All") {
+            filtered = filtered.filter {
+                it.category.equals(state.selectedCategory, true)
+            }
+        }
+
+        if (state.searchQuery.isNotBlank()) {
+
+            filtered = filtered.filter {
+
+                it.companyName.contains(state.searchQuery, true) ||
+                        it.jobRole.contains(state.searchQuery, true) ||
+                        it.location.contains(state.searchQuery, true)
+            }
+        }
+
+        _uiState.update {
+
+            it.copy(
+                placements = filtered,
+                featuredPlacement = filtered.firstOrNull(),
+                activeDrives = filtered.count { placement ->
+                    placement.status.equals("Active", true)
+                },
+                isEmpty = filtered.isEmpty()
+            )
+        }
+    }
+
+    fun refresh() {
+        loadPlacements()
+    }
+
+    fun clearError() {
+        _uiState.update {
+            it.copy(error = null)
+        }
     }
 }

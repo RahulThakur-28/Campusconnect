@@ -5,7 +5,7 @@ import com.rahul.campusconnect.domain.model.UserRole
 
 data class EventsUiState(
     val isLoading: Boolean = false,
-    val userRole: UserRole = UserRole.ADMIN,
+    val userRole: UserRole = UserRole.STUDENT,
     val events: List<Event> = emptyList(),
     val registeredEventIds: Set<String> = emptySet(),
     val featuredEvent: Event? = null,
@@ -31,5 +31,6 @@ data class EventsUiState(
 
     val canCreateEvent: Boolean
         get() = userRole == UserRole.ADMIN ||
-                userRole == UserRole.VERIFIED_TEACHER
+                userRole == UserRole.VERIFIED_TEACHER ||
+                userRole == UserRole.PLACEMENT_CELL
 }

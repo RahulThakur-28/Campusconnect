@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.presentation.event.components
 
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.rahul.campusconnect.core.imagepicker.CropType
+import com.rahul.campusconnect.core.imagepicker.ImagePicker
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.auth.AppTextField
 import java.text.SimpleDateFormat
@@ -48,9 +51,22 @@ fun EventForm(
     onVenueChange: (String) -> Unit,
     venueError: String? = null,
 
+
     buttonText: String,
-    onSubmit: () -> Unit
-) {
+    isLoading: Boolean = false,
+    onSubmit: () -> Unit,
+
+    imageUrl: String? = null,
+    imageUri: Uri?,
+
+    onImageSelected: (Uri) -> Unit,
+
+    onRemoveImage: () -> Unit,
+
+
+    loadingText: String = "Please wait..."
+
+    ) {
 
     val categories = listOf(
         "Academic",
@@ -85,6 +101,25 @@ fun EventForm(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
+
+        // ----------------- image picker -----------------------------
+
+        ImagePicker(
+
+            imageUri = imageUri,
+
+            cropType = CropType.BANNER,
+
+            title = "Upload Event Banner",
+
+            subtitle = "PNG, JPG",
+
+            onImageSelected = onImageSelected,
+
+            onRemoveImage = onRemoveImage
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // ---------------- Event Title ----------------
 
@@ -282,11 +317,13 @@ fun EventForm(
 
 
         // ---------------- Publish Button ----------------
-
         PrimaryButton(
-            text = buttonText,
-            onClick = onSubmit
+            text = if (isLoading) loadingText else buttonText,
+            onClick = onSubmit,
+            enabled = !isLoading
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Extra space for keyboard / bottom navigation
         Spacer(modifier = Modifier.height(32.dp))

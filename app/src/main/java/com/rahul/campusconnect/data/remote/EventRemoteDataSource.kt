@@ -20,9 +20,6 @@ interface EventRemoteDataSource {
     /**
      * Creates a new event.
      */
-    suspend fun createEvent(
-        event: Event
-    )
 
     /**
      * Updates an existing event.
@@ -76,6 +73,17 @@ interface EventRemoteDataSource {
     suspend fun unregisterFromEvent(
         eventId: String,
         userId: String
+    )
+
+
+    suspend fun isUserRegistered(
+        eventId: String,
+        userId: String
+    ): Boolean
+
+
+    suspend fun createEvent(
+        event: Event
     )
 
 

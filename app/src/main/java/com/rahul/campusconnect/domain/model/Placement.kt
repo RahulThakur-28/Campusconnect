@@ -1,23 +1,39 @@
 package com.rahul.campusconnect.domain.model
-
 data class Placement(
     val id: String = "",
     val companyName: String = "",
-    val role: String = "",
-    val packageAmount: String = "",
+    val jobRole: String = "",
+    val packageLpa: String = "",
     val location: String = "",
-    val jobType: String = "", // e.g., Full-time, Internship
+    val jobType: String = "",
     val openings: Int = 0,
-    val deadline: String = "",
+
+    val deadline: Long = 0L,
+
     val applyLink: String = "",
     val logoUrl: String = "",
+
     val eligibility: String = "",
-    val category: String = "All", // e.g., IT, Finance, Core, Startup
+    val category: String = "All",
+
     val description: String = "",
-    val mode : String ="",
-    val  batch : String  = "",
+
+    val mode: String = "",
+    val batch: String = "",
+
     val requiredSkills: List<String> = emptyList(),
+
     val applicationProcess: String = "",
-    val status: String = "Active", // Active, Closed
-    val postedAt: Long = System.currentTimeMillis()
+
+    val status: String = "Active",
+
+    val postedAt: Long = 0L,
+    val updatedAt: Long = 0L,
+
+    val createdBy: String = "",
+    val createdByName: String = "",
+    val createdByRole: String = "",
+    val collegeId: String = "",
+
+    val isDeleted: Boolean = false
 )

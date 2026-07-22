@@ -16,11 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.rahul.campusconnect.domain.model.Event
 
 enum class EventCardStyle {
@@ -64,10 +66,11 @@ fun EventCard(
         modifier = cardModifier.clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
+            defaultElevation = 10.dp,
+            pressedElevation = 14.dp
         )
     ) {
         Column {
@@ -82,8 +85,47 @@ fun EventCard(
                         )
                     )
             ) {
-                // TODO: Replace with AsyncImage
-                
+
+                if (event.imageUrl.isNotBlank()) {
+
+                    AsyncImage(
+                        model = event.imageUrl,
+                        contentDescription = event.title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.45f)
+                                    )
+                                )
+                            )
+                    )
+
+                } else {
+
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0xFF8B5CF6),
+                                        Color(0xFF6366F1)
+                                    )
+                                )
+                            )
+                    )
+
+                }
                 if (showCategory) {
                     Surface(
                         modifier = Modifier
@@ -147,7 +189,7 @@ fun EventCard(
                     Text(
                         text = event.description,
                         fontSize = 13.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )

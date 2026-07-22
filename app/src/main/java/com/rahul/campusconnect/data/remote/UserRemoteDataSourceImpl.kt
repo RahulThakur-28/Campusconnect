@@ -35,16 +35,13 @@ class UserRemoteDataSourceImpl @Inject constructor(
             ?: throw IllegalStateException("User not found.")
     }
 
-    override suspend fun updateUser(user: User) {
-
-        usersCollection
-            .document(user.uid)
-            .set(
-                user.copy(
-                    updatedAt = System.currentTimeMillis()
-                )
-            )
-            .await()
+    override suspend fun updateUser(user: User): Result<Unit> {
+        return try {
+            // update logic
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun uploadProfileImage(

@@ -10,39 +10,98 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.rahul.campusconnect.domain.model.Event
 import com.rahul.campusconnect.presentation.event.components.RegisterButton
+import com.rahul.campusconnect.presentation.event.viewmodel.EventDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailsScreen(
+
     eventId: String,
+
     onBackClick: () -> Unit,
-    onViewDiscussionClick: () -> Unit
-) {
+
+    onViewDiscussionClick: () -> Unit,
+
+    viewModel: EventDetailsViewModel = hiltViewModel()
+
+){
     // For demo, using a dummy event. In real app, fetch via ViewModel using eventId
-    val event = Event(
-        id = eventId,
-        title = "TechQuest 2024",
-        description = "Annual coding competition for all engineering students. Showcase your skills and win exciting prizes. The event will cover various programming languages and algorithmic challenges. Teams of 2-3 members are allowed. Registration is mandatory for all participants. Refreshments will be provided to all attendees.",
-        category = "Academic",
-        organizerName = "Coding Club",
-        organizerRole = "Official Club",
-        venue = "Auditorium A",
-        date = "Oct 24, 2024",
-        time = "10:00 AM",
-        registeredCount = 245
-    )
 
     val scrollState = rememberScrollState()
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(eventId) {
+
+        viewModel.loadEvent(eventId)
+
+    }
+
+    val event = uiState.event
+
+    when {
+
+        uiState.isLoading -> {
+
+            Box(
+                Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+
+                CircularProgressIndicator()
+
+            }
+
+            return
+        }
+
+        uiState.error != null -> {
+
+            Box(
+                Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Text(uiState.error!!)
+
+            }
+
+            return
+        }
+
+        event == null -> {
+
+            Box(
+                Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Text("Event not found")
+
+            }
+
+            return
+        }
+
+    }
+
+
 
     Scaffold(
         bottomBar = {
@@ -53,8 +112,23 @@ fun EventDetailsScreen(
             ) {
                 Box(modifier = Modifier.padding(16.dp)) {
                     RegisterButton(
-                        isRegistered = false, // State from ViewModel
-                        onClick = { /* TODO */ }
+
+                        isRegistered = uiState.isRegistered,
+
+                        onClick = {
+
+                            if (uiState.isRegistered) {
+
+                                viewModel.unregisterFromEvent()
+
+                            } else {
+
+                                viewModel.registerForEvent()
+
+                            }
+
+                        }
+
                     )
                 }
             }
@@ -71,20 +145,43 @@ fun EventDetailsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFF8B5CF6), Color(0xFF6366F1))
-                        )
-                    )
             ) {
+                AsyncImage(
+                    model = event.imageUrl,
+                    contentDescription = event.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                // Gradient overlay for better text visibility
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.5f)
+                                )
+                            )
+                        )
+                )
+
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier
                         .padding(16.dp)
                         .align(Alignment.TopStart)
-                        .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                        .background(
+                            Color.Black.copy(alpha = 0.4f),
+                            CircleShape
+                        )
                 ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
                 }
             }
 
@@ -132,7 +229,7 @@ fun EventDetailsScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(text = event.organizerName, fontWeight = FontWeight.Bold)
-                        Text(text = event.organizerRole, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text(text = event.organizerRole.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
                 }
 
@@ -188,7 +285,7 @@ fun EventDetailsScreen(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

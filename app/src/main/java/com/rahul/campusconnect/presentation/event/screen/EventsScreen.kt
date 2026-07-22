@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.domain.model.Event
 import com.rahul.campusconnect.presentation.event.components.*
 import com.rahul.campusconnect.presentation.event.viewmodel.EventsViewModel
@@ -33,8 +34,7 @@ fun EventsScreen(
     viewModel: EventsViewModel = hiltViewModel(),
             onUpcomingEventsClick: () -> Unit,
 onPastEventsClick: () -> Unit,
-) {
-    val uiState by viewModel.uiState.collectAsState()
+) {val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val filteredEvents = uiState.events.filter { event ->
 
         val query = uiState.searchQuery.trim()

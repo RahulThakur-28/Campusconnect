@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.presentation.event.components.CategoryChip
 import com.rahul.campusconnect.presentation.placement.components.PlacementCard
 import com.rahul.campusconnect.presentation.placement.viewmodel.PlacementsViewModel
@@ -32,17 +33,9 @@ fun PlacementsScreen(
 
     viewModel: PlacementsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val filteredPlacements = uiState.placements.filter { placement ->
 
-        val query = uiState.searchQuery.trim()
-
-        query.isBlank() ||
-                placement.companyName.contains(query, ignoreCase = true) ||
-                placement.role.contains(query, ignoreCase = true) ||
-                placement.location.contains(query, ignoreCase = true)
-    }
 
 
     Scaffold(
@@ -136,7 +129,10 @@ fun PlacementsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
-                    items(uiState.categories) { category ->
+                    items(
+                        items = uiState.categories,
+                        key = { it }
+                    ) { category ->
                         CategoryChip(
                             category = category,
                             isSelected = uiState.selectedCategory == category,
@@ -147,20 +143,40 @@ fun PlacementsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (uiState.isLoading) {
+            if (uiState.error != null) {
+                item {
+                    EmptyState(
+                        message = uiState.error!!,
+                        buttonText = "Retry",
+                        onButtonClick = {
+                            viewModel.refresh()
+                        }
+                    )
+                }
+            }
+            else if (uiState.isLoading) {
                 // TODO: Add Loading Shimmer
                 item { Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
-            } else if (uiState.placements.isEmpty()) {
+            } else if (uiState.isEmpty) {
                 item { EmptyState(message = "No placement drives found") }
             } else {
                 item {
                     SectionHeader(title = "Ongoing Drives", actionText = null)
                 }
-                items(filteredPlacements) { placement ->
+                items(
+                    items = uiState.placements,
+                    key = { it.id }
+                ) { placement ->
+
                     PlacementCard(
                         placement = placement,
-                        onClick = { onPlacementClick(placement.id) },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        onClick = {
+                            onPlacementClick(placement.id)
+                        },
+                        modifier = Modifier.padding(
+                            horizontal = 16.dp,
+                            vertical = 8.dp
+                        )
                     )
                 }
             }

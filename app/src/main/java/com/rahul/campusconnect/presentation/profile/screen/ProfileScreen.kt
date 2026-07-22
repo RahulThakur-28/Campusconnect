@@ -190,7 +190,7 @@ fun ProfileScreen(
                 }
 
                 Text(
-                    text = "${user.role.replace("_", " ")} • ${user.branch}",
+                    text = "${user.role.displayName} • ${user.branch}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )

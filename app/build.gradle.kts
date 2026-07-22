@@ -114,4 +114,7 @@ dependencies {
 
     implementation(libs.coil.compose)
 
+    // for the image picker
+    implementation("com.vanniktech:android-image-cropper:4.6.0")
+
 }

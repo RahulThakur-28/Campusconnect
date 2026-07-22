@@ -2,6 +2,7 @@ package com.rahul.campusconnect.data.remote
 
 
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -182,9 +183,12 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun uploadEventImage(
         imageUri: Uri
-    ):  Result<String> {
+    ): Result<String> {
 
         val path = "${StorageConstants.EVENTS}/${UUID.randomUUID()}.jpg"
+
+        Log.e("EVENT_DEBUG", "MEDIA_BUCKET = ${StorageConstants.MEDIA_BUCKET}")
+        Log.e("EVENT_DEBUG", "PATH = $path")
 
         return storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
@@ -210,26 +214,45 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
             val eventSnapshot = transaction.get(eventRef)
 
+            // Event exists
             if (!eventSnapshot.exists()) {
-                throw Exception("Event not found.")
+                throw IllegalStateException("Event not found.")
             }
 
-            val alreadyRegistered = transaction.get(registrationRef)
+            // Event deleted
+            val isDeleted =
+                eventSnapshot.getBoolean(Constants.IS_DELETED) ?: false
 
-            if (alreadyRegistered.exists()) {
-                throw Exception("User already registered.")
+            if (isDeleted) {
+                throw IllegalStateException("This event is no longer available.")
+            }
+
+            // Registration open
+            val isRegistrationOpen =
+                eventSnapshot.getBoolean(Constants.IS_REGISTRATION_OPEN) ?: true
+
+            if (!isRegistrationOpen) {
+                throw IllegalStateException("Registration is closed.")
+            }
+
+            // Already registered
+            if (transaction.get(registrationRef).exists()) {
+                throw IllegalStateException("You are already registered.")
             }
 
             val registeredCount =
                 eventSnapshot.getLong(Constants.REGISTERED_COUNT)?.toInt() ?: 0
 
             val maxParticipants =
-                eventSnapshot.getLong("maxParticipants")?.toInt() ?: Int.MAX_VALUE
+                eventSnapshot.getLong(Constants.MAX_PARTICIPANTS)?.toInt()
+                    ?: Int.MAX_VALUE
 
+            // Capacity check
             if (registeredCount >= maxParticipants) {
-                throw Exception("Event is full.")
+                throw IllegalStateException("Event is full.")
             }
 
+            // Create registration document
             transaction.set(
                 registrationRef,
                 mapOf(
@@ -238,6 +261,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
                 )
             )
 
+            // Increment participant count
             transaction.update(
                 eventRef,
                 Constants.REGISTERED_COUNT,
@@ -247,7 +271,6 @@ class EventRemoteDataSourceImpl @Inject constructor(
             null
         }.await()
     }
-
     override suspend fun unregisterFromEvent(
         eventId: String,
         userId: String
@@ -284,6 +307,22 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
             null
         }.await()
+    }
+
+
+    override suspend fun isUserRegistered(
+        eventId: String,
+        userId: String
+    ): Boolean {
+
+        val snapshot = eventsCollection()
+            .document(eventId)
+            .collection(Constants.REGISTRATIONS)
+            .document(userId)
+            .get()
+            .await()
+
+        return snapshot.exists()
     }
 
 }

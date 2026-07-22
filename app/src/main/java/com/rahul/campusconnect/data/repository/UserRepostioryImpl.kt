@@ -11,7 +11,12 @@ class UserRepositoryImpl @Inject constructor(
 ) : UserRepository {
 
     override suspend fun getCurrentUser(): Result<User> {
-        return remoteDataSource.getCurrentUser()
+        return try {
+            val user = remoteDataSource.getCurrentUser()
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun updateUser(user: User): Result<Unit> {
@@ -24,9 +29,13 @@ class UserRepositoryImpl @Inject constructor(
         return remoteDataSource.uploadProfileImage(imageUri)
     }
 
-    override suspend fun updateProfileImage(
-        imageUrl: String
-    ): Result<Unit> {
-        return remoteDataSource.updateProfileImage(imageUrl)
+    override  suspend fun updateProfileImage(imageUrl: String): Result<Unit> {
+        return try {
+            // update profile image logic
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

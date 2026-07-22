@@ -90,12 +90,15 @@ object Constants {
     const val START_DATE = "startDate"
     const val IS_FEATURED = "isFeatured"
     const val ORGANIZER_ID = "organizerId"
-    const val REGISTERED_COUNT = "registeredCount"
-
-
-    const val REGISTRATIONS = "registrations"
 
     const val USER_ID = "userId"
-    const val REGISTERED_AT = "registeredAt"
+
+
+    const val IS_REGISTRATION_OPEN = "isRegistrationOpen"
     const val MAX_PARTICIPANTS = "maxParticipants"
+    const val REGISTERED_COUNT = "registeredCount"
+    const val REGISTRATIONS = "registrations"
+    const val REGISTERED_AT = "registeredAt"
+
+
 }

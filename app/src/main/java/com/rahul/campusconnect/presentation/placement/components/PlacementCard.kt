@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rahul.campusconnect.domain.model.Placement
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun PlacementCard(
@@ -25,6 +28,11 @@ fun PlacementCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val formattedDeadline = remember(placement.deadline) {
+        if (placement.deadline > 0) dateFormatter.format(Date(placement.deadline)) else "N/A"
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -72,7 +80,7 @@ fun PlacementCard(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = placement.role,
+                            text = placement.jobRole,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -109,7 +117,7 @@ fun PlacementCard(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "•  ${placement.packageAmount}",
+                        text = "•  ${placement.packageLpa}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2E7D32)
@@ -132,7 +140,7 @@ fun PlacementCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Deadline: ${placement.deadline}",
+                            text = "Deadline: $formattedDeadline",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error
                         )

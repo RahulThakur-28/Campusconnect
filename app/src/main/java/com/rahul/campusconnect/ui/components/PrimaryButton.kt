@@ -20,7 +20,8 @@ fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    isLoading: Boolean = false
 ) {
     Button(
         onClick = onClick,
@@ -33,7 +34,7 @@ fun PrimaryButton(
             disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
         ),
         contentPadding = PaddingValues(0.dp),
-        enabled = enabled
+        enabled = enabled && !isLoading
     ) {
         Box(
             modifier = Modifier
@@ -54,12 +55,24 @@ fun PrimaryButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = text,
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            if (isLoading) {
+
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.White
+                )
+
+            } else {
+
+                Text(
+                    text = text,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+            }
         }
     }
 }

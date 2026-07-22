@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.presentation.event.screen
 
+import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -8,7 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.presentation.event.components.EventForm
+import com.rahul.campusconnect.presentation.event.viewmodel.CreateEventViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,8 +22,17 @@ fun CreateEventScreen(
 
 ) {
 
+    val viewModel: CreateEventViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+
+    var bannerUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
 
     var title by remember { mutableStateOf("") }
 
@@ -146,6 +159,38 @@ fun CreateEventScreen(
     // UI
     // ========================================================
 
+
+    LaunchedEffect(uiState.isSuccess) {
+
+        if (uiState.isSuccess) {
+
+            title = ""
+            description = ""
+            category = ""
+            date = ""
+            time = ""
+            venue = ""
+            bannerUri = null
+
+            snackbarHostState.showSnackbar("Event created successfully")
+
+            viewModel.clearSuccess()
+
+            onEventCreated()
+        }
+    }
+
+    LaunchedEffect(uiState.error) {
+
+        uiState.error?.let { message ->
+
+            snackbarHostState.showSnackbar(message)
+
+            viewModel.clearError()
+
+        }
+    }
+
     Scaffold(
 
         snackbarHost = {
@@ -193,11 +238,25 @@ fun CreateEventScreen(
 
     ) { padding ->
 
+
         EventForm(
 
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            imageUrl = null,
+
+            imageUri = bannerUri,
+
+            onImageSelected = {
+                bannerUri = it
+            },
+
+            onRemoveImage = {
+                bannerUri = null
+            },
+
+
 
             // Title
             title = title,
@@ -266,11 +325,15 @@ fun CreateEventScreen(
                 showErrors = true
 
                 if (isFormValid) {
-
-                    // Later:
-                    // viewModel.createEvent(...)
-
-                    onEventCreated()
+                    viewModel.createEvent(
+                        title = title,
+                        description = description,
+                        category = category,
+                        date = date,
+                        time = time,
+                        venue = venue,
+                        imageUri = bannerUri
+                    )
                 }
             }
         )

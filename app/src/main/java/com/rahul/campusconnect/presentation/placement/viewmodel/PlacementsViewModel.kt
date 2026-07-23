@@ -1,11 +1,12 @@
 package com.rahul.campusconnect.presentation.placement.viewmodel
 
-import PlacementsUiState
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.domain.repository.PlacementRepository
 import com.rahul.campusconnect.domain.repository.UserRepository
+import com.rahul.campusconnect.presentation.placement.state.PlacementsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,26 +58,17 @@ class PlacementsViewModel @Inject constructor(
                     allPlacements = placements
 
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            placements = placements,
-                            featuredPlacement = placements.firstOrNull(),
-                            activeDrives = placements.count { placement ->
-                                placement.status.equals("Active", true)
-                            },
-                            isEmpty = placements.isEmpty()
-                        )
+                        it.copy(isLoading = false)
                     }
-                }
 
+                    applyFilters()
+                }
                 .onFailure { exception ->
 
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = exception.message
-                                ?: "Unable to load placements.",
-                            isEmpty = true
+                            error = exception.message ?: "Unable to load placements."
                         )
                     }
                 }
@@ -84,20 +76,16 @@ class PlacementsViewModel @Inject constructor(
     }
 
     fun searchPlacements(query: String) {
-
         _uiState.update {
             it.copy(searchQuery = query)
         }
-
         applyFilters()
     }
 
     fun filterCategory(category: String) {
-
         _uiState.update {
             it.copy(selectedCategory = category)
         }
-
         applyFilters()
     }
 
@@ -114,9 +102,7 @@ class PlacementsViewModel @Inject constructor(
         }
 
         if (state.searchQuery.isNotBlank()) {
-
             filtered = filtered.filter {
-
                 it.companyName.contains(state.searchQuery, true) ||
                         it.jobRole.contains(state.searchQuery, true) ||
                         it.location.contains(state.searchQuery, true)
@@ -124,15 +110,19 @@ class PlacementsViewModel @Inject constructor(
         }
 
         _uiState.update {
-
             it.copy(
                 placements = filtered,
                 featuredPlacement = filtered.firstOrNull(),
-                activeDrives = filtered.count { placement ->
-                    placement.status.equals("Active", true)
-                },
-                isEmpty = filtered.isEmpty()
+                activeDrives = calculateActiveDrives(filtered)
             )
+        }
+    }
+
+    private fun calculateActiveDrives(
+        placements: List<Placement>
+    ): Int {
+        return placements.count {
+            it.status.equals("Active", true)
         }
     }
 

@@ -21,6 +21,7 @@ import com.rahul.campusconnect.presentation.notes.navigation.navigateToNoteDetai
 import com.rahul.campusconnect.presentation.notes.navigation.notesGraph
 import com.rahul.campusconnect.presentation.notification.navigation.notificationGraph
 import com.rahul.campusconnect.presentation.placement.navigation.navigateToCreatePlacement
+import com.rahul.campusconnect.presentation.placement.navigation.navigateToEditPlacement
 import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
 import com.rahul.campusconnect.presentation.placement.navigation.placementGraph
 import com.rahul.campusconnect.presentation.profile.navigation.profileGraph
@@ -96,6 +97,10 @@ fun MainNavigation(
                 navController.navigateToPlacementDetails(placementId)
             },
 
+            onEditPlacementClick = { placementId ->
+                navController.navigateToEditPlacement(placementId)
+            },
+
             onViewDiscussionClick = {
                 // TODO: Navigate to Placement Discussion
             },
@@ -112,7 +117,6 @@ fun MainNavigation(
                 navController.popBackStack()
             }
         )
-
 
         // ---------------- Announcements ----------------
 

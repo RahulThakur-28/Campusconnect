@@ -6,6 +6,10 @@ interface PlacementRepository {
 
     suspend fun getPlacements(): Result<List<Placement>>
 
+
+
+    suspend fun generatePlacementId(): String
+
     suspend fun getPlacementById(
         placementId: String
     ): Result<Placement?>
@@ -21,4 +25,16 @@ interface PlacementRepository {
     suspend fun deletePlacement(
         placementId: String
     ): Result<Unit>
+
+    suspend fun getPlacementsByCategory(
+        category: String
+    ): Result<List<Placement>>
+
+    suspend fun searchPlacements(
+        query: String
+    ): Result<List<Placement>>
+
+    suspend fun getMyPlacements(
+        userId: String
+    ): Result<List<Placement>>
 }

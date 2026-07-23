@@ -3,7 +3,6 @@ package com.rahul.campusconnect.data.remote
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
 import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.common.constant.StorageConstants
 import com.rahul.campusconnect.data.remote.storage.StorageManager

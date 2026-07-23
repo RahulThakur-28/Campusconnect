@@ -33,6 +33,7 @@ fun NavController.navigateToEditPlacement(placementId: String) {
 fun NavGraphBuilder.placementGraph(
     onBackClick: () -> Unit,
     onPlacementClick: (String) -> Unit,
+    onEditPlacementClick: (String) -> Unit,
     onViewDiscussionClick: (String) -> Unit,
     onCreatePlacementClick: () -> Unit,
     onPlacementUpdated: () -> Unit,
@@ -50,7 +51,10 @@ fun NavGraphBuilder.placementGraph(
         PlacementDetailsScreen(
             placementId = placementId,
             onBackClick = onBackClick,
-            onViewDiscussionClick = { onViewDiscussionClick(placementId) }
+            onViewDiscussionClick = {
+                onViewDiscussionClick(placementId)
+            },
+            onEditClick = onEditPlacementClick
         )
     }
 

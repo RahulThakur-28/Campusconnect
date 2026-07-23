@@ -18,8 +18,21 @@ interface PlacementRemoteDataSource {
         placement: Placement
     ): Result<Unit>
 
+    fun generatePlacementId(): String
+
     suspend fun deletePlacement(
         placementId: String
     ): Result<Unit>
 
+    suspend fun getPlacementsByCategory(
+        category: String
+    ): Result<List<Placement>>
+
+    suspend fun searchPlacements(
+        query: String
+    ): Result<List<Placement>>
+
+    suspend fun getMyPlacements(
+        userId: String
+    ): Result<List<Placement>>
 }

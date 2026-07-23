@@ -19,6 +19,7 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getPlacements(): Result<List<Placement>> {
         return try {
+
             val snapshot = placementsRef
                 .whereEqualTo("isDeleted", false)
                 .orderBy("postedAt", Query.Direction.DESCENDING)
@@ -65,9 +66,13 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
         return try {
 
             val document = placementsRef.document()
+            val currentTime = System.currentTimeMillis()
 
             val placementWithId = placement.copy(
-                id = document.id
+                id = document.id,
+                postedAt = currentTime,
+                updatedAt = currentTime,
+                isDeleted = false
             )
 
             document.set(placementWithId).await()
@@ -85,9 +90,13 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
 
         return try {
 
+            val updatedPlacement = placement.copy(
+                updatedAt = System.currentTimeMillis()
+            )
+
             placementsRef
-                .document(placement.id)
-                .set(placement)
+                .document(updatedPlacement.id)
+                .set(updatedPlacement)
                 .await()
 
             Result.success(Unit)
@@ -105,10 +114,95 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
 
             placementsRef
                 .document(placementId)
-                .update("isDeleted", true)
+                .update(
+                    mapOf(
+                        "isDeleted" to true,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+                )
                 .await()
 
             Result.success(Unit)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getPlacementsByCategory(
+        category: String
+    ): Result<List<Placement>> {
+
+        return try {
+
+            val snapshot = placementsRef
+                .whereEqualTo("isDeleted", false)
+                .whereEqualTo("category", category)
+                .orderBy("postedAt", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            val placements = snapshot.documents.mapNotNull {
+                it.toObject(Placement::class.java)?.copy(id = it.id)
+            }
+
+            Result.success(placements)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun generatePlacementId(): String {
+        return firestore
+            .collection("placements")
+            .document()
+            .id
+    }
+
+    override suspend fun searchPlacements(
+        query: String
+    ): Result<List<Placement>> {
+
+        return try {
+
+            val snapshot = placementsRef
+                .whereEqualTo("isDeleted", false)
+                .orderBy("companyName")
+                .startAt(query)
+                .endAt(query + "\uf8ff")
+                .get()
+                .await()
+
+            val placements = snapshot.documents.mapNotNull {
+                it.toObject(Placement::class.java)?.copy(id = it.id)
+            }
+
+            Result.success(placements)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getMyPlacements(
+        userId: String
+    ): Result<List<Placement>> {
+
+        return try {
+
+            val snapshot = placementsRef
+                .whereEqualTo("isDeleted", false)
+                .whereEqualTo("createdBy", userId)
+                .orderBy("postedAt", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            val placements = snapshot.documents.mapNotNull {
+                it.toObject(Placement::class.java)?.copy(id = it.id)
+            }
+
+            Result.success(placements)
 
         } catch (e: Exception) {
             Result.failure(e)

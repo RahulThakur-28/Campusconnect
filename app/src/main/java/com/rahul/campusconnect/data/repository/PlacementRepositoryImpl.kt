@@ -36,4 +36,28 @@ class PlacementRepositoryImpl @Inject constructor(
     ): Result<Unit> {
         return remoteDataSource.deletePlacement(placementId)
     }
+
+    override suspend fun getPlacementsByCategory(
+        category: String
+    ): Result<List<Placement>> {
+        return remoteDataSource.getPlacementsByCategory(category)
+    }
+
+    override suspend fun searchPlacements(
+        query: String
+    ): Result<List<Placement>> {
+        return remoteDataSource.searchPlacements(query)
+    }
+
+    override suspend fun getMyPlacements(
+        userId: String
+    ): Result<List<Placement>> {
+        return remoteDataSource.getMyPlacements(userId)
+    }
+
+    override suspend fun generatePlacementId(): String {
+        return remoteDataSource.generatePlacementId()
+    }
+
+
 }

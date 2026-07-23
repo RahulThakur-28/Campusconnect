@@ -146,28 +146,40 @@ fun PlacementsScreen(
             if (uiState.error != null) {
                 item {
                     EmptyState(
-                        message = uiState.error!!,
+                        message = uiState.error.orEmpty(),
                         buttonText = "Retry",
-                        onButtonClick = {
-                            viewModel.refresh()
-                        }
+                        onButtonClick = viewModel::refresh
                     )
                 }
-            }
-            else if (uiState.isLoading) {
-                // TODO: Add Loading Shimmer
-                item { Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
+            } else if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             } else if (uiState.isEmpty) {
-                item { EmptyState(message = "No placement drives found") }
+                item {
+                    EmptyState(
+                        message = "No placement drives found"
+                    )
+                }
             } else {
                 item {
-                    SectionHeader(title = "Ongoing Drives", actionText = null)
+                    SectionHeader(
+                        title = "Ongoing Drives",
+                        actionText = null
+                    )
                 }
+
                 items(
                     items = uiState.placements,
                     key = { it.id }
                 ) { placement ->
-
                     PlacementCard(
                         placement = placement,
                         onClick = {

@@ -1,3 +1,5 @@
+package com.rahul.campusconnect.presentation.placement.state
+
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.domain.model.UserRole
 
@@ -23,8 +25,6 @@ data class PlacementsUiState(
 
     val isRefreshing: Boolean = false,
 
-    val isEmpty: Boolean = false,
-
     val userRole: UserRole = UserRole.STUDENT,
 
     val error: String? = null,
@@ -32,7 +32,11 @@ data class PlacementsUiState(
     val activeDrives: Int = 0,
 
     val season: String = "2025-26"
+
 ) {
+
+    val isEmpty: Boolean
+        get() = !isLoading && placements.isEmpty()
 
     val canCreatePlacement: Boolean
         get() = userRole == UserRole.ADMIN ||

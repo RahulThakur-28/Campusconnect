@@ -23,7 +23,6 @@ data class Placement(
     val batch: String = "",
 
     val requiredSkills: List<String> = emptyList(),
-
     val applicationProcess: String = "",
 
     val status: String = "Active",
@@ -36,5 +35,5 @@ data class Placement(
     val createdByRole: String = "",
     val collegeId: String = "",
 
-    val isDeleted: Boolean = false
+    val deleted: Boolean = false
 )

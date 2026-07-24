@@ -1,5 +1,7 @@
 package com.rahul.campusconnect.common.storage
 
+import com.rahul.campusconnect.common.constant.StorageConstants
+
 object StoragePathGenerator {
 
     fun placementLogo(

@@ -28,6 +28,6 @@ data class User(
 // Metadata
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val isDeleted: Boolean = false,
+    val deleted: Boolean = false,
 
 )

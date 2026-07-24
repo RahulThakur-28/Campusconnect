@@ -84,7 +84,7 @@ object Constants {
     // -------------------------
 // Event Fields
 // -------------------------
-    const val IS_DELETED = "isDeleted"
+    const val DELETED = "deleted"
     const val CREATED_AT = "createdAt"
     const val UPDATED_AT = "updatedAt"
     const val START_DATE = "startDate"

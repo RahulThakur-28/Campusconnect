@@ -84,7 +84,7 @@ class EditEventViewModel @Inject constructor(
 
                 storageManager.uploadImage(
                     bucket = StorageConstants.MEDIA_BUCKET,
-                    path = "${StorageConstants.EVENTS}/event_${System.currentTimeMillis()}.jpg",
+                    path = "${StorageConstants.Folder.EVENTS}/event_${System.currentTimeMillis()}.jpg",
                     imageUri = imageUri
                 )
                     .onSuccess {

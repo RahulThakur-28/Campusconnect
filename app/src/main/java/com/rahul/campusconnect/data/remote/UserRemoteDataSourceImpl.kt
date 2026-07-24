@@ -51,7 +51,7 @@ class UserRemoteDataSourceImpl @Inject constructor(
 
         return storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
-            path = "${StorageConstants.PROFILE}/$fileName",
+            path = "${StorageConstants.Folder.PROFILE}/$fileName",
             imageUri = imageUri
         )
     }

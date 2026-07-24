@@ -89,4 +89,59 @@ class PlacementDetailsViewModel @Inject constructor(
             it.copy(error = null)
         }
     }
+
+    private var isDeleteInProgress = false
+
+    fun deletePlacement() {
+
+        val placementId = _uiState.value.placement?.id ?: return
+
+        if (isDeleteInProgress) return
+
+        isDeleteInProgress = true
+
+        viewModelScope.launch {
+
+            _uiState.update {
+                it.copy(
+                    Deleting = true,
+                    error = null
+                )
+            }
+
+            placementRepository
+                .deletePlacement(placementId)
+                .onSuccess {
+
+                    _uiState.update {
+                        it.copy(
+                            Deleting = false,
+                            Deleted = true
+                        )
+                    }
+
+                }
+                .onFailure { exception ->
+
+                    _uiState.update {
+                        it.copy(
+                            Deleting = false,
+                            error = exception.message
+                                ?: "Failed to delete placement."
+                        )
+                    }
+                }
+
+            isDeleteInProgress = false
+        }
+    }
+
+    fun resetDeleteState() {
+
+        _uiState.update {
+            it.copy(
+                Deleted = false
+            )
+        }
+    }
 }

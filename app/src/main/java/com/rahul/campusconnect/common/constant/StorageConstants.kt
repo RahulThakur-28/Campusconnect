@@ -1,3 +1,6 @@
+package com.rahul.campusconnect.common.constant
+
+
 object StorageConstants {
 
     const val MEDIA_BUCKET = "media"

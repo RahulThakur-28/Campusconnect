@@ -102,7 +102,7 @@ fun PlacementCard(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = placement.role,
+                        text = placement.jobRole,
                         fontSize = 13.sp,
                         color = Color.Gray,
                         maxLines = 1,
@@ -116,7 +116,7 @@ fun PlacementCard(
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = placement.packageAmount,
+                text = placement.packageLpa,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2563EB)

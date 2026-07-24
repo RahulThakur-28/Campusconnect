@@ -13,7 +13,9 @@ data class PlacementDetailsUiState(
 
     val userRole: UserRole = UserRole.STUDENT,
 
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val deleting: Boolean = false,
+    val deleted: Boolean = false
 ) {
 
     val canEdit: Boolean
@@ -22,7 +24,7 @@ data class PlacementDetailsUiState(
 
     val canApply: Boolean
         get() = placement != null &&
-                !placement.isDeleted &&
+                !placement.deleted &&
                 placement.status.equals("Active", true)
 
     val isExpired: Boolean

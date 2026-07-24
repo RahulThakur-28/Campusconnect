@@ -45,7 +45,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
     override suspend fun getAllEvents(): List<Event> {
 
         val snapshot = eventsCollection()
-            .whereEqualTo(Constants.IS_DELETED, false)
+            .whereEqualTo(Constants.DELETED, false)
             .orderBy(Constants.START_DATE)
             .get()
             .await()
@@ -75,7 +75,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
         val snapshot = eventsCollection()
             .whereEqualTo(Constants.IS_FEATURED, true)
-            .whereEqualTo(Constants.IS_DELETED, false)
+            .whereEqualTo(Constants.DELETED, false)
             .orderBy(Constants.START_DATE)
             .get()
             .await()
@@ -92,7 +92,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
                 Constants.START_DATE,
                 System.currentTimeMillis()
             )
-            .whereEqualTo(Constants.IS_DELETED, false)
+            .whereEqualTo(Constants.DELETED, false)
             .orderBy(Constants.START_DATE)
             .get()
             .await()
@@ -125,7 +125,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
                 id = document.id,
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
-                isDeleted = false
+                Deleted = false
             )
         ).await()
     }
@@ -156,7 +156,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
             .document(eventId)
             .update(
                 mapOf(
-                    Constants.IS_DELETED to true,
+                    Constants.DELETED to true,
                     Constants.UPDATED_AT to System.currentTimeMillis()
                 )
             )
@@ -171,7 +171,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
         val snapshot = eventsCollection()
             .whereEqualTo(Constants.ORGANIZER_ID, userId)
-            .whereEqualTo(Constants.IS_DELETED, false)
+            .whereEqualTo(Constants.DELETED, false)
             .orderBy(Constants.CREATED_AT)
             .get()
             .await()
@@ -185,10 +185,11 @@ class EventRemoteDataSourceImpl @Inject constructor(
         imageUri: Uri
     ): Result<String> {
 
-        val path = "${StorageConstants.EVENTS}/${UUID.randomUUID()}.jpg"
+        val fileName = "${UUID.randomUUID()}.jpg"
+        val path = "${StorageConstants.Folder.EVENTS}/$fileName"
 
-        Log.e("EVENT_DEBUG", "MEDIA_BUCKET = ${StorageConstants.MEDIA_BUCKET}")
-        Log.e("EVENT_DEBUG", "PATH = $path")
+        Log.d("EVENT_DEBUG", "Bucket = ${StorageConstants.MEDIA_BUCKET}")
+        Log.d("EVENT_DEBUG", "Path = $path")
 
         return storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
@@ -220,10 +221,10 @@ class EventRemoteDataSourceImpl @Inject constructor(
             }
 
             // Event deleted
-            val isDeleted =
-                eventSnapshot.getBoolean(Constants.IS_DELETED) ?: false
+            val Deleted =
+                eventSnapshot.getBoolean(Constants.DELETED) ?: false
 
-            if (isDeleted) {
+            if (Deleted) {
                 throw IllegalStateException("This event is no longer available.")
             }
 

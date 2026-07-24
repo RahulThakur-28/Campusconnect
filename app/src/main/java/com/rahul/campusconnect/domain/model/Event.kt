@@ -21,5 +21,5 @@ data class Event(
     val isRegistrationOpen: Boolean = true,
     val registrationLink: String = "",
     val updatedAt: Long = System.currentTimeMillis(),
-    val isDeleted: Boolean = false
+    val deleted: Boolean = false
 )

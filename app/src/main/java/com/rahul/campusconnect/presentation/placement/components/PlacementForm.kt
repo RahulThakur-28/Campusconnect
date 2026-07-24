@@ -52,8 +52,7 @@ fun PlacementForm(
     buttonText: String,
 
     modifier: Modifier = Modifier
-)
- {
+) {
 
     // =========================================================
     // FORM STATE
@@ -322,446 +321,453 @@ fun PlacementForm(
                 requiredSkills.isNotBlank()
 
 
-     ImagePicker(
-
-         imageUri = imagePickerState.imageUri,
-
-         imageUrl = imagePickerState.imageUrl,
-
-         cropType = CropType.PROFILE,
-
-         title = "Company Logo",
-
-         subtitle = "Upload company logo",
-
-         onImageSelected = onImageSelected,
-
-         onRemoveImage = onRemoveImage
-     )
-
-     Spacer(modifier = Modifier.height(20.dp))
-    // =====================================================
-    // COMPANY NAME
-    // =====================================================
-
-    AppTextField(
-        value = companyName,
-        onValueChange = {
-            if (it.length <= 100) {
-                companyName = it
-            }
-        },
-        label = "Company Name",
-        placeholder = "e.g. Google, Microsoft, Amazon"
-    )
-
-    ErrorText(companyNameError)
-
-
-    // =====================================================
-    // JOB ROLE
-    // =====================================================
-
-    AppTextField(
-        value = jobRole,
-        onValueChange = {
-            if (it.length <= 100) {
-                jobRole = it
-            }
-        },
-        label = "Job Role",
-        placeholder = "e.g. Software Engineer"
-    )
-
-    ErrorText(jobRoleError)
-
-
-    // =====================================================
-    // PACKAGE / STIPEND
-    // =====================================================
-
-    AppTextField(
-        value = packageLpa,
-        onValueChange = {
-            packageLpa = it
-        },
-        label = "Package / Stipend",
-        placeholder = "e.g. 18 LPA or ₹60,000/month"
-    )
-
-    ErrorText(packageLpaError)
-
-
-    // =====================================================
-    // JOB TYPE
-    // =====================================================
-
-    ExposedDropdownMenuBox(
-        expanded = jobTypeExpanded,
-        onExpandedChange = {
-            jobTypeExpanded = !jobTypeExpanded
-        }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        ImagePicker(
 
-        OutlinedTextField(
-            value = jobType,
-            onValueChange = {},
-            readOnly = true,
-            label = {
-                Text("Job Type")
-            },
-            placeholder = {
-                Text("Select Job Type")
-            },
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = null
-                )
-            },
-            isError = jobTypeError != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            shape = RoundedCornerShape(18.dp)
+            imageUri = imagePickerState.imageUri,
+
+            imageUrl = imagePickerState.imageUrl,
+
+            cropType = CropType.PROFILE,
+
+            title = "Company Logo",
+
+            subtitle = "Upload company logo",
+
+            onImageSelected = onImageSelected,
+
+            onRemoveImage = onRemoveImage
         )
 
-        ExposedDropdownMenu(
-            expanded = jobTypeExpanded,
-            onDismissRequest = {
-                jobTypeExpanded = false
-            }
-        ) {
+        Spacer(modifier = Modifier.height(20.dp))
+        // =====================================================
+        // COMPANY NAME
+        // =====================================================
 
-            jobTypes.forEach { type ->
-
-                DropdownMenuItem(
-                    text = {
-                        Text(type)
-                    },
-                    onClick = {
-
-                        jobType = type
-                        jobTypeExpanded = false
-                    }
-                )
-            }
-        }
-    }
-
-    ErrorText(jobTypeError)
-
-    // =====================================================
-    // LOCATION
-    // =====================================================
-
-    AppTextField(
-        value = location,
-        onValueChange = {
-            location = it
-        },
-        label = "Location",
-        placeholder = "e.g. Bengaluru / Remote / Hybrid"
-    )
-
-    ErrorText(locationError)
-
-
-    // =====================================================
-    // OPENINGS
-    // =====================================================
-
-    AppTextField(
-        value = openings,
-        onValueChange = { newValue ->
-
-            if (newValue.all { it.isDigit() }) {
-                openings = newValue.take(4)
-            }
-        },
-        label = "Number of Openings",
-        placeholder = "e.g. 5"
-    )
-
-    ErrorText(openingsError)
-
-
-    // =====================================================
-    // ELIGIBILITY
-    // =====================================================
-
-    AppTextField(
-        value = eligibility,
-        onValueChange = {
-            eligibility = it
-        },
-        label = "Eligibility Criteria",
-        placeholder = "e.g. CSE/IT, 7.5+ CGPA, No Active Backlogs"
-    )
-
-    ErrorText(eligibilityError)
-
-
-    // =====================================================
-    // APPLICATION DEADLINE
-    // =====================================================
-
-    Text(
-        text = "Application Deadline",
-        style = MaterialTheme.typography.labelLarge
-    )
-
-    OutlinedCard(
-        onClick = {
-            showDatePicker = true
-        },
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp)
-    ) {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Icon(
-                imageVector = Icons.Outlined.CalendarMonth,
-                contentDescription = null
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = if (deadline == 0L) {
-                    "Select application deadline"
-                } else {
-                    SimpleDateFormat(
-                        "dd MMM yyyy",
-                        Locale.getDefault()
-                    ).format(Date(deadline))
+        AppTextField(
+            value = companyName,
+            onValueChange = {
+                if (it.length <= 100) {
+                    companyName = it
                 }
-            )
-        }
-    }
-
-    ErrorText(deadlineError)
-
-    // =====================================================
-    // APPLICATION LINK
-    // =====================================================
-
-    AppTextField(
-        value = applyLink,
-        onValueChange = {
-            applyLink = it.trim()
-        },
-        label = "Application Link",
-        placeholder = "https://company.com/careers/..."
-    )
-
-    ErrorText(applyLinkError)
-
-
-    // =====================================================
-    // JOB DESCRIPTION
-    // =====================================================
-
-    AppTextField(
-        value = description,
-        onValueChange = {
-
-            if (it.length <= 2000) {
-                description = it
-            }
-        },
-        label = "Job Description",
-        placeholder = "Describe the role, responsibilities, eligibility, interview process and other important details...",
-        singleLine = false,
-        modifier = Modifier.height(180.dp)
-    )
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-
-        ErrorText(descriptionError)
-
-        Text(
-            text = "${description.length}/2000",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            label = "Company Name",
+            placeholder = "e.g. Google, Microsoft, Amazon"
         )
-    }
+
+        ErrorText(companyNameError)
 
 
-    // =====================================================
-    // REQUIRED SKILLS
-    // =====================================================
+        // =====================================================
+        // JOB ROLE
+        // =====================================================
 
-    AppTextField(
-        value = requiredSkills,
-        onValueChange = {
-            requiredSkills = it
-        },
-        label = "Required Skills",
-        placeholder = "Java, Kotlin, DSA, SQL, Firebase"
-    )
+        AppTextField(
+            value = jobRole,
+            onValueChange = {
+                if (it.length <= 100) {
+                    jobRole = it
+                }
+            },
+            label = "Job Role",
+            placeholder = "e.g. Software Engineer"
+        )
 
-    ErrorText(requiredSkillsError)
+        ErrorText(jobRoleError)
 
 
-    // =====================================================
-    // SKILLS PREVIEW
-    // =====================================================
+        // =====================================================
+        // PACKAGE / STIPEND
+        // =====================================================
 
-    val skills = remember(requiredSkills) {
-        requiredSkills
-            .split(",")
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .distinct()
-    }
+        AppTextField(
+            value = packageLpa,
+            onValueChange = {
+                packageLpa = it
+            },
+            label = "Package / Stipend",
+            placeholder = "e.g. 18 LPA or ₹60,000/month"
+        )
 
-    if (skills.isNotEmpty()) {
+        ErrorText(packageLpaError)
+
+
+        // =====================================================
+        // JOB TYPE
+        // =====================================================
+
+        ExposedDropdownMenuBox(
+            expanded = jobTypeExpanded,
+            onExpandedChange = {
+                jobTypeExpanded = !jobTypeExpanded
+            }
+        ) {
+
+            OutlinedTextField(
+                value = jobType,
+                onValueChange = {},
+                readOnly = true,
+                label = {
+                    Text("Job Type")
+                },
+                placeholder = {
+                    Text("Select Job Type")
+                },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = null
+                    )
+                },
+                isError = jobTypeError != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                shape = RoundedCornerShape(18.dp)
+            )
+
+            ExposedDropdownMenu(
+                expanded = jobTypeExpanded,
+                onDismissRequest = {
+                    jobTypeExpanded = false
+                }
+            ) {
+
+                jobTypes.forEach { type ->
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(type)
+                        },
+                        onClick = {
+
+                            jobType = type
+                            jobTypeExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        ErrorText(jobTypeError)
+
+        // =====================================================
+        // LOCATION
+        // =====================================================
+
+        AppTextField(
+            value = location,
+            onValueChange = {
+                location = it
+            },
+            label = "Location",
+            placeholder = "e.g. Bengaluru / Remote / Hybrid"
+        )
+
+        ErrorText(locationError)
+
+
+        // =====================================================
+        // OPENINGS
+        // =====================================================
+
+        AppTextField(
+            value = openings,
+            onValueChange = { newValue ->
+
+                if (newValue.all { it.isDigit() }) {
+                    openings = newValue.take(4)
+                }
+            },
+            label = "Number of Openings",
+            placeholder = "e.g. 5"
+        )
+
+        ErrorText(openingsError)
+
+
+        // =====================================================
+        // ELIGIBILITY
+        // =====================================================
+
+        AppTextField(
+            value = eligibility,
+            onValueChange = {
+                eligibility = it
+            },
+            label = "Eligibility Criteria",
+            placeholder = "e.g. CSE/IT, 7.5+ CGPA, No Active Backlogs"
+        )
+
+        ErrorText(eligibilityError)
+
+
+        // =====================================================
+        // APPLICATION DEADLINE
+        // =====================================================
 
         Text(
-            text = "Skills Preview",
+            text = "Application Deadline",
             style = MaterialTheme.typography.labelLarge
         )
 
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        OutlinedCard(
+            onClick = {
+                showDatePicker = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp)
         ) {
 
-            skills.forEach { skill ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
-                SuggestionChip(
-                    onClick = {},
-                    label = {
-                        Text(skill)
+                Icon(
+                    imageVector = Icons.Outlined.CalendarMonth,
+                    contentDescription = null
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = if (deadline == 0L) {
+                        "Select application deadline"
+                    } else {
+                        SimpleDateFormat(
+                            "dd MMM yyyy",
+                            Locale.getDefault()
+                        ).format(Date(deadline))
                     }
                 )
             }
         }
-    }
 
-    Spacer(
-        modifier = Modifier.height(16.dp)
-    )
+        ErrorText(deadlineError)
 
-    // =====================================================
-    // SUBMIT
-    // =====================================================
+        // =====================================================
+        // APPLICATION LINK
+        // =====================================================
 
-    PrimaryButton(
-        text = buttonText,
-        onClick = {
-
-            showErrors = true
-
-            if (isFormValid) {
-
-                val placement = (
-                        initialPlacement ?: Placement()
-                        ).copy(
-
-                        companyName = companyName.trim(),
-
-                        jobRole = jobRole.trim(),
-
-                        packageLpa = packageLpa.trim(),
-
-                        location = location.trim(),
-
-                        jobType = jobType,
-
-                        openings = openings.toIntOrNull() ?: 0,
-
-                        eligibility = eligibility.trim(),
-
-                        deadline = deadline,
-
-                        applyLink = applyLink.trim(),
-
-                        description = description.trim(),
-
-                        requiredSkills = skills
-                    )
-
-                onSubmit(placement)
-            }
-        }
-    )
-
-    Spacer(
-        modifier = Modifier.height(40.dp)
-    )
-
-
-    // =========================================================
-    // DEADLINE DATE PICKER
-    // =========================================================
-
-    if (showDatePicker) {
-
-        val datePickerState = rememberDatePickerState()
-
-        DatePickerDialog(
-
-            onDismissRequest = {
-                showDatePicker = false
+        AppTextField(
+            value = applyLink,
+            onValueChange = {
+                applyLink = it.trim()
             },
+            label = "Application Link",
+            placeholder = "https://company.com/careers/..."
+        )
 
-            confirmButton = {
+        ErrorText(applyLinkError)
 
-                TextButton(
 
-                    onClick = {
+        // =====================================================
+        // JOB DESCRIPTION
+        // =====================================================
 
-                        datePickerState.selectedDateMillis?.let { millis ->
+        AppTextField(
+            value = description,
+            onValueChange = {
 
-                            val formatter = SimpleDateFormat(
-                                "dd MMM yyyy",
-                                Locale.getDefault()
-                            )
-
-                            deadline = millis
-                        }
-
-                        showDatePicker = false
-                    }
-
-                ) {
-                    Text("Select")
+                if (it.length <= 2000) {
+                    description = it
                 }
             },
+            label = "Job Description",
+            placeholder = "Describe the role, responsibilities, eligibility, interview process and other important details...",
+            singleLine = false,
+            modifier = Modifier.height(180.dp)
+        )
 
-            dismissButton = {
-
-                TextButton(
-
-                    onClick = {
-                        showDatePicker = false
-                    }
-
-                ) {
-                    Text("Cancel")
-                }
-            }
-
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            DatePicker(
-                state = datePickerState
+            ErrorText(descriptionError)
+
+            Text(
+                text = "${description.length}/2000",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+
+        // =====================================================
+        // REQUIRED SKILLS
+        // =====================================================
+
+        AppTextField(
+            value = requiredSkills,
+            onValueChange = {
+                requiredSkills = it
+            },
+            label = "Required Skills",
+            placeholder = "Java, Kotlin, DSA, SQL, Firebase"
+        )
+
+        ErrorText(requiredSkillsError)
+
+
+        // =====================================================
+        // SKILLS PREVIEW
+        // =====================================================
+
+        val skills = remember(requiredSkills) {
+            requiredSkills
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+        }
+
+        if (skills.isNotEmpty()) {
+
+            Text(
+                text = "Skills Preview",
+                style = MaterialTheme.typography.labelLarge
+            )
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                skills.forEach { skill ->
+
+                    SuggestionChip(
+                        onClick = {},
+                        label = {
+                            Text(skill)
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
+
+        // =====================================================
+        // SUBMIT
+        // =====================================================
+
+        PrimaryButton(
+            text = buttonText,
+            onClick = {
+
+                showErrors = true
+
+                if (isFormValid) {
+
+                    val placement = (
+                            initialPlacement ?: Placement()
+                            ).copy(
+
+                            companyName = companyName.trim(),
+
+                            jobRole = jobRole.trim(),
+
+                            packageLpa = packageLpa.trim(),
+
+                            location = location.trim(),
+
+                            jobType = jobType,
+
+                            openings = openings.toIntOrNull() ?: 0,
+
+                            eligibility = eligibility.trim(),
+
+                            deadline = deadline,
+
+                            applyLink = applyLink.trim(),
+
+                            description = description.trim(),
+
+                            requiredSkills = skills
+                        )
+
+                    onSubmit(placement)
+                }
+            }
+        )
+
+        Spacer(
+            modifier = Modifier.height(40.dp)
+        )
+
+
+        // =========================================================
+        // DEADLINE DATE PICKER
+        // =========================================================
+
+        if (showDatePicker) {
+
+            val datePickerState = rememberDatePickerState()
+
+            DatePickerDialog(
+
+                onDismissRequest = {
+                    showDatePicker = false
+                },
+
+                confirmButton = {
+
+                    TextButton(
+
+                        onClick = {
+
+                            datePickerState.selectedDateMillis?.let { millis ->
+
+                                val formatter = SimpleDateFormat(
+                                    "dd MMM yyyy",
+                                    Locale.getDefault()
+                                )
+
+                                deadline = millis
+                            }
+
+                            showDatePicker = false
+                        }
+
+                    ) {
+                        Text("Select")
+                    }
+                },
+
+                dismissButton = {
+
+                    TextButton(
+
+                        onClick = {
+                            showDatePicker = false
+                        }
+
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+
+            ) {
+
+                DatePicker(
+                    state = datePickerState
+                )
+            }
         }
     }
 }
-
 
 @Composable
 private fun ErrorText(

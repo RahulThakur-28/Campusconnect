@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.data.remote
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.rahul.campusconnect.domain.model.Placement
@@ -20,11 +21,25 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
     override suspend fun getPlacements(): Result<List<Placement>> {
         return try {
 
+            Log.d("PLACEMENT_QUERY", "Fetching placements...")
+
             val snapshot = placementsRef
-                .whereEqualTo("isDeleted", false)
+                .whereEqualTo("deleted", false)
                 .orderBy("postedAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
+
+            Log.d(
+                "PLACEMENT_QUERY",
+                "Documents found = ${snapshot.size()}"
+            )
+
+            snapshot.documents.forEach {
+                Log.d(
+                    "PLACEMENT_QUERY",
+                    it.data.toString()
+                )
+            }
 
             val placements = snapshot.documents.mapNotNull {
                 it.toObject(Placement::class.java)?.copy(id = it.id)
@@ -33,6 +48,12 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
             Result.success(placements)
 
         } catch (e: Exception) {
+
+            Log.e(
+                "PLACEMENT_QUERY",
+                e.stackTraceToString()
+            )
+
             Result.failure(e)
         }
     }
@@ -72,10 +93,16 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
                 id = document.id,
                 postedAt = currentTime,
                 updatedAt = currentTime,
-                isDeleted = false
+                deleted = false
             )
 
+            Log.d("PLACEMENT_DEBUG", placementWithId.toString())
+            Log.d(
+                "PLACEMENT_CREATE",
+                placementWithId.toString()
+            )
             document.set(placementWithId).await()
+
 
             Result.success(document.id)
 
@@ -116,7 +143,7 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
                 .document(placementId)
                 .update(
                     mapOf(
-                        "isDeleted" to true,
+                        "deleted" to true,
                         "updatedAt" to System.currentTimeMillis()
                     )
                 )
@@ -136,7 +163,7 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
         return try {
 
             val snapshot = placementsRef
-                .whereEqualTo("isDeleted", false)
+                .whereEqualTo("deleted", false)
                 .whereEqualTo("category", category)
                 .orderBy("postedAt", Query.Direction.DESCENDING)
                 .get()
@@ -167,7 +194,7 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
         return try {
 
             val snapshot = placementsRef
-                .whereEqualTo("isDeleted", false)
+                .whereEqualTo("deleted", false)
                 .orderBy("companyName")
                 .startAt(query)
                 .endAt(query + "\uf8ff")
@@ -192,7 +219,7 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
         return try {
 
             val snapshot = placementsRef
-                .whereEqualTo("isDeleted", false)
+                .whereEqualTo("deleted", false)
                 .whereEqualTo("createdBy", userId)
                 .orderBy("postedAt", Query.Direction.DESCENDING)
                 .get()

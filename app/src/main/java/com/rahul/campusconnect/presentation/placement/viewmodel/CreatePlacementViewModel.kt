@@ -3,6 +3,7 @@ package com.rahul.campusconnect.presentation.placement.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rahul.campusconnect.common.constant.StorageConstants
 import com.rahul.campusconnect.common.storage.StoragePathGenerator
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.Placement
@@ -149,7 +150,7 @@ class CreatePlacementViewModel @Inject constructor(
 
                         collegeId = user.collegeId,
 
-                        isDeleted = false
+                        Deleted = false
                     )
 
                 val createResult =

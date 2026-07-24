@@ -25,8 +25,6 @@ fun CreatePlacementScreen(
     var imagePickerState by remember {
         mutableStateOf(ImagePickerState())
     }
-    onPlacementCreated()
-    viewModel.resetSuccessState()
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {

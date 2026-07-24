@@ -1,9 +1,11 @@
 package com.rahul.campusconnect.presentation.placement.viewmodel
 
-
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rahul.campusconnect.common.constant.StorageConstants
+import com.rahul.campusconnect.common.storage.StoragePathGenerator
+import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.domain.repository.PlacementRepository
 import com.rahul.campusconnect.presentation.placement.state.EditPlacementUiState
@@ -17,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditPlacementViewModel @Inject constructor(
-    private val placementRepository: PlacementRepository
+    private val placementRepository: PlacementRepository,
+    private val storageManager: StorageManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditPlacementUiState())
@@ -38,46 +41,40 @@ class EditPlacementViewModel @Inject constructor(
                 )
             }
 
-            val result =
-                placementRepository.getPlacementById(
-                    placementId
-                )
+            placementRepository
+                .getPlacementById(placementId)
+                .onSuccess { placement ->
 
-            result.onSuccess { placement ->
+                    if (placement == null) {
 
-                if (placement == null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = "Placement not found."
+                            )
+                        }
 
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Placement not found."
-                        )
+                    } else {
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                placement = placement,
+                                error = null
+                            )
+                        }
                     }
-
-                } else {
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            placement = placement,
-                            error = null
-                        )
-                    }
-
                 }
-
-            }.onFailure { exception ->
+                .onFailure { exception ->
 
                     _uiState.update {
                         it.copy(
-                            isSubmitting = false,
-                            error = exception.message ?: "Failed to update placement."
+                            isLoading = false,
+                            error = exception.message
+                                ?: "Failed to load placement."
                         )
                     }
-
-
-            }
-
+                }
         }
     }
 
@@ -99,38 +96,88 @@ class EditPlacementViewModel @Inject constructor(
                 )
             }
 
-            val updatedPlacement =
-                placement.copy(
-                    updatedAt = System.currentTimeMillis()
-                )
+            try {
 
-            val result =
-                placementRepository.updatePlacement(
-                    updatedPlacement
-                )
+                var logoUrl = placement.logoUrl
+                var logoStoragePath = placement.logoStoragePath
 
-            result.onSuccess {
+                if (logoUri != null) {
+
+                    logoStoragePath =
+                        StoragePathGenerator.placementLogo(
+                            collegeId = placement.collegeId,
+                            placementId = placement.id
+                        )
+
+                    val uploadResult =
+                        storageManager.uploadImage(
+                            bucket = StorageConstants.MEDIA_BUCKET,
+                            path = logoStoragePath,
+                            imageUri = logoUri
+                        )
+
+                    if (uploadResult.isFailure) {
+
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                error = uploadResult.exceptionOrNull()?.message
+                                    ?: "Failed to upload company logo."
+                            )
+                        }
+
+                        return@launch
+                    }
+
+                    logoUrl = uploadResult.getOrThrow()
+                }
+
+                val updatedPlacement =
+                    placement.copy(
+                        logoUrl = logoUrl,
+                        logoStoragePath = logoStoragePath,
+                        updatedAt = System.currentTimeMillis()
+                    )
+
+                placementRepository
+                    .updatePlacement(updatedPlacement)
+                    .onSuccess {
+
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                isSuccess = true,
+                                placement = updatedPlacement,
+                                error = null
+                            )
+                        }
+
+                    }
+                    .onFailure { exception ->
+
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                error = exception.message
+                                    ?: "Failed to update placement."
+                            )
+                        }
+                    }
+
+            } catch (e: Exception) {
 
                 _uiState.update {
                     it.copy(
                         isSubmitting = false,
-                        isSuccess = true
+                        error = e.message
+                            ?: "Something went wrong."
                     )
                 }
 
-            }.onFailure {exception ->
+            } finally {
 
-                    _uiState.update {
-                        it.copy(
-                            isSubmitting = false,
-                            error = exception.message ?: "Failed to update placement."
-                        )
-                    }
-
-
+                isUpdating = false
             }
-
-            isUpdating = false
         }
     }
 

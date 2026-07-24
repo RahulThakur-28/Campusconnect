@@ -15,6 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,15 +44,28 @@ fun PlacementDetailsScreen(
     onViewDiscussionClick: () -> Unit,
     onEditClick: (String) -> Unit,
     viewModel: PlacementDetailsViewModel = hiltViewModel()
-) {
+){
     val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(placementId) {
         viewModel.loadPlacement(placementId)
     }
 
+    LaunchedEffect(uiState.Deleted) {
+
+        if (uiState.Deleted) {
+
+            viewModel.resetDeleteState()
+
+            onBackClick()
+        }
+    }
 
 
     val placement = uiState.placement
@@ -82,6 +98,70 @@ fun PlacementDetailsScreen(
         return
     }
 
+
+
+    if (showDeleteDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+
+            title = {
+                Text("Delete Placement")
+            },
+
+            text = {
+                Text(
+                    "Are you sure you want to delete this placement? This action can be restored only by an admin."
+                )
+            },
+
+            confirmButton = {
+
+                TextButton(
+
+                    enabled = !uiState.Deleting,
+
+                    onClick = {
+
+                        showDeleteDialog = false
+
+                        viewModel.deletePlacement()
+                    }
+
+                ) {
+
+                    if (uiState.Deleting) {
+
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp)
+                        )
+
+                    } else {
+
+                        Text("Delete")
+                    }
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+
+                    onClick = {
+
+                        showDeleteDialog = false
+                    }
+
+                ) {
+
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
 
     Scaffold(
@@ -144,6 +224,22 @@ fun PlacementDetailsScreen(
                             )
                         }
                     }
+
+                    if (uiState.canEdit) {
+
+                        IconButton(
+                            onClick = {
+                                showDeleteDialog = true
+                            }
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete Placement",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
             )
         },
@@ -155,7 +251,7 @@ fun PlacementDetailsScreen(
                 PrimaryButton(
                     text = when {
 
-                        placement.isDeleted ->
+                        placement.Deleted ->
                             "Placement Removed"
 
                         uiState.isExpired ->
@@ -372,7 +468,7 @@ private fun PlacementStatusChip(
 
     val (text, color) = when {
 
-        placement.isDeleted ->
+        placement.Deleted ->
             "Deleted" to MaterialTheme.colorScheme.error
 
         isExpired ->

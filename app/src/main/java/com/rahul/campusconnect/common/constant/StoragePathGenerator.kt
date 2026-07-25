@@ -61,4 +61,19 @@ object StoragePathGenerator {
 
         }
     }
+
+    fun announcementBanner(
+        collegeId: String,
+        announcementId: String
+    ): String {
+        return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.BANNERS}/$announcementId.jpg"
+    }
+
+    fun announcementAttachment(
+        collegeId: String,
+        announcementId: String,
+        extension: String
+    ): String {
+        return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$announcementId.$extension"
+    }
 }

@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-// import coil.compose.AsyncImage // I'll comment this out since user rejected adding dependency
+import coil.compose.AsyncImage
 
 @Composable
 fun CardImageHeader(
@@ -36,14 +36,12 @@ fun CardImageHeader(
             .background(Brush.verticalGradient(gradientColors))
     ) {
         if (!imageUrl.isNullOrEmpty()) {
-            /* 
             AsyncImage(
                 model = imageUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-            */
         }
 
         Surface(
@@ -58,7 +56,7 @@ fun CardImageHeader(
                 color = Color.White,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
             )
         }
     }

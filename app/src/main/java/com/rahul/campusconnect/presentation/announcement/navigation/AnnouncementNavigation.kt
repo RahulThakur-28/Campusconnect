@@ -11,6 +11,7 @@ import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.announcement.screen.AnnouncementDetailsScreen
 import com.rahul.campusconnect.presentation.announcement.screen.AnnouncementsScreen
 import com.rahul.campusconnect.presentation.announcement.screen.CreateAnnouncementScreen
+import com.rahul.campusconnect.presentation.announcement.screen.EditAnnouncementScreen
 
 fun NavController.navigateToAnnouncements(navOptions: NavOptions? = null) {
     this.navigate(AppRoutes.Announcements.route, navOptions)
@@ -24,6 +25,10 @@ fun NavController.navigateToCreateAnnouncement() {
     this.navigate(AppRoutes.CreateAnnouncement.route)
 }
 
+fun NavController.navigateToEditAnnouncement(announcementId: String) {
+    this.navigate("edit_announcement/$announcementId")
+}
+
 fun NavGraphBuilder.announcementGraph(
     navController: NavHostController
 ) {
@@ -34,7 +39,8 @@ fun NavGraphBuilder.announcementGraph(
             },
             onCreateAnnouncementClick = {
                 navController.navigateToCreateAnnouncement()
-            }
+            },
+            navController = navController
         )
     }
 
@@ -47,7 +53,11 @@ fun NavGraphBuilder.announcementGraph(
             announcementId = announcementId,
             onBackClick = {
                 navController.popBackStack()
-            }
+            },
+            onEditClick = { id ->
+                navController.navigateToEditAnnouncement(id)
+            },
+            navController = navController
         )
     }
 
@@ -56,9 +66,21 @@ fun NavGraphBuilder.announcementGraph(
             onBackClick = {
                 navController.popBackStack()
             },
-            onPublishSuccess = {
+            navController = navController
+        )
+    }
+
+    composable(
+        route = AppRoutes.EditAnnouncement.route,
+        arguments = listOf(navArgument("announcementId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val announcementId = backStackEntry.arguments?.getString("announcementId") ?: return@composable
+        EditAnnouncementScreen(
+            announcementId = announcementId,
+            onBackClick = {
                 navController.popBackStack()
-            }
+            },
+            navController = navController
         )
     }
 }

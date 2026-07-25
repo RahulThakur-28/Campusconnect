@@ -77,6 +77,8 @@ sealed class AppRoutes(val route: String) {
 
     object CreateAnnouncement : AppRoutes("create_announcement")
 
+    object EditAnnouncement : AppRoutes("edit_announcement/{announcementId}")
+
 
     //---------------------------routes for Profile section ----------------------------------------------------------
 

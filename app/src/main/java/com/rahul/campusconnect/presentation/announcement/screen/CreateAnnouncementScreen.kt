@@ -1,40 +1,43 @@
 package com.rahul.campusconnect.presentation.announcement.screen
 
+import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Attachment
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.rahul.campusconnect.ui.components.PrimaryButton
-import com.rahul.campusconnect.ui.components.auth.AppTextField
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.rahul.campusconnect.core.imagepicker.ImagePickerState
+import com.rahul.campusconnect.presentation.announcement.components.AnnouncementForm
+import com.rahul.campusconnect.presentation.announcement.viewmodel.CreateAnnouncementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAnnouncementScreen(
     onBackClick: () -> Unit,
-    onPublishSuccess: () -> Unit
+    navController: NavController,
+    viewModel: CreateAnnouncementViewModel = hiltViewModel()
 ) {
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var selectedImageName by remember { mutableStateOf<String?>(null) }
-    var selectedAttachmentName by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val scrollState = rememberScrollState()
+    var imagePickerState by remember { mutableStateOf(ImagePickerState()) }
+    var selectedAttachmentUri by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            onBackClick()
+            viewModel.resetSuccessState()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -48,109 +51,57 @@ fun CreateAnnouncementScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(scrollState)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            AppTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = "Announcement Title *",
-                placeholder = "e.g. Exam Schedule Revised"
+        Box(modifier = Modifier.fillMaxSize()) {
+            AnnouncementForm(
+                imagePickerState = imagePickerState,
+                onImageSelected = { uri ->
+                    imagePickerState = imagePickerState.copy(imageUri = uri, imageUrl = null)
+                },
+                onRemoveImage = {
+                    imagePickerState = imagePickerState.copy(imageUri = null, imageUrl = null)
+                },
+                attachmentUri = selectedAttachmentUri,
+                attachmentUrl = null,
+                onAttachmentSelected = { uri -> selectedAttachmentUri = uri },
+                onRemoveAttachment = { selectedAttachmentUri = null },
+                onSubmit = { title, description, category, imageUri, attachmentUri ->
+                    viewModel.createAnnouncement(
+                        title = title,
+                        description = description,
+                        category = category,
+                        imageUri = imageUri,
+                        attachmentUri = attachmentUri
+                    )
+                },
+                buttonText = "Publish Announcement",
+                isLoading = uiState.isLoading,
+                modifier = Modifier.padding(padding)
             )
 
-            AppTextField(
-                value = category,
-                onValueChange = { category = it },
-                label = "Category *",
-                placeholder = "e.g. Academic, Exam, Holiday"
-            )
-
-            AppTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = "Description *",
-                placeholder = "Detailed information...",
-                singleLine = false,
-                modifier = Modifier.height(150.dp)
-            )
-
-            Text(
-                text = "Optional Attachments",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Image Picker Placeholder
-                Surface(
+            if (uiState.isLoading) {
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(100.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
-                        .clickable { /* TODO: Image Picker */ },
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable(enabled = false) {},
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray)
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = selectedImageName ?: "Add Banner",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
-                        )
-                    }
-                }
-
-                // File Picker Placeholder
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(100.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
-                        .clickable { /* TODO: PDF Picker */ },
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(Icons.Default.Attachment, contentDescription = null, tint = Color.Gray)
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = selectedAttachmentName ?: "Add PDF",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
-                        )
-                    }
+                    CircularProgressIndicator(color = Color(0xFF2563EB))
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            PrimaryButton(
-                text = "Publish Announcement",
-                onClick = {
-                    // Simulate Publish logic
-                    onPublishSuccess()
-                },
-                enabled = title.isNotEmpty() && category.isNotEmpty() && description.isNotEmpty()
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    uiState.error?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearError() },
+            title = { Text("Error") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearError() }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }

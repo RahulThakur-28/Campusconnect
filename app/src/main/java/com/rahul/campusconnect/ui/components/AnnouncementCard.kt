@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.domain.model.Announcement
 
 @Composable
@@ -30,14 +31,13 @@ fun AnnouncementCard(
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(horizontal = 16.dp),
-
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
     ) {
         Column {
             // Optional Banner Image
-            if (announcement.imageUrl != null) {
+            if (!announcement.imageUrl.isNullOrEmpty()) {
                 CardImageHeader(
                     imageUrl = announcement.imageUrl,
                     category = announcement.category,
@@ -92,12 +92,14 @@ fun AnnouncementCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                         Text(
-                            text = announcement.postedBy,
+                            text = announcement.postedByName.ifBlank { "Anonymous" },
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         if (announcement.isVerified) {
                             Spacer(modifier = Modifier.width(4.dp))
@@ -110,7 +112,7 @@ fun AnnouncementCard(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "• ${announcement.timestamp}",
+                            text = "• ${TimeUtils.getRelativeTime(announcement.postedAt)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.Gray
                         )

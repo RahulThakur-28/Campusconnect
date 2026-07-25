@@ -7,11 +7,16 @@ data class AnnouncementUiState(
     val announcements: List<Announcement> = emptyList(),
     val filteredAnnouncements: List<Announcement> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val searchQuery: String = "",
     val selectedCategory: String = "All",
     val userRole: UserRole = UserRole.STUDENT,
     val error: String? = null,
     val categories: List<String> = listOf("All", "Academic", "Exam", "Holiday", "General", "Placement", "Events")
+) {
+    val isEmpty: Boolean
+        get() = !isLoading && filteredAnnouncements.isEmpty()
 
-
-)
+    val canPublishAnnouncement: Boolean
+        get() = userRole == UserRole.VERIFIED_TEACHER || userRole == UserRole.ADMIN
+}

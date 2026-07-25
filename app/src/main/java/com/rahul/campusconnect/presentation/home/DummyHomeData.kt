@@ -19,7 +19,7 @@ fun dummyHomeState() = HomeUiState(
         Announcement(
             title = "End Semester Examination Schedule",
             description = "The end semester examination for 3rd year students will commence from June 15th. Detailed schedule attached.",
-            timestamp = "2 hours ago",
+//            timestamp = "2 hours ago",
             category = "Academic"
         )
     ),

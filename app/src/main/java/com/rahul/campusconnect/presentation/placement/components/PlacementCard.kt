@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.rahul.campusconnect.R
 import com.rahul.campusconnect.domain.model.Placement
 import java.text.SimpleDateFormat
 import java.util.*
@@ -47,19 +49,20 @@ fun PlacementCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Company Logo Placeholder
-            Box(
+            // Company Logo
+            Surface(
                 modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
+                    .size(60.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
             ) {
-                Icon(
-                    imageVector = Icons.Default.Business,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
+                AsyncImage(
+                    model = placement.logoUrl,
+                    contentDescription = "${placement.companyName} logo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    placeholder = androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground), // Replace with actual placeholder
+                    error = androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground) // Replace with actual error image
                 )
             }
 

@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.rahul.campusconnect.core.imagepicker.ImagePickerState
 import com.rahul.campusconnect.presentation.placement.components.PlacementForm
 import com.rahul.campusconnect.presentation.placement.viewmodel.CreatePlacementViewModel
@@ -16,7 +17,7 @@ import com.rahul.campusconnect.presentation.placement.viewmodel.CreatePlacementV
 @Composable
 fun CreatePlacementScreen(
     onBackClick: () -> Unit,
-    onPlacementCreated: () -> Unit,
+    navController: NavController,
     viewModel: CreatePlacementViewModel = hiltViewModel()
 ) {
 
@@ -28,7 +29,8 @@ fun CreatePlacementScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onPlacementCreated()
+            navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            onBackClick()
             viewModel.resetSuccessState()
         }
     }

@@ -31,18 +31,18 @@ fun NavController.navigateToEditPlacement(placementId: String) {
 }
 
 fun NavGraphBuilder.placementGraph(
+    navController: NavController,
     onBackClick: () -> Unit,
     onPlacementClick: (String) -> Unit,
     onEditPlacementClick: (String) -> Unit,
     onViewDiscussionClick: (String) -> Unit,
-    onCreatePlacementClick: () -> Unit,
-    onPlacementUpdated: () -> Unit,
-    onPlacementCreated: () -> Unit
+    onCreatePlacementClick: () -> Unit
 ) {
     composable(route = PLACEMENTS_ROUTE) {
         PlacementsScreen(
             onPlacementClick = onPlacementClick,
-            onCreatePlacementClick = onCreatePlacementClick
+            onCreatePlacementClick = onCreatePlacementClick,
+            navController = navController
         )
     }
 
@@ -54,14 +54,15 @@ fun NavGraphBuilder.placementGraph(
             onViewDiscussionClick = {
                 onViewDiscussionClick(placementId)
             },
-            onEditClick = onEditPlacementClick
+            onEditClick = onEditPlacementClick,
+            navController = navController
         )
     }
 
     composable(route = CREATE_PLACEMENT_ROUTE) {
         CreatePlacementScreen(
             onBackClick = onBackClick,
-            onPlacementCreated = onPlacementCreated
+            navController = navController
         )
     }
 
@@ -70,7 +71,7 @@ fun NavGraphBuilder.placementGraph(
         EditPlacementScreen(
             placementId = placementId,
             onBackClick = onBackClick,
-            onPlacementUpdated = onPlacementUpdated
+            navController = navController
         )
     }
 }

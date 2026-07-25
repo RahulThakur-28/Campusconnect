@@ -88,33 +88,21 @@ fun MainNavigation(
         // ---------------- Placements ----------------
 
         placementGraph(
-
+            navController = navController,
             onBackClick = {
                 navController.popBackStack()
             },
-
             onPlacementClick = { placementId ->
                 navController.navigateToPlacementDetails(placementId)
             },
-
             onEditPlacementClick = { placementId ->
                 navController.navigateToEditPlacement(placementId)
             },
-
             onViewDiscussionClick = {
                 // TODO: Navigate to Placement Discussion
             },
-
             onCreatePlacementClick = {
                 navController.navigateToCreatePlacement()
-            },
-
-            onPlacementUpdated = {
-                navController.popBackStack()
-            },
-
-            onPlacementCreated = {
-                navController.popBackStack()
             }
         )
 

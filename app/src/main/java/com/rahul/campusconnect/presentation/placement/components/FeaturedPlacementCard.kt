@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.rahul.campusconnect.R
 import com.rahul.campusconnect.domain.model.Placement
 import java.text.SimpleDateFormat
 import java.util.*
@@ -92,11 +94,13 @@ fun FeaturedPlacementCard(
                             .background(Color.White),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Business,
+                        AsyncImage(
+                            model = placement.logoUrl,
                             contentDescription = null,
-                            tint = Color(0xFF1565C0),
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            placeholder = androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground),
+                            error = androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground)
                         )
                     }
                 }

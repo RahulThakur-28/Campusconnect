@@ -82,6 +82,7 @@ class EditPlacementViewModel @Inject constructor(
         placement: Placement,
         logoUri: Uri?
     ) {
+        if (!validateForm(placement)) return
 
         if (isUpdating) return
 
@@ -188,6 +189,26 @@ class EditPlacementViewModel @Inject constructor(
                 error = null
             )
         }
+    }
+
+    private fun validateForm(placement: Placement): Boolean {
+        if (placement.companyName.isBlank()) {
+            _uiState.update { it.copy(error = "Company name is required") }
+            return false
+        }
+        if (placement.jobRole.isBlank()) {
+            _uiState.update { it.copy(error = "Job role is required") }
+            return false
+        }
+        if (placement.packageLpa.isBlank()) {
+            _uiState.update { it.copy(error = "Package is required") }
+            return false
+        }
+        if (placement.applyLink.isBlank()) {
+            _uiState.update { it.copy(error = "Apply link is required") }
+            return false
+        }
+        return true
     }
 
     fun resetSuccessState() {

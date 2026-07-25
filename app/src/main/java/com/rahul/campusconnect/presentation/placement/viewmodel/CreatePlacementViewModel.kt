@@ -36,6 +36,34 @@ class CreatePlacementViewModel @Inject constructor(
         }
     }
 
+    private fun validateForm(placement: Placement, logoUri: Uri?): Boolean {
+        if (placement.companyName.isBlank()) {
+            setError("Company name is required")
+            return false
+        }
+        if (placement.jobRole.isBlank()) {
+            setError("Job role is required")
+            return false
+        }
+        if (placement.packageLpa.isBlank()) {
+            setError("Package detail is required")
+            return false
+        }
+        if (placement.deadline <= 0L) {
+            setError("Please set a valid deadline")
+            return false
+        }
+        if (placement.applyLink.isBlank()) {
+            setError("Application link is required")
+            return false
+        }
+        if (logoUri == null) {
+            setError("Company logo is required")
+            return false
+        }
+        return true
+    }
+
     fun resetSuccessState() {
         _uiState.update {
             it.copy(isSuccess = false)
@@ -71,6 +99,7 @@ class CreatePlacementViewModel @Inject constructor(
         placement: Placement,
         logoUri: Uri?
     ) {
+        if (!validateForm(placement, logoUri)) return
 
         if (isCreatingPlacement) return
 
@@ -150,7 +179,7 @@ class CreatePlacementViewModel @Inject constructor(
 
                         collegeId = user.collegeId,
 
-                        Deleted = false
+                        deleted = false
                     )
 
                 val createResult =

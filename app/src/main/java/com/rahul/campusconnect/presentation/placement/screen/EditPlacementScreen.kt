@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.rahul.campusconnect.core.imagepicker.ImagePickerState
 import com.rahul.campusconnect.presentation.placement.components.PlacementForm
 import com.rahul.campusconnect.presentation.placement.viewmodel.EditPlacementViewModel
@@ -28,7 +29,7 @@ import com.rahul.campusconnect.presentation.placement.viewmodel.EditPlacementVie
 fun EditPlacementScreen(
     placementId: String,
     onBackClick: () -> Unit,
-    onPlacementUpdated: () -> Unit,
+    navController: NavController,
     viewModel: EditPlacementViewModel = hiltViewModel()
 ) {
 
@@ -57,7 +58,9 @@ fun EditPlacementScreen(
 
         if (uiState.isSuccess) {
 
-            onPlacementUpdated()
+            navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+
+            onBackClick()
 
             viewModel.resetSuccessState()
         }

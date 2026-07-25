@@ -125,7 +125,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
                 id = document.id,
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
-                Deleted = false
+                deleted = false
             )
         ).await()
     }

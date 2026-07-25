@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 fun EmptyState(
     message: String,
     modifier: Modifier = Modifier,
+    description: String? = null,
     icon: ImageVector = Icons.Default.Inbox,
     buttonText: String? = null,
     onButtonClick: (() -> Unit)? = null
@@ -49,10 +50,20 @@ fun EmptyState(
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
+
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
 
         if (buttonText != null && onButtonClick != null) {
 

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.presentation.placement.viewmodel.PlacementDetailsViewModel
 import com.rahul.campusconnect.ui.components.EmptyState
@@ -43,6 +44,7 @@ fun PlacementDetailsScreen(
     onBackClick: () -> Unit,
     onViewDiscussionClick: () -> Unit,
     onEditClick: (String) -> Unit,
+    navController: NavController,
     viewModel: PlacementDetailsViewModel = hiltViewModel()
 ){
     val context = LocalContext.current
@@ -57,11 +59,13 @@ fun PlacementDetailsScreen(
         viewModel.loadPlacement(placementId)
     }
 
-    LaunchedEffect(uiState.Deleted) {
+    LaunchedEffect(uiState.deleted) {
 
-        if (uiState.Deleted) {
+        if (uiState.deleted) {
 
             viewModel.resetDeleteState()
+
+            navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
 
             onBackClick()
         }
@@ -122,7 +126,7 @@ fun PlacementDetailsScreen(
 
                 TextButton(
 
-                    enabled = !uiState.Deleting,
+                    enabled = !uiState.deleting,
 
                     onClick = {
 
@@ -133,7 +137,7 @@ fun PlacementDetailsScreen(
 
                 ) {
 
-                    if (uiState.Deleting) {
+                    if (uiState.deleting) {
 
                         CircularProgressIndicator(
                             modifier = Modifier.size(18.dp)
@@ -251,7 +255,7 @@ fun PlacementDetailsScreen(
                 PrimaryButton(
                     text = when {
 
-                        placement.Deleted ->
+                        placement.deleted ->
                             "Placement Removed"
 
                         uiState.isExpired ->
@@ -468,7 +472,7 @@ private fun PlacementStatusChip(
 
     val (text, color) = when {
 
-        placement.Deleted ->
+        placement.deleted ->
             "Deleted" to MaterialTheme.colorScheme.error
 
         isExpired ->

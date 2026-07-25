@@ -2,6 +2,7 @@ package com.rahul.campusconnect.data.remote
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.rahul.campusconnect.domain.model.Placement
 import kotlinx.coroutines.tasks.await
@@ -47,12 +48,26 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
 
             Result.success(placements)
 
-        } catch (e: Exception) {
+        } catch (e: FirebaseFirestoreException) {
 
-            Log.e(
-                "PLACEMENT_QUERY",
-                e.stackTraceToString()
-            )
+        Log.e("PLACEMENT_QUERY", "========================================")
+        Log.e("PLACEMENT_QUERY", "Firestore Exception")
+        Log.e("PLACEMENT_QUERY", "Code    : ${e.code}")
+        Log.e("PLACEMENT_QUERY", "Message : ${e.message}")
+        Log.e("PLACEMENT_QUERY", "Cause   : ${e.cause}")
+        Log.e("PLACEMENT_QUERY", "========================================", e)
+
+        Result.failure(e)
+
+    } catch (e: Exception) {
+
+        Log.e("PLACEMENT_QUERY", "General Exception", e)
+
+        Result.failure(e)
+    } catch (e: Exception) {
+
+            Log.e("PLACEMENT_QUERY", "Message: ${e.message}")
+            Log.e("PLACEMENT_QUERY", Log.getStackTraceString(e))
 
             Result.failure(e)
         }

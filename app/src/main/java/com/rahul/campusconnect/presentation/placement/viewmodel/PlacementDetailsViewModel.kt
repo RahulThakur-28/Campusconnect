@@ -104,7 +104,7 @@ class PlacementDetailsViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
-                    Deleting = true,
+                    deleting = true,
                     error = null
                 )
             }
@@ -115,8 +115,8 @@ class PlacementDetailsViewModel @Inject constructor(
 
                     _uiState.update {
                         it.copy(
-                            Deleting = false,
-                            Deleted = true
+                            deleting = false,
+                            deleted = true
                         )
                     }
 
@@ -125,7 +125,7 @@ class PlacementDetailsViewModel @Inject constructor(
 
                     _uiState.update {
                         it.copy(
-                            Deleting = false,
+                            deleting = false,
                             error = exception.message
                                 ?: "Failed to delete placement."
                         )
@@ -140,7 +140,7 @@ class PlacementDetailsViewModel @Inject constructor(
 
         _uiState.update {
             it.copy(
-                Deleted = false
+                deleted = false
             )
         }
     }

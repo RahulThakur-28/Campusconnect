@@ -1,16 +1,13 @@
 package com.rahul.campusconnect.domain.repository
 
-import android.net.Uri
+import com.rahul.campusconnect.domain.model.User
+import kotlinx.coroutines.flow.StateFlow
 
 interface AuthRepository {
 
-    suspend fun registerUser(
-        fullName: String,
-        email: String,
-        password: String,
-        collegeId: String,
-        branch: String,
-        imageUri: Uri?
+    suspend fun register(
+        user: User,
+        password: String
     ): Result<Unit>
 
     suspend fun login(
@@ -18,4 +15,7 @@ interface AuthRepository {
         password: String
     ): Result<Unit>
 
+    suspend fun logout(): Result<Unit>
+
+    fun isUserLoggedIn(): Boolean
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.domain.model.DiscussionParentType
 import com.rahul.campusconnect.presentation.discussion.components.EmptyQuestionState
 import com.rahul.campusconnect.presentation.discussion.components.QuestionCard
@@ -30,7 +31,7 @@ fun EventQAScreen(
     onViewDiscussionClick: (String) -> Unit,
     viewModel: EventQAViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val screenTitle = when (parentType) {
         DiscussionParentType.EVENT -> "Event Discussion"

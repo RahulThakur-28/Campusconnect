@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.presentation.settings.components.SettingItem
 import com.rahul.campusconnect.presentation.settings.components.SettingSwitchItem
 import com.rahul.campusconnect.presentation.settings.viewmodel.SettingsViewModel
@@ -32,7 +33,7 @@ fun SettingsScreen(
     onTermsClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     
     var showLogoutDialog by remember { mutableStateOf(false) }

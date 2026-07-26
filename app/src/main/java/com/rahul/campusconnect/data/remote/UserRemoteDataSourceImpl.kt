@@ -1,54 +1,77 @@
 package com.rahul.campusconnect.data.remote
 
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.common.constant.StorageConstants
+import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
+import com.rahul.campusconnect.domain.model.College
 import com.rahul.campusconnect.domain.model.User
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
 class UserRemoteDataSourceImpl @Inject constructor(
-    private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth,
+    private val pathProvider: FirestorePathProvider,
     private val storageManager: StorageManager
 ) : UserRemoteDataSource {
 
-    private val usersCollection =
-        firestore.collection(Constants.USERS)
-
-    override suspend fun getCurrentUser(): User {
-
-        val uid = auth.currentUser?.uid
-            ?: throw IllegalStateException("User not logged in.")
-
-        val snapshot = usersCollection
-            .document(uid)
-            .get()
-            .await()
-
-        return snapshot.toObject(User::class.java)
-            ?: throw IllegalStateException("User not found.")
+    override suspend fun getUserProfile(uid: String, collegeId: String): User? {
+        return try {
+            pathProvider.users(collegeId)
+                .document(uid)
+                .get()
+                .await()
+                .toObject(User::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
-    override suspend fun updateUser(user: User): Result<Unit> {
+    override suspend fun saveUser(user: User): Result<Unit> {
         return try {
-            // update logic
+            pathProvider.users(user.collegeId)
+                .document(user.uid)
+                .set(user)
+                .await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun uploadProfileImage(
-        imageUri: Uri
-    ): Result<String> {
+    override suspend fun getCollege(collegeId: String): College? {
 
-        val fileName = "${UUID.randomUUID()}.jpg"
+        val snapshot = pathProvider.college(collegeId)
+            .get()
+            .await()
 
+        Log.d("COLLEGE", "Exists = ${snapshot.exists()}")
+
+        if (!snapshot.exists()) {
+            return null
+        }
+
+        return snapshot.toObject(College::class.java)
+    }
+
+    override suspend fun isEnrollmentRegistered(collegeId: String, enrollmentNumber: String): Boolean {
+        return try {
+            val query = pathProvider.users(collegeId)
+                .whereEqualTo("enrollmentNumber", enrollmentNumber)
+                .get()
+                .await()
+            !query.isEmpty
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun uploadProfileImage(imageUri: Uri): Result<String> {
+        val fileName = "profile_${UUID.randomUUID()}.jpg"
         return storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
             path = "${StorageConstants.Folder.PROFILE}/$fileName",
@@ -56,21 +79,15 @@ class UserRemoteDataSourceImpl @Inject constructor(
         )
     }
 
-    override suspend fun updateProfileImage(
-        imageUrl: String
-    ) {
-
-        val uid = auth.currentUser?.uid
-            ?: throw IllegalStateException("User not logged in.")
-
-        usersCollection
-            .document(uid)
-            .update(
-                "profileImage",
-                imageUrl,
-                Constants.UPDATED_AT,
-                System.currentTimeMillis()
-            )
-            .await()
+    override suspend fun updateProfile(user: User): Result<Unit> {
+        return try {
+            pathProvider.users(user.collegeId)
+                .document(user.uid)
+                .set(user)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

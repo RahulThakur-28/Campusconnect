@@ -60,7 +60,7 @@ fun MainNavigation(
             },
 
             onViewDiscussionClick = { eventId ->
-                // TODO: Discussion navigation
+                // Discussion navigation will be implemented in Phase 3 or as needed
             }
         )
 
@@ -123,7 +123,11 @@ fun MainNavigation(
         // ---------------- Profile ----------------
         profileGraph(
             navController = navController,
-            onLogoutClick = { /* TODO */ },
+            onLogoutClick = {
+                navController.navigate(AppRoutes.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
             onSettingsClick = { navController.navigate(AppRoutes.Settings.route) },
             onNoteClick = { noteId -> navController.navigateToNoteDetails(noteId) },
             onEventClick = { eventId -> navController.navigateToEventDetails(eventId) },

@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.rahul.campusconnect.presentation.discussion.viewmodel.Question
+import com.rahul.campusconnect.domain.model.Question
 import com.rahul.campusconnect.domain.model.UserRole
 
 @Composable
@@ -59,7 +59,7 @@ fun QuestionCard(
                                 color = MaterialTheme.colorScheme.secondaryContainer
                             ) {
                                 Text(
-                                    text = question.userRole.name.replace("_", " ").lowercase().capitalize(),
+                                    text = question.userRole.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -68,7 +68,7 @@ fun QuestionCard(
                         }
                     }
                     Text(
-                        text = "2 hours ago", // In real app, format question.timestamp
+                        text = "Just now", // Replace with relative time if needed
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )

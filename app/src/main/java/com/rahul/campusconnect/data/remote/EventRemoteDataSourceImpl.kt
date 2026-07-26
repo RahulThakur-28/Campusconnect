@@ -2,14 +2,13 @@ package com.rahul.campusconnect.data.remote
 
 import android.net.Uri
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.common.constant.StorageConstants
 import com.rahul.campusconnect.common.storage.StoragePathGenerator
+import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.Event
 import kotlinx.coroutines.tasks.await
@@ -18,33 +17,13 @@ import javax.inject.Inject
 
 class EventRemoteDataSourceImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth,
+    private val pathProvider: FirestorePathProvider,
     private val storageManager: StorageManager
 ) : EventRemoteDataSource {
 
-    private suspend fun getCollegeId(): String {
-        val uid = auth.currentUser?.uid
-            ?: throw IllegalStateException("User is not logged in.")
-
-        val snapshot = firestore
-            .collection(Constants.USERS)
-            .document(uid)
-            .get()
-            .await()
-
-        return snapshot.getString("collegeId")
-            ?: throw IllegalStateException("College ID not found.")
-    }
-
-    private suspend fun eventsCollection(): CollectionReference {
-        return firestore.collection(Constants.COLLEGES)
-            .document(getCollegeId())
-            .collection(Constants.EVENTS)
-    }
-
-    override suspend fun getAllEvents(): Result<List<Event>> = try {
-        Log.d("EVENT_QUERY", "Fetching all events...")
-        val snapshot = eventsCollection()
+    override suspend fun getAllEvents(collegeId: String): Result<List<Event>> = try {
+        Log.d("EVENT_QUERY", "Fetching all events for college: $collegeId")
+        val snapshot = pathProvider.events(collegeId)
             .whereEqualTo("deleted", false)
             .orderBy("startDate", Query.Direction.ASCENDING)
             .get()
@@ -52,25 +31,21 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
         val events = snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
         Result.success(events)
-    } catch (e: FirebaseFirestoreException) {
-        Log.e("EVENT_QUERY", "Firestore Error: ${e.message}", e)
-        Result.failure(e)
     } catch (e: Exception) {
-        Log.e("EVENT_QUERY", "Error: ${e.message}", e)
+        Log.e("EVENT_QUERY", "Error fetching events", e)
         Result.failure(e)
     }
 
-    override suspend fun getEventById(eventId: String): Result<Event?> = try {
-        val snapshot = eventsCollection().document(eventId).get().await()
+    override suspend fun getEventById(collegeId: String, eventId: String): Result<Event?> = try {
+        val snapshot = pathProvider.events(collegeId).document(eventId).get().await()
         val event = snapshot.toObject(Event::class.java)?.copy(id = snapshot.id)
         if (event?.deleted == true) Result.success(null) else Result.success(event)
     } catch (e: Exception) {
         Result.failure(e)
     }
 
-    override suspend fun createEvent(event: Event): Result<String> = try {
-        val document = eventsCollection().document(event.id.ifBlank { generateEventId() })
-        val collegeId = getCollegeId()
+    override suspend fun createEvent(collegeId: String, event: Event): Result<String> = try {
+        val document = pathProvider.events(collegeId).document(event.id.ifBlank { generateEventId() })
         val finalEvent = event.copy(
             id = document.id,
             collegeId = collegeId,
@@ -79,39 +54,33 @@ class EventRemoteDataSourceImpl @Inject constructor(
             deleted = false
         )
         document.set(finalEvent).await()
-        Log.d("EVENT_CREATE", "Event created: ${document.id}")
         Result.success(document.id)
     } catch (e: Exception) {
-        Log.e("EVENT_CREATE", "Error creating event", e)
         Result.failure(e)
     }
 
-    override suspend fun updateEvent(event: Event): Result<Unit> = try {
+    override suspend fun updateEvent(collegeId: String, event: Event): Result<Unit> = try {
         val updatedEvent = event.copy(updatedAt = System.currentTimeMillis())
-        eventsCollection().document(event.id).set(updatedEvent).await()
-        Log.d("EVENT_UPDATE", "Event updated: ${event.id}")
+        pathProvider.events(collegeId).document(event.id).set(updatedEvent).await()
         Result.success(Unit)
     } catch (e: Exception) {
-        Log.e("EVENT_UPDATE", "Error updating event", e)
         Result.failure(e)
     }
 
-    override suspend fun deleteEvent(eventId: String): Result<Unit> = try {
-        eventsCollection().document(eventId).update(
+    override suspend fun deleteEvent(collegeId: String, eventId: String): Result<Unit> = try {
+        pathProvider.events(collegeId).document(eventId).update(
             mapOf(
                 "deleted" to true,
                 "updatedAt" to System.currentTimeMillis()
             )
         ).await()
-        Log.d("EVENT_DELETE", "Event soft deleted: $eventId")
         Result.success(Unit)
     } catch (e: Exception) {
-        Log.e("EVENT_DELETE", "Error deleting event", e)
         Result.failure(e)
     }
 
-    override suspend fun getFeaturedEvents(): Result<List<Event>> = try {
-        val snapshot = eventsCollection()
+    override suspend fun getFeaturedEvents(collegeId: String): Result<List<Event>> = try {
+        val snapshot = pathProvider.events(collegeId)
             .whereEqualTo("isFeatured", true)
             .whereEqualTo("deleted", false)
             .orderBy("startDate", Query.Direction.ASCENDING)
@@ -123,8 +92,8 @@ class EventRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun getUpcomingEvents(): Result<List<Event>> = try {
-        val snapshot = eventsCollection()
+    override suspend fun getUpcomingEvents(collegeId: String): Result<List<Event>> = try {
+        val snapshot = pathProvider.events(collegeId)
             .whereGreaterThanOrEqualTo("startDate", System.currentTimeMillis())
             .whereEqualTo("deleted", false)
             .orderBy("startDate", Query.Direction.ASCENDING)
@@ -136,8 +105,8 @@ class EventRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun getMyEvents(userId: String): Result<List<Event>> = try {
-        val snapshot = eventsCollection()
+    override suspend fun getMyEvents(collegeId: String, userId: String): Result<List<Event>> = try {
+        val snapshot = pathProvider.events(collegeId)
             .whereEqualTo("organizerId", userId)
             .whereEqualTo("deleted", false)
             .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -149,15 +118,14 @@ class EventRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun uploadEventImage(eventId: String, imageUri: Uri): Result<Pair<String, String>> = try {
-        val path = StoragePathGenerator.eventBanner(getCollegeId(), eventId)
+    override suspend fun uploadEventImage(collegeId: String, eventId: String, imageUri: Uri): Result<Pair<String, String>> = try {
+        val path = StoragePathGenerator.eventBanner(collegeId, eventId)
         storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
             path = path,
             imageUri = imageUri
         ).map { url -> Pair(url, path) }
     } catch (e: Exception) {
-        Log.e("EVENT_UPLOAD", "Error uploading image", e)
         Result.failure(e)
     }
 
@@ -167,8 +135,8 @@ class EventRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun registerForEvent(eventId: String, userId: String): Result<Unit> = try {
-        val eventRef = eventsCollection().document(eventId)
+    override suspend fun registerForEvent(collegeId: String, eventId: String, userId: String): Result<Unit> = try {
+        val eventRef = pathProvider.events(collegeId).document(eventId)
         firestore.runTransaction { transaction ->
             val eventSnapshot = transaction.get(eventRef)
             if (!eventSnapshot.exists()) throw IllegalStateException("Event not found")
@@ -186,15 +154,13 @@ class EventRemoteDataSourceImpl @Inject constructor(
             transaction.set(registrationRef, mapOf("userId" to userId, "registeredAt" to System.currentTimeMillis()))
             transaction.update(eventRef, "registeredCount", registeredCount + 1)
         }.await()
-        Log.d("EVENT_REGISTER", "User $userId registered for $eventId")
         Result.success(Unit)
     } catch (e: Exception) {
-        Log.e("EVENT_REGISTER", "Registration failed", e)
         Result.failure(e)
     }
 
-    override suspend fun unregisterFromEvent(eventId: String, userId: String): Result<Unit> = try {
-        val eventRef = eventsCollection().document(eventId)
+    override suspend fun unregisterFromEvent(collegeId: String, eventId: String, userId: String): Result<Unit> = try {
+        val eventRef = pathProvider.events(collegeId).document(eventId)
         firestore.runTransaction { transaction ->
             val registrationRef = eventRef.collection(Constants.REGISTRATIONS).document(userId)
             if (!transaction.get(registrationRef).exists()) return@runTransaction
@@ -210,8 +176,8 @@ class EventRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun isUserRegistered(eventId: String, userId: String): Result<Boolean> = try {
-        val snapshot = eventsCollection().document(eventId).collection(Constants.REGISTRATIONS).document(userId).get().await()
+    override suspend fun isUserRegistered(collegeId: String, eventId: String, userId: String): Result<Boolean> = try {
+        val snapshot = pathProvider.events(collegeId).document(eventId).collection(Constants.REGISTRATIONS).document(userId).get().await()
         Result.success(snapshot.exists())
     } catch (e: Exception) {
         Result.failure(e)

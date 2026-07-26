@@ -5,17 +5,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.FirebaseNetworkException
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.rahul.campusconnect.common.session.PreferenceManager
 import com.rahul.campusconnect.domain.repository.AuthRepository
+import com.rahul.campusconnect.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
+    private val preferenceManager: PreferenceManager
 ) : ViewModel() {
 
     var isLoading by mutableStateOf(false)
@@ -27,61 +28,35 @@ class LoginViewModel @Inject constructor(
     var loginSuccess by mutableStateOf(false)
         private set
 
-    fun login(
-        email: String,
-        password: String
-    ) {
-
+    fun login(collegeId: String, email: String, password: String) {
         viewModelScope.launch {
-
             isLoading = true
             errorMessage = null
 
-            val result = repository.login(email, password)
+            // 1. Save collegeId to preferences first so AuthRepository can find it
+            preferenceManager.saveCollegeId(collegeId)
 
-            isLoading = false
+            // 2. Validate college exists
+            val collegeResult = userRepository.validateCollegeId(collegeId)
+            if (collegeResult.isFailure || collegeResult.getOrNull() == null) {
+                isLoading = false
+                errorMessage = "Invalid College ID"
+                return@launch
+            }
 
-            result.onSuccess {
+            // 3. Login
+            val result = authRepository.login(email, password)
+
+            if (result.isSuccess) {
                 loginSuccess = true
+            } else {
+                errorMessage = result.exceptionOrNull()?.message ?: "Login failed"
             }
-
-            result.onFailure {
-
-                errorMessage = when (it) {
-
-                    is FirebaseAuthInvalidUserException -> {
-                        "No account found with this email."
-                    }
-
-                    is FirebaseAuthInvalidCredentialsException -> {
-
-                        when (it.errorCode) {
-
-                            "ERROR_WRONG_PASSWORD" ->
-                                "Incorrect password."
-
-                            "ERROR_INVALID_EMAIL" ->
-                                "Invalid email address."
-
-                            else ->
-                                "Invalid login credentials."
-                        }
-
-                    }
-
-                    is FirebaseNetworkException -> {
-                        "No internet connection."
-                    }
-
-                    else -> {
-                        it.localizedMessage ?: "Something went wrong."
-                    }
-
-                }
-
-            }
-
+            isLoading = false
         }
+    }
 
+    fun clearError() {
+        errorMessage = null
     }
 }

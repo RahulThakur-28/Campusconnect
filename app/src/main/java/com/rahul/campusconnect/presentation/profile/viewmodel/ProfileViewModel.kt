@@ -1,384 +1,120 @@
-package com.rahul.campusconnect.presentation.profile
+package com.rahul.campusconnect.presentation.profile.viewmodel
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.campusconnect.domain.model.User
+import com.rahul.campusconnect.domain.repository.AuthRepository
 import com.rahul.campusconnect.domain.repository.UserRepository
 import com.rahul.campusconnect.presentation.profile.state.EditProfileUiState
 import com.rahul.campusconnect.presentation.profile.state.ProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.net.Uri
-import android.util.Log
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState = _uiState.asStateFlow()
+
     private val _editProfileState = MutableStateFlow(EditProfileUiState())
     val editProfileState = _editProfileState.asStateFlow()
 
-
     init {
-        getCurrentUser()
+        observeUserSession()
     }
 
-    fun getCurrentUser() {
-
-
-        viewModelScope.launch {
-
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null
-                )
-            }
-
-            userRepository.getCurrentUser()
-                .onSuccess { user ->
-
-                    _uiState.update {
-                        it.copy(
-                            user = user,
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-
-                    _editProfileState.value = EditProfileUiState(
-                        fullName = user.fullName,
-                        phoneNumber = user.phoneNumber,
-                        bio = user.bio,
-                        branch = user.branch,
-                        year = user.year,
-                        section = user.section,
-                        profileImage = user.profileImage
-                    )
-
-                }
-                .onFailure { exception ->
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = exception.message
-                        )
-                    }
-
-                }
-        }
-    }
-
-    fun updateUser(user: User) {
-
-        viewModelScope.launch {
-
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null
-                )
-            }
-
-            userRepository.updateUser(user)
-                .onSuccess {
-
-                    _uiState.update {
-                        it.copy(
-                            user = user,
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-
-                }
-                .onFailure { exception ->
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = exception.message
-                        )
-                    }
-
-                }
-        }
-    }
-
-    //-------------------edit profile ui finction -----------------------------------
-
-    fun updateEditProfileState(
-        state: EditProfileUiState
-    ) {
-        _editProfileState.value = state
-    }
-
-    fun clearError() {
-        _uiState.update {
-            it.copy(error = null)
-        }
-    }
-
-    fun onFullNameChange(value: String) {
-        _editProfileState.update {
-            it.copy(fullName = value)
-        }
-    }
-
-    fun onPhoneNumberChange(value: String) {
-        _editProfileState.update {
-            it.copy(phoneNumber = value)
-        }
-    }
-
-    fun onBioChange(value: String) {
-        _editProfileState.update {
-            it.copy(bio = value)
-        }
-    }
-
-    fun onBranchChange(value: String) {
-        _editProfileState.update {
-            it.copy(branch = value)
-        }
-    }
-
-    fun onYearChange(value: String) {
-        _editProfileState.update {
-            it.copy(year = value)
-        }
-    }
-
-    fun onSectionChange(value: String) {
-        _editProfileState.update {
-            it.copy(section = value)
-        }
-    }
-
-    fun onSuccessConsumed() {
-        _editProfileState.value = _editProfileState.value.copy(
-            isSuccess = false
-        )
-    }
-
-
-    fun uploadProfileImage(imageUri: Uri) {
-
-        viewModelScope.launch {
-
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null
-                )
-            }
-
-            try {
-
-                // Upload image to Supabase
-                val uploadResult = userRepository.uploadProfileImage(imageUri)
-
-                uploadResult.fold(
-
-                    onSuccess = { imageUrl ->
-
-                        // Save image URL in Firestore
-                        val updateResult =
-                            userRepository.updateProfileImage(imageUrl)
-
-                        updateResult.fold(
-
-                            onSuccess = {
-
-                                Log.d("PROFILE_DEBUG", "Uploaded URL = $imageUrl")
-
-                                val updateResult = userRepository.updateProfileImage(imageUrl)
-
-                                _editProfileState.update {
-                                    it.copy(profileImage = imageUrl)
-                                }
-
-
-                                _uiState.update { state ->
-                                    state.copy(
-                                        user = state.user.copy(
-                                            profileImage = imageUrl
-                                        )
-                                    )
-                                }
-
-                                loadUserProfile(forceRefresh = true)
-
-                                _uiState.update {
-                                    it.copy(
-                                        isLoading = false,
-                                        successMessage = "Profile image updated successfully."
-                                    )
-                                }
-                            },
-
-                            onFailure = { exception ->
-
-                                _uiState.update {
-                                    it.copy(
-                                        isLoading = false,
-                                        error = exception.message
-                                            ?: "Failed to update profile image."
-                                    )
-                                }
-                            }
-                        )
-                    },
-
-                    onFailure = { exception ->
-
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = exception.message
-                                    ?: "Image upload failed."
-                            )
-                        }
-                    }
-                )
-
-            } catch (e: Exception) {
-
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Something went wrong."
-                    )
-                }
-            }
-        }
-    }
-
-    fun loadUserProfile(forceRefresh: Boolean = false) {
-
-        if (!forceRefresh && _uiState.value.user != null) {
-            return
-        }
-
-        viewModelScope.launch {
-
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null
-                )
-            }
-
-            val result = userRepository.getCurrentUser()
-
-            result.fold(
-
-                onSuccess = { user ->
-
-
-                    Log.d("PROFILE_DEBUG", "loadUserProfile = ${user.profileImage}")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            user = user
-                        )
-                    }
-
+    private fun observeUserSession() {
+        userRepository.currentUser
+            .onEach { user ->
+                if (user != null) {
+                    _uiState.update { it.copy(user = user, isLoading = false) }
                     _editProfileState.update {
                         it.copy(
                             fullName = user.fullName,
-                            phoneNumber = user.phoneNumber,
+                            phoneNumber = user.phone,
                             bio = user.bio,
-                            branch = user.branch,
-                            year = user.year,
-                            section = user.section,
+                            branch = user.department,
+                            year = user.academicYear,
+                            section = user.section ?: "",
                             profileImage = user.profileImage
                         )
                     }
-                },
-
-                onFailure = { exception ->
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = exception.message
-                        )
-                    }
                 }
-            )
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun uploadProfileImage(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            userRepository.uploadProfileImage(uri)
+                .onSuccess { url ->
+                    val currentUser = _uiState.value.user
+                    val updatedUser = currentUser.copy(profileImage = url)
+                    userRepository.updateProfile(updatedUser)
+                        .onSuccess {
+                            _uiState.update { it.copy(isLoading = false, successMessage = "Image Updated") }
+                        }
+                        .onFailure { e ->
+                            _uiState.update { it.copy(isLoading = false, error = e.message) }
+                        }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
         }
     }
+
     fun saveProfile() {
-
-        val form = editProfileState.value
-
+        val form = _editProfileState.value
         if (form.fullName.isBlank()) {
-
-            _editProfileState.update {
-                it.copy(error = "Full name cannot be empty")
-            }
+            _editProfileState.update { it.copy(error = "Name required") }
             return
         }
 
         viewModelScope.launch {
-
-            _editProfileState.update {
-                it.copy(
-                    isSaving = true,
-                    error = null
-                )
-            }
-
-            val currentUser = uiState.value.user
-
-            val updatedUser = currentUser.copy(
+            _editProfileState.update { it.copy(isSaving = true, error = null) }
+            val updatedUser = _uiState.value.user.copy(
                 fullName = form.fullName,
-                phoneNumber = form.phoneNumber,
+                phone = form.phoneNumber,
                 bio = form.bio,
-                branch = form.branch,
-                year = form.year,
+                department = form.branch,
+                academicYear = form.year,
                 section = form.section,
-                profileImage = currentUser.profileImage,
                 updatedAt = System.currentTimeMillis()
             )
 
-            userRepository.updateUser(updatedUser)
+            userRepository.updateProfile(updatedUser)
                 .onSuccess {
-
-                    _uiState.update {
-                        it.copy(user = updatedUser)
-                    }
-
-                    _editProfileState.value = _editProfileState.value.copy(
-                        isSaving = false,
-                        error = null,
-                        isSuccess = true
-                    )
-
+                    _editProfileState.update { it.copy(isSaving = false, isSuccess = true) }
                 }
-                .onFailure { exception ->
-
-                    _editProfileState.update {
-                        it.copy(
-                            isSaving = false,
-                            error = exception.message
-                                ?: "Something went wrong"
-                        )
-                    }
-
+                .onFailure { e ->
+                    _editProfileState.update { it.copy(isSaving = false, error = e.message) }
                 }
         }
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
+
+    fun onFullNameChange(v: String) = _editProfileState.update { it.copy(fullName = v) }
+    fun onPhoneNumberChange(v: String) = _editProfileState.update { it.copy(phoneNumber = v) }
+    fun onBioChange(v: String) = _editProfileState.update { it.copy(bio = v) }
+    fun onBranchChange(v: String) = _editProfileState.update { it.copy(branch = v) }
+    fun onYearChange(v: String) = _editProfileState.update { it.copy(year = v) }
+    fun onSectionChange(v: String) = _editProfileState.update { it.copy(section = v) }
+    
+    fun clearError() = _uiState.update { it.copy(error = null) }
+    fun clearEditError() = _editProfileState.update { it.copy(error = null) }
+    fun resetSuccess() = _editProfileState.update { it.copy(isSuccess = false) }
 }

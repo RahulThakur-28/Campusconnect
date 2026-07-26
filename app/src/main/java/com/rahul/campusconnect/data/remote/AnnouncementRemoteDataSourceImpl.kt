@@ -2,122 +2,60 @@ package com.rahul.campusconnect.data.remote
 
 import android.net.Uri
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.common.constant.StorageConstants
 import com.rahul.campusconnect.common.storage.StoragePathGenerator
+import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.Announcement
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AnnouncementRemoteDataSourceImpl @Inject constructor(
-    private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth,
+    private val pathProvider: FirestorePathProvider,
     private val storageManager: StorageManager
 ) : AnnouncementRemoteDataSource {
 
-    private suspend fun getCollegeId(): String {
-        val uid = auth.currentUser?.uid
-            ?: throw IllegalStateException("User is not logged in.")
-
-        val snapshot = firestore
-            .collection(Constants.USERS)
-            .document(uid)
-            .get()
-            .await()
-
-        val collegeId = snapshot.getString("collegeId")
-        if (collegeId.isNullOrBlank()) {
-            throw IllegalStateException("College ID not found.")
-        }
-        return collegeId
-    }
-
-    private suspend fun announcementsCollection(): CollectionReference {
-        return firestore.collection(Constants.COLLEGES)
-            .document(getCollegeId())
-            .collection(Constants.ANNOUNCEMENTS)
-    }
-
-    override suspend fun getAnnouncements(): Result<List<Announcement>> {
-
+    override suspend fun getAnnouncements(collegeId: String): Result<List<Announcement>> {
         return try {
-
-            Log.d("ANNOUNCEMENT_QUERY", "Fetching announcements...")
-
-            val snapshot = announcementsCollection()
+            Log.d("ANNOUNCEMENT_QUERY", "Fetching announcements for college: $collegeId")
+            val snapshot = pathProvider.announcements(collegeId)
                 .whereEqualTo(Constants.DELETED, false)
                 .orderBy("postedAt", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
-            Log.d(
-                "ANNOUNCEMENT_QUERY",
-                "Documents found = ${snapshot.size()}"
-            )
-
-            snapshot.documents.forEach {
-                Log.d(
-                    "ANNOUNCEMENT_QUERY",
-                    it.data.toString()
-                )
-            }
-
             val announcements = snapshot.documents.mapNotNull {
                 it.toObject(Announcement::class.java)?.copy(id = it.id)
             }
-
             Result.success(announcements)
-
-        } catch (e: FirebaseFirestoreException) {
-
-            Log.e("ANNOUNCEMENT_QUERY", "========================================")
-            Log.e("ANNOUNCEMENT_QUERY", "Firestore Exception")
-            Log.e("ANNOUNCEMENT_QUERY", "Code    : ${e.code}")
-            Log.e("ANNOUNCEMENT_QUERY", "Message : ${e.message}")
-            Log.e("ANNOUNCEMENT_QUERY", "Cause   : ${e.cause}")
-            Log.e("ANNOUNCEMENT_QUERY", "========================================", e)
-
-            Result.failure(e)
-
         } catch (e: Exception) {
-
-            Log.e("ANNOUNCEMENT_QUERY", "General Exception", e)
-
+            Log.e("ANNOUNCEMENT_QUERY", "Error fetching announcements", e)
             Result.failure(e)
         }
     }
 
-    override suspend fun getAnnouncementById(announcementId: String): Result<Announcement?> {
+    override suspend fun getAnnouncementById(collegeId: String, announcementId: String): Result<Announcement?> {
         return try {
-            val document = announcementsCollection()
+            val document = pathProvider.announcements(collegeId)
                 .document(announcementId)
                 .get()
                 .await()
 
             val announcement = document.toObject(Announcement::class.java)?.copy(id = document.id)
-            
-            if (announcement?.deleted == true) {
-                Result.success(null)
-            } else {
-                Result.success(announcement)
-            }
+            if (announcement?.deleted == true) Result.success(null)
+            else Result.success(announcement)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun createAnnouncement(announcement: Announcement): Result<String> {
+    override suspend fun createAnnouncement(collegeId: String, announcement: Announcement): Result<String> {
         return try {
-            val document = announcementsCollection().document(announcement.id.ifBlank { generateAnnouncementId() })
+            val document = pathProvider.announcements(collegeId).document(announcement.id.ifBlank { generateAnnouncementId() })
             val currentTime = System.currentTimeMillis()
-            val collegeId = getCollegeId()
-
             val announcementWithId = announcement.copy(
                 id = document.id,
                 postedAt = currentTime,
@@ -132,12 +70,10 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateAnnouncement(announcement: Announcement): Result<Unit> {
+    override suspend fun updateAnnouncement(collegeId: String, announcement: Announcement): Result<Unit> {
         return try {
-            val updatedAnnouncement = announcement.copy(
-                updatedAt = System.currentTimeMillis()
-            )
-            announcementsCollection()
+            val updatedAnnouncement = announcement.copy(updatedAt = System.currentTimeMillis())
+            pathProvider.announcements(collegeId)
                 .document(announcement.id)
                 .set(updatedAnnouncement)
                 .await()
@@ -147,9 +83,9 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteAnnouncement(announcementId: String): Result<Unit> {
+    override suspend fun deleteAnnouncement(collegeId: String, announcementId: String): Result<Unit> {
         return try {
-            announcementsCollection()
+            pathProvider.announcements(collegeId)
                 .document(announcementId)
                 .update(
                     mapOf(
@@ -164,9 +100,9 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMyAnnouncements(userId: String): Result<List<Announcement>> {
+    override suspend fun getMyAnnouncements(collegeId: String, userId: String): Result<List<Announcement>> {
         return try {
-            val snapshot = announcementsCollection()
+            val snapshot = pathProvider.announcements(collegeId)
                 .whereEqualTo(Constants.DELETED, false)
                 .whereEqualTo("postedBy", userId)
                 .orderBy("postedAt", Query.Direction.DESCENDING)
@@ -182,19 +118,11 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override fun generateAnnouncementId(): String {
-        // We can't suspend here if we want to use it in non-suspend context, but document() is not suspend.
-        // However, announcementsCollection() IS suspend because of getCollegeId().
-        // For simplicity, we can use a random UUID if collegeId is not needed for ID generation.
-        return java.util.UUID.randomUUID().toString()
-    }
+    override fun generateAnnouncementId(): String = java.util.UUID.randomUUID().toString()
 
-    override suspend fun uploadAnnouncementImage(
-        announcementId: String,
-        imageUri: Uri
-    ): Result<Pair<String, String>> {
+    override suspend fun uploadAnnouncementImage(collegeId: String, announcementId: String, imageUri: Uri): Result<Pair<String, String>> {
         return try {
-            val path = StoragePathGenerator.announcementBanner(getCollegeId(), announcementId)
+            val path = StoragePathGenerator.announcementBanner(collegeId, announcementId)
             storageManager.uploadImage(
                 bucket = StorageConstants.MEDIA_BUCKET,
                 path = path,
@@ -205,13 +133,9 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun uploadAnnouncementAttachment(
-        announcementId: String,
-        attachmentUri: Uri
-    ): Result<Pair<String, String>> {
+    override suspend fun uploadAnnouncementAttachment(collegeId: String, announcementId: String, attachmentUri: Uri): Result<Pair<String, String>> {
         return try {
-            // Need to extract extension from Uri or use a fixed one like pdf for now
-            val path = StoragePathGenerator.announcementAttachment(getCollegeId(), announcementId, "pdf")
+            val path = StoragePathGenerator.announcementAttachment(collegeId, announcementId, "pdf")
             storageManager.uploadPdf(
                 bucket = StorageConstants.MEDIA_BUCKET,
                 path = path,
@@ -223,9 +147,6 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun deleteFile(path: String): Result<Unit> {
-        return storageManager.deleteFile(
-            bucket = StorageConstants.MEDIA_BUCKET,
-            path = path
-        )
+        return storageManager.deleteFile(bucket = StorageConstants.MEDIA_BUCKET, path = path)
     }
 }

@@ -1,7 +1,4 @@
-package com.rahul.campusconnect.presentation.discussion.viewmodel
-
-import com.rahul.campusconnect.domain.model.DiscussionParentType
-import com.rahul.campusconnect.domain.model.UserRole
+package com.rahul.campusconnect.domain.model
 
 data class Answer(
     val id: String = "",
@@ -15,5 +12,6 @@ data class Answer(
     val content: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val likeCount: Int = 0,
-    val isOfficial: Boolean = false
+    val isOfficial: Boolean = false,
+    val collegeId: String = ""
 )

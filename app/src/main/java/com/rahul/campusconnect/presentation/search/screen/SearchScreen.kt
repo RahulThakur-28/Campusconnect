@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.domain.model.SearchResult
 import com.rahul.campusconnect.presentation.search.components.SearchFilterChips
 import com.rahul.campusconnect.presentation.search.components.SearchResultItem
@@ -30,7 +31,7 @@ fun SearchScreen(
     onResultClick: (SearchResult) -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {

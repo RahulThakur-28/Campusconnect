@@ -11,7 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rahul.campusconnect.presentation.profile.ProfileViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rahul.campusconnect.presentation.profile.viewmodel.ProfileViewModel
 import com.rahul.campusconnect.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +26,7 @@ fun MyActivityScreen(
     onLostFoundClick: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = listOf("Notes", "Events", "Placements", "Lost & Found")
     var selectedTabIndex by remember { 
         mutableStateOf(tabs.indexOf(initialTab).coerceAtLeast(0)) 

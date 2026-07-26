@@ -1,6 +1,6 @@
 package com.rahul.campusconnect.presentation.discussion.state
 
-import com.rahul.campusconnect.presentation.discussion.viewmodel.Question
+import com.rahul.campusconnect.domain.model.Question
 
 data class EventQAUiState(
     val questions: List<Question> = emptyList(),

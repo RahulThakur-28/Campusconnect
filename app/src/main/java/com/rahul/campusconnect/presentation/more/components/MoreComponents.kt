@@ -73,14 +73,15 @@ fun MoreHeader(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = state.userRole,
+                text = state.role,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold
             )
 
             Text(
-                text = "${state.department} • ${state.year}",
+
+                text = "${state.department} • ${state.academicYear}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

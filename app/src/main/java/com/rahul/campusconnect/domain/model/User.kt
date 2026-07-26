@@ -1,33 +1,21 @@
 package com.rahul.campusconnect.domain.model
 
 data class User(
-
-// Basic Info
     val uid: String = "",
     val fullName: String = "",
     val email: String = "",
-    val profileImage: String = "",
-    val phoneNumber: String = "",
-    val bio: String = "",
-
-// College Info
     val collegeId: String = "",
-    val studentId: String = "",
-    val branch: String = "",
-    val year: String = "",
-    val section: String = "",
-
-// Permissions
+    val collegeName: String = "",
+    val enrollmentNumber: String = "",
+    val department: String = "",
+    val academicYear: String = "",
+    val section: String? = null,
     val role: UserRole = UserRole.STUDENT,
     val verificationStatus: String = "PENDING",
-
-// Status
-    val isEmailVerified: Boolean = false,
-    val isProfileCompleted: Boolean = false,
-
-// Metadata
+    val profileImage: String = "",
+    val phone: String = "",
+    val bio: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val deleted: Boolean = false,
-
+    val deleted: Boolean = false
 )

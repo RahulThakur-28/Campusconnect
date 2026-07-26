@@ -5,17 +5,16 @@ import com.rahul.campusconnect.domain.model.LostFoundItem
 import com.rahul.campusconnect.domain.model.Note
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.domain.model.User
+
 data class ProfileUiState(
-
     val user: User = User(),
-
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
     val successMessage: String? = null,
-
+    
+    // Placeholder lists for Phase 2 migration
     val myNotes: List<Note> = emptyList(),
     val myEvents: List<Event> = emptyList(),
     val myPlacements: List<Placement> = emptyList(),
     val myLostFoundItems: List<LostFoundItem> = emptyList()
-
 )

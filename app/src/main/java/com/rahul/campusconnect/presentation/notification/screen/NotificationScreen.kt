@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.domain.model.Notification
 import com.rahul.campusconnect.domain.model.NotificationType
 import com.rahul.campusconnect.presentation.notification.components.NotificationFilterChips
@@ -29,7 +30,7 @@ fun NotificationScreen(
     onNotificationClick: (Notification) -> Unit,
     viewModel: NotificationViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val filteredNotifications = remember(uiState.notifications, uiState.selectedFilter) {
         when (uiState.selectedFilter) {

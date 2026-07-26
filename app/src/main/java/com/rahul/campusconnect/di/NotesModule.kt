@@ -1,9 +1,9 @@
 package com.rahul.campusconnect.di
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.rahul.campusconnect.common.session.SessionManager
 import com.rahul.campusconnect.data.remote.NotesRemoteDataSource
 import com.rahul.campusconnect.data.remote.NotesRemoteDataSourceImpl
+import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.data.repository.NotesRepositoryImpl
 import com.rahul.campusconnect.domain.repository.NotesRepository
@@ -20,13 +20,11 @@ object NotesModule {
     @Provides
     @Singleton
     fun provideNotesRemoteDataSource(
-        firestore: FirebaseFirestore,
-        auth: FirebaseAuth,
+        pathProvider: FirestorePathProvider,
         storageManager: StorageManager
     ): NotesRemoteDataSource {
         return NotesRemoteDataSourceImpl(
-            firestore = firestore,
-            auth = auth,
+            pathProvider = pathProvider,
             storageManager = storageManager
         )
     }
@@ -34,8 +32,9 @@ object NotesModule {
     @Provides
     @Singleton
     fun provideNotesRepository(
-        remoteDataSource: NotesRemoteDataSource
+        remoteDataSource: NotesRemoteDataSource,
+        sessionManager: SessionManager
     ): NotesRepository {
-        return NotesRepositoryImpl(remoteDataSource)
+        return NotesRepositoryImpl(remoteDataSource, sessionManager)
     }
 }

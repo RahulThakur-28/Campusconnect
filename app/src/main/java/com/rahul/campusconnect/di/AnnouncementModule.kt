@@ -1,9 +1,9 @@
 package com.rahul.campusconnect.di
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.rahul.campusconnect.common.session.SessionManager
 import com.rahul.campusconnect.data.remote.AnnouncementRemoteDataSource
 import com.rahul.campusconnect.data.remote.AnnouncementRemoteDataSourceImpl
+import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.data.repository.AnnouncementRepositoryImpl
 import com.rahul.campusconnect.domain.repository.AnnouncementRepository
@@ -20,13 +20,11 @@ object AnnouncementModule {
     @Provides
     @Singleton
     fun provideAnnouncementRemoteDataSource(
-        firestore: FirebaseFirestore,
-        auth: FirebaseAuth,
+        pathProvider: FirestorePathProvider,
         storageManager: StorageManager
     ): AnnouncementRemoteDataSource {
         return AnnouncementRemoteDataSourceImpl(
-            firestore = firestore,
-            auth = auth,
+            pathProvider = pathProvider,
             storageManager = storageManager
         )
     }
@@ -34,8 +32,9 @@ object AnnouncementModule {
     @Provides
     @Singleton
     fun provideAnnouncementRepository(
-        remoteDataSource: AnnouncementRemoteDataSource
+        remoteDataSource: AnnouncementRemoteDataSource,
+        sessionManager: SessionManager
     ): AnnouncementRepository {
-        return AnnouncementRepositoryImpl(remoteDataSource)
+        return AnnouncementRepositoryImpl(remoteDataSource, sessionManager)
     }
 }

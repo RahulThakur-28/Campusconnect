@@ -12,6 +12,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,73 +23,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
-import kotlinx.coroutines.delay
-
 
 @Composable
 fun SplashScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-
+    viewModel: SplashViewModel = hiltViewModel()
 ) {
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
 
-    LaunchedEffect(Unit) {
-
-        delay(500)
-
-        val currentUser = FirebaseAuth.getInstance().currentUser
-
-        if (currentUser != null) {
-
-            navController.navigate(AppRoutes.Main.route) {
-                popUpTo(AppRoutes.Splash.route) {
-                    inclusive = true
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn != null) {
+            if (isLoggedIn == true) {
+                navController.navigate(AppRoutes.Main.route) {
+                    popUpTo(AppRoutes.Splash.route) { inclusive = true }
+                }
+            } else {
+                navController.navigate(AppRoutes.Login.route) {
+                    popUpTo(AppRoutes.Splash.route) { inclusive = true }
                 }
             }
-
-        } else {
-
-            navController.navigate(AppRoutes.Login.route) {
-                popUpTo(AppRoutes.Splash.route) {
-                    inclusive = true
-                }
-            }
-
         }
     }
 
-
-
-    // Defining consistent blue gradient colors
-    val gradientColors = listOf(
-        Color(0xFF2563EB),
-        Color(0xFF1D4ED8),
-        Color(0xFF312E81)
-    )
+    val gradientColors = listOf(Color(0xFF2563EB), Color(0xFF1D4ED8), Color(0xFF312E81))
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = gradientColors
-                )
-            ),
+        modifier = modifier.fillMaxSize().background(Brush.verticalGradient(gradientColors)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
         ) {
-            // Glassmorphism Center Card containing the Graduation Cap
             GlassCard {
                 Icon(
                     imageVector = Icons.Filled.School,
@@ -96,10 +70,7 @@ fun SplashScreen(
                     tint = Color.White
                 )
             }
-
             Spacer(modifier = Modifier.height(32.dp))
-
-            // App Name with high emphasis
             Text(
                 text = "CampusConnect",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -108,10 +79,7 @@ fun SplashScreen(
                     letterSpacing = 1.2.sp
                 )
             )
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Tagline with medium emphasis
             Text(
                 text = "Your Campus. Your Community.",
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -124,27 +92,23 @@ fun SplashScreen(
     }
 }
 
-
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     Surface(
-        color = Color.White.copy(alpha = 0.12f), // Frosted glass transparency
+        color = Color.White.copy(alpha = 0.12f),
         shape = RoundedCornerShape(32.dp),
         modifier = modifier
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.25f), // Subtle highlight border
+                color = Color.White.copy(alpha = 0.25f),
                 shape = RoundedCornerShape(32.dp)
             )
             .clip(RoundedCornerShape(32.dp))
     ) {
-        Box(
-            modifier = Modifier.padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.padding(32.dp), contentAlignment = Alignment.Center) {
             content()
         }
     }
@@ -154,6 +118,6 @@ fun GlassCard(
 @Composable
 fun SplashScreenPreview() {
     CampusconnectTheme {
-        SplashScreen( navController = rememberNavController())
+        SplashScreen(navController = rememberNavController())
     }
 }

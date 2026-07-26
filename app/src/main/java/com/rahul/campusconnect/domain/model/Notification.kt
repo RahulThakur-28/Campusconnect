@@ -16,5 +16,6 @@ data class Notification(
     val type: NotificationType = NotificationType.GENERAL,
     val referenceId: String? = null,
     val isRead: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val collegeId: String = ""
 )

@@ -24,6 +24,14 @@ object StoragePathGenerator {
         }
     }
 
+    fun placementAttachment(
+        collegeId: String,
+        placementId: String,
+        extension: String
+    ): String {
+        return "colleges/$collegeId/${StorageConstants.Folder.PLACEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$placementId.$extension"
+    }
+
     fun eventBanner(
         collegeId: String,
         eventId: String
@@ -75,5 +83,27 @@ object StoragePathGenerator {
         extension: String
     ): String {
         return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$announcementId.$extension"
+    }
+
+    fun noteFile(
+        collegeId: String,
+        noteId: String,
+        extension: String
+    ): String {
+        return "colleges/$collegeId/${StorageConstants.Folder.NOTES}/${StorageConstants.Folder.DOCUMENTS}/$noteId.$extension"
+    }
+
+    fun noteThumbnail(
+        collegeId: String,
+        noteId: String
+    ): String {
+        return "colleges/$collegeId/${StorageConstants.Folder.NOTES}/${StorageConstants.Folder.BANNERS}/$noteId.jpg"
+    }
+
+    fun lostFoundImage(
+        collegeId: String,
+        itemId: String
+    ): String {
+        return "colleges/$collegeId/${StorageConstants.Folder.LOST_FOUND}/$itemId.jpg"
     }
 }

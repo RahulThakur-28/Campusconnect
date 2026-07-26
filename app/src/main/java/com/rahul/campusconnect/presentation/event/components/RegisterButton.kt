@@ -18,11 +18,12 @@ fun RegisterButton(
     isRegistered: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    isLoading: Boolean = false
 ) {
     Button(
         onClick = onClick,
-        enabled = enabled,
+        enabled = enabled && !isLoading,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isRegistered) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.primary,
@@ -30,18 +31,26 @@ fun RegisterButton(
         ),
         modifier = modifier.fillMaxWidth().height(56.dp)
     ) {
-        if (isRegistered) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = if (isRegistered) Color(0xFF2E7D32) else Color.White,
+                strokeWidth = 2.dp
             )
-            Spacer(modifier = Modifier.width(8.dp))
+        } else {
+            if (isRegistered) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = if (isRegistered) "Registered" else "Register Now",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
-        Text(
-            text = if (isRegistered) "Registered" else "Register Now",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
     }
 }

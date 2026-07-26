@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.domain.model.LostFoundItem
 
 @Composable
@@ -27,26 +29,17 @@ fun LostFoundCard(
     onContactClick: () -> Unit = {}
 ) {
 
-    val statusBackground = when (item.status) {
-        "Lost" -> Color(0xFFFEE2E2)
-        "Found" -> Color(0xFFDCFCE7)
-        "Claimed" -> Color(0xFFDBEAFE)
-        else -> Color(0xFFF3F4F6)
-    }
-
     val statusColor = when (item.status) {
-        "Lost" -> Color(0xFFDC2626)
-        "Found" -> Color(0xFF16A34A)
-        "Claimed" -> Color(0xFF2563EB)
+        "ACTIVE" -> if (item.type == "LOST") Color(0xFFDC2626) else Color(0xFF16A34A)
+        "RESOLVED" -> Color(0xFF6B7280)
         else -> Color.Gray
     }
 
-    val categoryColor = when (item.category) {
-        "Document" -> Color(0xFF2563EB)
-        "Electronics" -> Color(0xFF7C3AED)
-        "Accessories" -> Color(0xFF16A34A)
-        "Personal" -> Color(0xFFF59E0B)
-        else -> Color(0xFFF59E0B)
+    val statusBackground = statusColor.copy(alpha = 0.1f)
+
+    val categoryColor = when (item.type) {
+        "LOST" -> Color(0xFFDC2626)
+        else -> Color(0xFF16A34A)
     }
 
     val cardModifier = if (fullWidth) {
@@ -62,17 +55,48 @@ fun LostFoundCard(
             containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
+            defaultElevation = 2.dp
         )
     ) {
 
         Column {
-
-            CardImageHeader(
-                imageUrl = item.imageUrl,
-                category = item.category,
-                categoryColor = categoryColor
-            )
+            if (!item.imageUrl.isNullOrEmpty()) {
+                CardImageHeader(
+                    imageUrl = item.imageUrl,
+                    category = item.category,
+                    categoryColor = categoryColor,
+                    height = 140.dp
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = if (item.type == "LOST") 
+                                    listOf(Color(0xFFFECACA), Color(0xFFFEE2E2)) 
+                                else 
+                                    listOf(Color(0xFFBBF7D0), Color(0xFFDCFCE7))
+                            )
+                        )
+                        .padding(12.dp),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(50.dp),
+                        color = categoryColor
+                    ) {
+                        Text(
+                            text = item.category,
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
 
             Column(
                 modifier = Modifier.padding(16.dp)
@@ -123,59 +147,55 @@ fun LostFoundCard(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
                         modifier = Modifier.size(15.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = item.location,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.Gray,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = item.reportedDate,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = TimeUtils.getRelativeTime(item.createdAt),
+                        fontSize = 11.sp,
+                        color = Color.Gray
                     )
-                }
-
-                if (fullWidth) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onContactClick,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Contact", fontSize = 14.sp)
+                    
+                    if (fullWidth && item.status == "ACTIVE") {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = onContactClick,
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Icon(Icons.Default.Phone, null, Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Contact", fontSize = 11.sp)
+                            }
+                            Button(
+                                onClick = onClick,
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text("Details", fontSize = 11.sp)
+                            }
                         }
-                        
-                        Button(
-                            onClick = onClick,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("Details", fontSize = 14.sp)
+                    } else if (fullWidth) {
+                        TextButton(onClick = onClick) {
+                            Text("View Details", fontSize = 12.sp)
                         }
                     }
                 }

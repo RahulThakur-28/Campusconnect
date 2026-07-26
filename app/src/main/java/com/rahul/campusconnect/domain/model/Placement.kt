@@ -13,6 +13,9 @@ data class Placement(
     val applyLink: String = "",
     val logoUrl: String = "",
     val logoStoragePath: String = "",
+    
+    val attachmentUrl: String? = null,
+    val attachmentStoragePath: String? = null,
 
     val eligibility: String = "",
     val category: String = "All",

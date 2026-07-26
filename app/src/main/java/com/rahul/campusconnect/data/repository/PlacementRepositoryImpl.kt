@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.data.repository
 
+import android.net.Uri
 import com.rahul.campusconnect.data.remote.PlacementRemoteDataSource
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.domain.repository.PlacementRepository
@@ -59,5 +60,22 @@ class PlacementRepositoryImpl @Inject constructor(
         return remoteDataSource.generatePlacementId()
     }
 
+    override suspend fun uploadPlacementLogo(
+        placementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>> {
+        return remoteDataSource.uploadPlacementLogo(placementId, imageUri)
+    }
 
+    override suspend fun uploadPlacementAttachment(
+        placementId: String,
+        fileUri: Uri,
+        extension: String
+    ): Result<Pair<String, String>> {
+        return remoteDataSource.uploadPlacementAttachment(placementId, fileUri, extension)
+    }
+
+    override suspend fun deleteFile(path: String): Result<Unit> {
+        return remoteDataSource.deleteFile(path)
+    }
 }

@@ -54,34 +54,14 @@ fun MainNavigation(
         // ---------------- Events ----------------
 
         eventGraph(
+            navController = navController,
             onBackClick = {
                 navController.popBackStack()
             },
 
-            onEventClick = { eventId ->
-                navController.navigateToEventDetails(eventId)
-            },
-
-            onViewDiscussionClick = {
+            onViewDiscussionClick = { eventId ->
                 // TODO: Discussion navigation
-            },
-
-            onCreateEventClick = {
-                navController.navigateToCreateEvent()
-            },
-
-            onEventCreated = {
-                navController.popBackStack()
             }
-            ,
-            onUpcomingEventsClick = {
-                navController.navigateToUpcomingEvents()
-            },
-
-            onPastEventsClick = {
-                navController.navigateToPastEvents()
-            }
-
         )
 
 

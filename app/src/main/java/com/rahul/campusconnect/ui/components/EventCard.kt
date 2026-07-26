@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.domain.model.Event
 
 enum class EventCardStyle {
@@ -42,7 +43,6 @@ fun EventCard(
     onClick: () -> Unit = {},
     onRegisterClick: () -> Unit = {}
 ) {
-
     val categoryColor = when (event.category) {
         "Academic" -> Color(0xFF2563EB)
         "Workshop" -> Color(0xFF7C3AED)
@@ -65,13 +65,8 @@ fun EventCard(
     Card(
         modifier = cardModifier.clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 10.dp,
-            pressedElevation = 14.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
             Box(
@@ -80,57 +75,30 @@ fun EventCard(
                     .height(imageHeight)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFF8B5CF6), Color(0xFF6366F1))
-                        )
+                        Brush.verticalGradient(listOf(Color(0xFF8B5CF6), Color(0xFF6366F1)))
                     )
             ) {
-
-                if (event.imageUrl.isNotBlank()) {
-
+                if (!event.imageUrl.isNullOrEmpty()) {
                     AsyncImage(
                         model = event.imageUrl,
                         contentDescription = event.title,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-
                     Box(
                         modifier = Modifier
                             .matchParentSize()
                             .background(
                                 Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.45f)
-                                    )
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f))
                                 )
                             )
                     )
-
-                } else {
-
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color(0xFF8B5CF6),
-                                        Color(0xFF6366F1)
-                                    )
-                                )
-                            )
-                    )
-
                 }
+
                 if (showCategory) {
                     Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(12.dp),
+                        modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
                         shape = RoundedCornerShape(50.dp),
                         color = categoryColor
                     ) {
@@ -139,16 +107,14 @@ fun EventCard(
                             color = Color.White,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
                 }
 
                 if (isRegistered) {
                     Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp),
+                        modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
                         shape = RoundedCornerShape(50.dp),
                         color = Color(0xFFE8F5E9).copy(alpha = 0.9f)
                     ) {
@@ -156,19 +122,9 @@ fun EventCard(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF2E7D32),
-                                modifier = Modifier.size(14.dp)
-                            )
+                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Registered",
-                                color = Color(0xFF2E7D32),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("Registered", color = Color(0xFF2E7D32), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -177,102 +133,49 @@ fun EventCard(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = event.title,
-                    fontSize = if (cardStyle == EventCardStyle.Large) 20.sp else 18.sp,
+                    fontSize = if (cardStyle == EventCardStyle.Large) 18.sp else 16.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                if (cardStyle != EventCardStyle.Small) {
-                    Text(
-                        text = event.description,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(Icons.Default.CalendarToday, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "${event.date} • ${event.time}",
+                        text = "${TimeUtils.formatDate(event.startDate)} • ${event.time}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp),
-                        tint = Color.Gray
-                    )
+                    Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(14.dp), tint = Color.Gray)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = event.venue,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = Color.Gray,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                if (showAttendance || showRegisterButton) {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        if (showAttendance) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.People,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(15.dp),
-                                    tint = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "${event.registeredCount} Registered",
-                                    fontSize = 12.sp,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-
-                        if (showRegisterButton) {
-                            Button(
-                                onClick = onRegisterClick,
-                                shape = RoundedCornerShape(50.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isRegistered) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.primary,
-                                    contentColor = if (isRegistered) Color(0xFF2E7D32) else Color.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                                modifier = Modifier.height(36.dp)
-                            ) {
-                                Text(
-                                    text = if (isRegistered) "Registered" else "Register",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
+                if (showAttendance) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.People, null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${event.registeredCount} Registered",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
                     }
                 }
             }

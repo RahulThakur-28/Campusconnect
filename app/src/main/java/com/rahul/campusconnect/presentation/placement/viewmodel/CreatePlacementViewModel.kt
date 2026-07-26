@@ -1,11 +1,9 @@
 package com.rahul.campusconnect.presentation.placement.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rahul.campusconnect.common.constant.StorageConstants
-import com.rahul.campusconnect.common.storage.StoragePathGenerator
-import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.Placement
 import com.rahul.campusconnect.domain.repository.PlacementRepository
 import com.rahul.campusconnect.domain.repository.UserRepository
@@ -21,210 +19,91 @@ import javax.inject.Inject
 @HiltViewModel
 class CreatePlacementViewModel @Inject constructor(
     private val placementRepository: PlacementRepository,
-    private val userRepository: UserRepository,
-    private val storageManager: StorageManager
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreatePlacementUiState())
     val uiState: StateFlow<CreatePlacementUiState> = _uiState.asStateFlow()
 
-    private var isCreatingPlacement = false
+    fun createPlacement(
+        placement: Placement,
+        logoUri: Uri?,
+        attachmentUri: Uri?
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSubmitting = true, error = null, isSuccess = false) }
 
-    fun clearError() {
-        _uiState.update {
-            it.copy(error = null)
-        }
-    }
+            try {
+                val user = userRepository.getCurrentUser().getOrThrow()
+                val placementId = placementRepository.generatePlacementId()
 
-    private fun validateForm(placement: Placement, logoUri: Uri?): Boolean {
-        if (placement.companyName.isBlank()) {
-            setError("Company name is required")
-            return false
+                var logoUrl = ""
+                var logoPath = ""
+                var attachmentUrl: String? = null
+                var attachmentPath: String? = null
+
+                // Upload Logo
+                if (logoUri != null) {
+                    Log.d("PLACEMENT_UPLOAD", "Uploading logo for placement: $placementId")
+                    val result = placementRepository.uploadPlacementLogo(placementId, logoUri)
+                    if (result.isSuccess) {
+                        logoUrl = result.getOrThrow().first
+                        logoPath = result.getOrThrow().second
+                    } else {
+                        throw result.exceptionOrNull() ?: Exception("Logo upload failed")
+                    }
+                }
+
+                // Upload Attachment
+                if (attachmentUri != null) {
+                    Log.d("PLACEMENT_UPLOAD", "Uploading attachment for placement: $placementId")
+                    val result = placementRepository.uploadPlacementAttachment(placementId, attachmentUri, "pdf")
+                    if (result.isSuccess) {
+                        attachmentUrl = result.getOrThrow().first
+                        attachmentPath = result.getOrThrow().second
+                    } else {
+                        // Cleanup logo if attachment fails
+                        if (logoPath.isNotBlank()) placementRepository.deleteFile(logoPath)
+                        throw result.exceptionOrNull() ?: Exception("Attachment upload failed")
+                    }
+                }
+
+                val finalPlacement = placement.copy(
+                    id = placementId,
+                    logoUrl = logoUrl,
+                    logoStoragePath = logoPath,
+                    attachmentUrl = attachmentUrl,
+                    attachmentStoragePath = attachmentPath,
+                    createdBy = user.uid,
+                    createdByName = user.fullName,
+                    createdByRole = user.role.name,
+                    collegeId = user.collegeId,
+                    postedAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+
+                placementRepository.createPlacement(finalPlacement).onSuccess {
+                    Log.d("PLACEMENT_CREATE", "Placement created: $placementId")
+                    _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
+                }.onFailure { e ->
+                    // Cleanup uploaded files on failure
+                    if (logoPath.isNotBlank()) placementRepository.deleteFile(logoPath)
+                    if (attachmentPath != null) placementRepository.deleteFile(attachmentPath)
+                    throw e
+                }
+
+            } catch (e: Exception) {
+                Log.e("PLACEMENT_CREATE", "Error creating placement", e)
+                _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to create placement") }
+            }
         }
-        if (placement.jobRole.isBlank()) {
-            setError("Job role is required")
-            return false
-        }
-        if (placement.packageLpa.isBlank()) {
-            setError("Package detail is required")
-            return false
-        }
-        if (placement.deadline <= 0L) {
-            setError("Please set a valid deadline")
-            return false
-        }
-        if (placement.applyLink.isBlank()) {
-            setError("Application link is required")
-            return false
-        }
-        if (logoUri == null) {
-            setError("Company logo is required")
-            return false
-        }
-        return true
     }
 
     fun resetSuccessState() {
-        _uiState.update {
-            it.copy(isSuccess = false)
-        }
+        _uiState.update { it.copy(isSuccess = false) }
     }
 
-    private fun setSubmitting(value: Boolean) {
-        _uiState.update {
-            it.copy(isSubmitting = value)
-        }
-    }
-
-    private fun setSuccess() {
-        _uiState.update {
-            it.copy(
-                isSubmitting = false,
-                isSuccess = true,
-                error = null
-            )
-        }
-    }
-
-    private fun setError(message: String) {
-        _uiState.update {
-            it.copy(
-                isSubmitting = false,
-                error = message
-            )
-        }
-    }
-
-    fun createPlacement(
-        placement: Placement,
-        logoUri: Uri?
-    ) {
-        if (!validateForm(placement, logoUri)) return
-
-        if (isCreatingPlacement) return
-
-        isCreatingPlacement = true
-
-        viewModelScope.launch {
-
-            setSubmitting(true)
-
-            var uploadedLogoPath = ""
-            var uploadedLogoUrl = ""
-
-            try {
-
-                val userResult = userRepository.getCurrentUser()
-
-                if (userResult.isFailure) {
-                    setError(
-                        userResult.exceptionOrNull()?.message
-                            ?: "Unable to load user."
-                    )
-                    return@launch
-                }
-
-                val user = userResult.getOrThrow()
-
-                val placementId =
-                    placementRepository.generatePlacementId()
-
-                if (logoUri != null) {
-
-                    uploadedLogoPath =
-                        StoragePathGenerator.placementLogo(
-                            collegeId = user.collegeId,
-                            placementId = placementId
-                        )
-
-                    val uploadResult =
-                        storageManager.uploadImage(
-                            bucket = StorageConstants.MEDIA_BUCKET,
-                            path = uploadedLogoPath,
-                            imageUri = logoUri
-                        )
-
-                    if (uploadResult.isFailure) {
-
-                        setError(
-                            uploadResult.exceptionOrNull()?.message
-                                ?: "Failed to upload company logo."
-                        )
-
-                        return@launch
-                    }
-
-                    uploadedLogoUrl =
-                        uploadResult.getOrThrow()
-                }
-
-                val finalPlacement =
-                    placement.copy(
-
-                        id = placementId,
-
-                        logoUrl = uploadedLogoUrl,
-
-                        logoStoragePath = uploadedLogoPath,
-
-                        postedAt = System.currentTimeMillis(),
-
-                        updatedAt = System.currentTimeMillis(),
-
-                        createdBy = user.uid,
-
-                        createdByName = user.fullName,
-
-                        createdByRole = user.role.name,
-
-                        collegeId = user.collegeId,
-
-                        deleted = false
-                    )
-
-                val createResult =
-                    placementRepository.createPlacement(
-                        finalPlacement
-                    )
-
-                if (createResult.isFailure) {
-
-                    if (uploadedLogoPath.isNotBlank()) {
-
-                        storageManager.deleteFile(
-                            bucket = StorageConstants.MEDIA_BUCKET,
-                            path = uploadedLogoPath
-                        )
-                    }
-
-                    setError(
-                        createResult.exceptionOrNull()?.message
-                            ?: "Failed to create placement."
-                    )
-
-                    return@launch
-                }
-
-                setSuccess()
-
-            } catch (e: Exception) {
-
-                if (uploadedLogoPath.isNotBlank()) {
-
-                    storageManager.deleteFile(
-                        bucket = StorageConstants.MEDIA_BUCKET,
-                        path = uploadedLogoPath
-                    )
-                }
-
-                setError(
-                    e.message ?: "Something went wrong."
-                )
-
-            } finally {
-
-                isCreatingPlacement = false
-            }
-        }
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 }

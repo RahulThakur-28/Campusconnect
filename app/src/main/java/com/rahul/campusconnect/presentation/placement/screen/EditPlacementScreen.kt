@@ -5,20 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.rahul.campusconnect.core.imagepicker.ImagePickerState
 import com.rahul.campusconnect.presentation.placement.components.PlacementForm
@@ -32,21 +25,17 @@ fun EditPlacementScreen(
     navController: NavController,
     viewModel: EditPlacementViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val uiState by viewModel.uiState.collectAsState()
-
-    var imagePickerState by remember {
-        mutableStateOf(ImagePickerState())
-    }
+    var imagePickerState by remember { mutableStateOf(ImagePickerState()) }
+    var removeLogo by remember { mutableStateOf(false) }
 
     LaunchedEffect(placementId) {
         viewModel.loadPlacement(placementId)
     }
 
     LaunchedEffect(uiState.placement) {
-
         uiState.placement?.let { placement ->
-
             imagePickerState = imagePickerState.copy(
                 imageUrl = placement.logoUrl,
                 imageUri = null
@@ -55,127 +44,76 @@ fun EditPlacementScreen(
     }
 
     LaunchedEffect(uiState.isSuccess) {
-
         if (uiState.isSuccess) {
-
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
-
             onBackClick()
-
             viewModel.resetSuccessState()
         }
     }
 
     Scaffold(
-
         topBar = {
-
             TopAppBar(
-
-                title = {
-                    Text(
-                        text = "Edit Placement Drive",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-
+                title = { Text(text = "Edit Placement Drive", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-
-                    IconButton(
-                        onClick = onBackClick
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         }
-
     ) { padding ->
-
-        when {
-
-            uiState.isLoading -> {
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                uiState.isLoading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                uiState.placement != null -> {
+                    PlacementForm(
+                        modifier = Modifier.padding(padding),
+                        initialPlacement = uiState.placement,
+                        imagePickerState = imagePickerState,
+                        onImageSelected = { uri ->
+                            imagePickerState = imagePickerState.copy(imageUri = uri, imageUrl = null)
+                            removeLogo = false
+                        },
+                        onRemoveImage = {
+                            imagePickerState = imagePickerState.copy(imageUri = null, imageUrl = null)
+                            removeLogo = true
+                        },
+                        buttonText = "Update Drive",
+                        onSubmit = { updatedPlacement, attachmentUri, removeAttachment ->
+                            viewModel.updatePlacement(
+                                placement = updatedPlacement,
+                                logoUri = imagePickerState.imageUri,
+                                attachmentUri = attachmentUri,
+                                removeLogo = removeLogo,
+                                removeAttachment = removeAttachment
+                            )
+                        }
+                    )
                 }
             }
 
-            uiState.placement != null -> {
-
-                PlacementForm(
-
-                    modifier = Modifier.padding(padding),
-
-                    initialPlacement = uiState.placement,
-
-                    imagePickerState = imagePickerState,
-
-                    onImageSelected = { uri ->
-
-                        imagePickerState = imagePickerState.copy(
-                            imageUri = uri
-                        )
-                    },
-
-                    onRemoveImage = {
-
-                        imagePickerState = imagePickerState.copy(
-                            imageUri = null,
-                            imageUrl = null
-                        )
-                    },
-
-                    buttonText = "Update Drive",
-
-                    onSubmit = { updatedPlacement ->
-
-                        viewModel.updatePlacement(
-                            placement = updatedPlacement,
-                            logoUri = imagePickerState.imageUri
-                        )
-                    }
-                )
+            if (uiState.isSubmitting) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
         }
     }
 
-    uiState.error?.let { message ->
-
+    uiState.error?.let { error ->
         AlertDialog(
-
-            onDismissRequest = {
-                viewModel.clearError()
-            },
-
+            onDismissRequest = { viewModel.clearError() },
             confirmButton = {
-
-                TextButton(
-                    onClick = {
-                        viewModel.clearError()
-                    }
-                ) {
-                    Text("OK")
-                }
+                TextButton(onClick = { viewModel.clearError() }) { Text("OK") }
             },
-
-            title = {
-                Text("Error")
-            },
-
-            text = {
-                Text(message)
-            }
+            title = { Text("Error") },
+            text = { Text(error) }
         )
     }
 }

@@ -1,7 +1,6 @@
 package com.rahul.campusconnect.presentation.event.screen
 
-
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -10,42 +9,49 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.rahul.campusconnect.domain.model.Event
+import androidx.navigation.NavController
 import com.rahul.campusconnect.presentation.event.components.*
+import com.rahul.campusconnect.presentation.event.state.EventTab
 import com.rahul.campusconnect.presentation.event.viewmodel.EventsViewModel
-import com.rahul.campusconnect.ui.components.EventCard
-import com.rahul.campusconnect.ui.components.EventCardStyle
-import com.rahul.campusconnect.ui.components.SectionHeader
+import com.rahul.campusconnect.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsScreen(
     onEventClick: (String) -> Unit,
     onCreateEventClick: () -> Unit,
-    viewModel: EventsViewModel = hiltViewModel(),
-            onUpcomingEventsClick: () -> Unit,
-onPastEventsClick: () -> Unit,
-) {val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val filteredEvents = uiState.events.filter { event ->
+    navController: NavController,
+    viewModel: EventsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-        val query = uiState.searchQuery.trim()
+    // Automatic Refresh Logic
+    val refreshSignal = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getLiveData<Boolean>("refresh")
+        ?.observeAsState()
 
-        query.isBlank() ||
-                event.title.contains(query, ignoreCase = true) ||
-                event.description.contains(query, ignoreCase = true) ||
-                event.category.contains(query, ignoreCase = true) ||
-                event.venue.contains(query, ignoreCase = true)
+    LaunchedEffect(refreshSignal?.value) {
+        if (refreshSignal?.value == true) {
+            viewModel.refresh()
+            navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>("refresh")
+        }
     }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -56,11 +62,7 @@ onPastEventsClick: () -> Unit,
                     )
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            // TODO: Navigate to Notifications
-                        }
-                    ) {
+                    IconButton(onClick = { navController.navigate(com.rahul.campusconnect.navigation.AppRoutes.Notifications.route) }) {
                         Icon(
                             imageVector = Icons.Default.NotificationsNone,
                             contentDescription = "Notifications"
@@ -72,263 +74,151 @@ onPastEventsClick: () -> Unit,
                 )
             )
         },
-
-
-
         floatingActionButton = {
-
             AnimatedVisibility(
-                visible = uiState.canCreateEvent
+                visible = uiState.canCreateEvent,
+                enter = fadeIn() + expandIn(),
+                exit = fadeOut()
             ) {
                 FloatingActionButton(
                     onClick = onCreateEventClick,
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Create Event"
-                    )
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Create Event")
                 }
             }
         }
-
     ) { padding ->
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(bottom = 80.dp)
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = viewModel::refresh,
+            modifier = Modifier.padding(padding)
         ) {
-
-            // Search Bar
-            item {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = viewModel::onSearchQueryChanged,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    placeholder = {
-                        Text("Search events...")
-                    },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, null)
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    ),
-                    singleLine = true
-                )
-            }
-
-            // Categories
-            item {
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.categories) { category ->
-                        CategoryChip(
-                            category = category,
-                            isSelected = uiState.selectedCategory == category,
-                            onClick = {
-                                viewModel.onCategorySelected(category)
-                            }
-                        )
-                    }
-                }
-            }
-
-            when {
-
-                uiState.isLoading -> {
-
-                    item {
-                        LoadingShimmer()
-                    }
-
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                // Search Bar
+                item {
+                    SearchTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = viewModel::onSearchQueryChanged,
+                        placeholder = "Search events, venues...",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
                 }
 
-                uiState.events.isEmpty() -> {
-
-                    item {
-                        EmptyEventsState()
-                    }
-
-                }
-
-                else -> {
-
-                    // Featured Event
-                    val filteredFeaturedEvent =
-                        uiState.featuredEvent?.takeIf { featured ->
-                            filteredEvents.any { event ->
-                                event.id == featured.id
-                            }
-                        }
-
-                    filteredFeaturedEvent?.let { featured ->
-
-                        item {
-
-                            SectionHeader(
-                                title = "Featured",
-                                actionText = null
-                            )
-
-                            FeaturedEventCard(
-                                event = featured,
-                                onClick = {
-                                    onEventClick(featured.id)
-                                },
-                                onRegisterClick = {
-                                    viewModel.onRegisterEvent(featured.id)
+                // Tab Row (Upcoming, Ongoing, Past)
+                item {
+                    PrimaryTabRow(
+                        selectedTabIndex = uiState.selectedTab.ordinal,
+                        containerColor = MaterialTheme.colorScheme.background,
+                        divider = {}
+                    ) {
+                        EventTab.entries.forEach { tab ->
+                            Tab(
+                                selected = uiState.selectedTab == tab,
+                                onClick = { viewModel.onTabSelected(tab) },
+                                text = {
+                                    Text(
+                                        text = tab.name,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (uiState.selectedTab == tab) FontWeight.Bold else FontWeight.Normal
+                                    )
                                 }
                             )
+                        }
+                    }
+                }
 
+                // Category Row
+                item {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(uiState.categories) { category ->
+                            CategoryChip(
+                                category = category,
+                                isSelected = uiState.selectedCategory == category,
+                                onClick = { viewModel.onCategorySelected(category) }
+                            )
+                        }
+                    }
+                }
+
+                when {
+                    uiState.isLoading && !uiState.isRefreshing -> {
+                        item {
+                            Box(modifier = Modifier.fillParentMaxHeight(0.7f), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
                         }
                     }
 
-                    // Registered Events
-                    val registeredEvents =
-                        filteredEvents.filter {
-                            uiState.registeredEventIds.contains(it.id)
-                        }
-
-                    if (registeredEvents.isNotEmpty()) {
-
+                    uiState.error != null -> {
                         item {
-                            Spacer(Modifier.height(24.dp))
-
-                            SectionHeader(
-                                title = "My Registered Events"
+                            EmptyState(
+                                message = uiState.error ?: "An error occurred",
+                                buttonText = "Retry",
+                                onButtonClick = viewModel::refresh,
+                                modifier = Modifier.fillParentMaxHeight(0.7f)
                             )
                         }
+                    }
 
+                    uiState.isEmpty -> {
                         item {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
+                            EmptyState(
+                                message = "No events found",
+                                modifier = Modifier.fillParentMaxHeight(0.7f)
+                            )
+                        }
+                    }
 
-                                items(
-                                    items = registeredEvents,
-                                    key = { it.id }
-                                ) { event ->
-
-                                    EventCard(
-                                        event = event,
-                                        isRegistered = true,
-                                        cardStyle = EventCardStyle.Medium,
-                                        onClick = {
-                                            onEventClick(event.id)
-                                        }
+                    else -> {
+                        // Featured Section (Only for Upcoming Tab and no Search)
+                        if (uiState.selectedTab == EventTab.UPCOMING && uiState.searchQuery.isBlank() && uiState.selectedCategory == "All") {
+                            uiState.featuredEvent?.let { featured ->
+                                item {
+                                    SectionHeader(title = "Featured Event", actionText = null)
+                                    FeaturedEventCard(
+                                        event = featured,
+                                        onClick = { onEventClick(featured.id) }
                                     )
                                 }
                             }
                         }
-                    }
-                    // Upcoming Events
-                val upcomingEvents = filteredEvents.filter { !it.isFeatured }
-
-                    if (upcomingEvents.isNotEmpty()) {
 
                         item {
-
-                            Spacer(Modifier.height(24.dp))
-
                             SectionHeader(
-                                title = "Upcoming Events",
-                                actionText = "See All",
-                                onActionClick = onUpcomingEventsClick
+                                title = when(uiState.selectedTab) {
+                                    EventTab.UPCOMING -> "Upcoming Events"
+                                    EventTab.ONGOING -> "Ongoing Events"
+                                    EventTab.PAST -> "Past Events"
+                                },
+                                actionText = null
                             )
-
                         }
 
-                        items(upcomingEvents) { event ->
-
+                        items(
+                            items = uiState.filteredEvents,
+                            key = { it.id }
+                        ) { event ->
                             EventCard(
                                 event = event,
-                                modifier = Modifier.padding(
-                                    horizontal = 16.dp,
-                                    vertical = 8.dp
-                                ),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .animateItem(),
                                 cardStyle = EventCardStyle.Large,
-                                showRegisterButton = true,
-                                isRegistered = uiState.registeredEventIds.contains(event.id),
-                                onRegisterClick = {
-                                    viewModel.onRegisterEvent(event.id)
-                                },
-                                onClick = {
-                                    onEventClick(event.id)
-                                }
+                                onClick = { onEventClick(event.id) }
                             )
-
                         }
-
                     }
-
-                    // Past Events
-                    item {
-
-                        Spacer(Modifier.height(24.dp))
-
-                        SectionHeader(
-                            title = "Past Events",
-                            actionText = "See All",
-                            onActionClick = onPastEventsClick
-                        )
-
-                    }
-
-                    item {
-
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-
-                            items(3) {
-
-                                val pastEvent = Event(
-                                    id = "past_1",
-                                    title = "Hackathon 2023",
-                                    category = "Technical",
-                                    date = "Dec 10, 2023",
-                                    isRegistrationOpen = false
-                                )
-
-                                EventCard(
-                                    event = pastEvent,
-                                    onClick = {
-                                        onEventClick(pastEvent.id)
-                                    },
-                                    cardStyle = EventCardStyle.Small,
-                                    showRegisterButton = false,
-                                    showAttendance = false
-                                )
-
-                            }
-
-                        }
-
-                    }
-
                 }
-
             }
-
         }
-
     }
 }
-

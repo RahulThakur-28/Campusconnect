@@ -48,13 +48,17 @@ sealed class AppRoutes(val route: String) {
 
 
 
-    //---------------------------routes for Notes section ----------------------------------------------------------
+// --------------------------- Notes ---------------------------
 
     object Notes : AppRoutes("notes")
 
     object NoteDetails : AppRoutes("note_details/{noteId}")
 
     object UploadNote : AppRoutes("upload_note")
+
+    object EditNote : AppRoutes("edit_note/{noteId}")
+
+    object MyNotes : AppRoutes("my_notes")
 
 
 
@@ -67,6 +71,8 @@ sealed class AppRoutes(val route: String) {
     object LostFoundDetails : AppRoutes("lost_found_details/{itemId}")
 
     object ReportLostFound : AppRoutes("report_lost_found")
+
+    object EditLostFound : AppRoutes("edit_lost_found/{itemId}")
 
 
     //---------------------------routes for Announcement section ----------------------------------------------------------
@@ -115,4 +121,6 @@ sealed class AppRoutes(val route: String) {
     object UpcomingEvents : AppRoutes("upcoming_events")
 
     object PastEvents : AppRoutes("past_events")
+
+    object MyEvents : AppRoutes("my_events")
 }

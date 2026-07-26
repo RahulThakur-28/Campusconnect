@@ -1,5 +1,3 @@
-
-
 package com.rahul.campusconnect.presentation.placement.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -25,123 +23,49 @@ class PlacementDetailsViewModel @Inject constructor(
     val uiState: StateFlow<PlacementDetailsUiState> = _uiState.asStateFlow()
 
     fun loadPlacement(placementId: String) {
-
-        loadUserRole()
-
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null
-                )
+            // Parallel load user info and placement
+            val userJob = launch {
+                userRepository.getCurrentUser().onSuccess { user ->
+                    _uiState.update { it.copy(userRole = user.role, currentUserId = user.uid) }
+                }
             }
 
             placementRepository.getPlacementById(placementId)
                 .onSuccess { placement ->
-
-                    _uiState.update {
-                        it.copy(
-                            placement = placement,
-                            isLoading = false
-                        )
-                    }
+                    _uiState.update { it.copy(placement = placement, isLoading = false) }
                 }
                 .onFailure { exception ->
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = exception.message
-                                ?: "Unable to load placement."
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, error = exception.message ?: "Unable to load placement.") }
                 }
         }
     }
 
-    private fun loadUserRole() {
-
+    fun deletePlacement() {
+        val placementId = _uiState.value.placement?.id ?: return
         viewModelScope.launch {
-
-            userRepository.getCurrentUser()
-                .onSuccess { user ->
-
-                    _uiState.update {
-                        it.copy(
-                            userRole = user.role
-                        )
-                    }
+            _uiState.update { it.copy(deleting = true) }
+            placementRepository.deletePlacement(placementId)
+                .onSuccess {
+                    _uiState.update { it.copy(deleting = false, deleted = true) }
+                }
+                .onFailure { exception ->
+                    _uiState.update { it.copy(deleting = false, error = exception.message ?: "Failed to delete placement.") }
                 }
         }
     }
 
     fun refresh() {
-
-        _uiState.value.placement?.id?.let { placementId ->
-            loadPlacement(placementId)
-        }
-    }
-
-    fun clearError() {
-
-        _uiState.update {
-            it.copy(error = null)
-        }
-    }
-
-    private var isDeleteInProgress = false
-
-    fun deletePlacement() {
-
-        val placementId = _uiState.value.placement?.id ?: return
-
-        if (isDeleteInProgress) return
-
-        isDeleteInProgress = true
-
-        viewModelScope.launch {
-
-            _uiState.update {
-                it.copy(
-                    deleting = true,
-                    error = null
-                )
-            }
-
-            placementRepository
-                .deletePlacement(placementId)
-                .onSuccess {
-
-                    _uiState.update {
-                        it.copy(
-                            deleting = false,
-                            deleted = true
-                        )
-                    }
-
-                }
-                .onFailure { exception ->
-
-                    _uiState.update {
-                        it.copy(
-                            deleting = false,
-                            error = exception.message
-                                ?: "Failed to delete placement."
-                        )
-                    }
-                }
-
-            isDeleteInProgress = false
-        }
+        _uiState.value.placement?.id?.let { loadPlacement(it) }
     }
 
     fun resetDeleteState() {
+        _uiState.update { it.copy(deleted = false) }
+    }
 
-        _uiState.update {
-            it.copy(
-                deleted = false
-            )
-        }
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 }

@@ -7,11 +7,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,270 +22,226 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.rahul.campusconnect.domain.model.Event
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.presentation.event.components.RegisterButton
 import com.rahul.campusconnect.presentation.event.viewmodel.EventDetailsViewModel
+import com.rahul.campusconnect.ui.components.CardImageHeader
+import com.rahul.campusconnect.ui.components.EmptyState
+import com.rahul.campusconnect.ui.components.PrimaryButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailsScreen(
-
     eventId: String,
-
     onBackClick: () -> Unit,
-
+    onEditClick: (String) -> Unit,
     onViewDiscussionClick: () -> Unit,
-
+    navController: NavController,
     viewModel: EventDetailsViewModel = hiltViewModel()
-
-){
-    // For demo, using a dummy event. In real app, fetch via ViewModel using eventId
-
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
     LaunchedEffect(eventId) {
-
         viewModel.loadEvent(eventId)
-
     }
 
-    val event = uiState.event
-
-    when {
-
-        uiState.isLoading -> {
-
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                CircularProgressIndicator()
-
-            }
-
-            return
+    LaunchedEffect(uiState.isDeleted) {
+        if (uiState.isDeleted) {
+            navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            onBackClick()
+            viewModel.resetDeleteState()
         }
-
-        uiState.error != null -> {
-
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                Text(uiState.error!!)
-
-            }
-
-            return
-        }
-
-        event == null -> {
-
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                Text("Event not found")
-
-            }
-
-            return
-        }
-
     }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Event") },
+            text = { Text("Are you sure you want to delete this event? This will mark it as deleted.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteEvent()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
-        bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-            ) {
-                Box(modifier = Modifier.padding(16.dp)) {
-                    RegisterButton(
-
-                        isRegistered = uiState.isRegistered,
-
-                        onClick = {
-
-                            if (uiState.isRegistered) {
-
-                                viewModel.unregisterFromEvent()
-
-                            } else {
-
-                                viewModel.registerForEvent()
-
-                            }
-
+        topBar = {
+            TopAppBar(
+                title = { Text("Event Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (uiState.canEdit) {
+                        IconButton(onClick = { onEditClick(eventId) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
-
-                    )
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                        }
+                    }
+                    IconButton(onClick = {
+                        val sendIntent: android.content.Intent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
+                            putExtra(android.content.Intent.EXTRA_TEXT, "Check out this event: ${uiState.event?.title}\nVenue: ${uiState.event?.venue}\nDate: ${TimeUtils.formatDate(uiState.event?.startDate ?: 0L)}")
+                            type = "text/plain"
+                        }
+                        val shareIntent = android.content.Intent.createChooser(sendIntent, null)
+                        context.startActivity(shareIntent)
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share")
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            if (uiState.event != null) {
+                Surface(tonalElevation = 8.dp, shadowElevation = 8.dp) {
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        RegisterButton(
+                            isRegistered = uiState.isRegistered,
+                            onClick = {
+                                if (uiState.isRegistered) viewModel.unregisterFromEvent()
+                                else viewModel.registerForEvent()
+                            },
+                            isLoading = uiState.isLoading,
+                            enabled = uiState.event!!.isRegistrationOpen && (uiState.event!!.registeredCount < uiState.event!!.maxParticipants || uiState.event!!.maxParticipants == 0)
+                        )
+                    }
                 }
             }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(scrollState)
-        ) {
-            // 1. Banner Image
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp)
-            ) {
-                AsyncImage(
-                    model = event.imageUrl,
-                    contentDescription = event.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                // Gradient overlay for better text visibility
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.5f)
-                                )
-                            )
-                        )
-                )
-
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.TopStart)
-                        .background(
-                            Color.Black.copy(alpha = 0.4f),
-                            CircleShape
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
+        when {
+            uiState.isLoading && uiState.event == null -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
-
-            Column(
-                modifier = Modifier
-                    .offset(y = (-30).dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(24.dp)
-            ) {
-                // Category Tag
-                Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.padding(bottom = 12.dp)
+            uiState.error != null -> {
+                EmptyState(
+                    message = uiState.error ?: "Error loading event",
+                    buttonText = "Retry",
+                    onButtonClick = { viewModel.loadEvent(eventId) },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            uiState.event != null -> {
+                val event = uiState.event!!
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(scrollState)
                 ) {
-                    Text(
-                        text = event.category,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                    CardImageHeader(
+                        imageUrl = event.imageUrl,
+                        category = event.category,
+                        categoryColor = MaterialTheme.colorScheme.primary,
+                        height = 240.dp
                     )
-                }
 
-                Text(
-                    text = event.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Organizer
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-                        contentAlignment = Alignment.Center
+                            .padding(24.dp)
+                            .fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.Person, contentDescription = null)
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(text = event.organizerName, fontWeight = FontWeight.Bold)
-                        Text(text = event.organizerRole.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    }
-                }
+                        Text(
+                            text = event.title,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                // Info Rows
-                InfoRow(icon = Icons.Default.CalendarToday, text = event.date)
-                Spacer(modifier = Modifier.height(12.dp))
-                InfoRow(icon = Icons.Default.Schedule, text = event.time)
-                Spacer(modifier = Modifier.height(12.dp))
-                InfoRow(icon = Icons.Default.LocationOn, text = event.venue)
-                Spacer(modifier = Modifier.height(12.dp))
-                InfoRow(icon = Icons.Default.Groups, text = "${event.registeredCount} Participants")
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(text = "About Event", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = event.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = 24.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Discussion Preview
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "Questions & Answers", fontWeight = FontWeight.Bold)
-                            Text(
-                                text = "2 Questions",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                        // Organizer
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Person, null)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(text = event.organizerName, fontWeight = FontWeight.Bold)
+                                Text(text = event.organizerRole, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        InfoRow(icon = Icons.Default.CalendarToday, text = TimeUtils.formatDate(event.startDate))
                         Spacer(modifier = Modifier.height(12.dp))
-                        TextButton(
-                            onClick = onViewDiscussionClick,
-                            modifier = Modifier.align(Alignment.End)
+                        InfoRow(icon = Icons.Default.Schedule, text = event.time)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        InfoRow(icon = Icons.Default.LocationOn, text = event.venue)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        InfoRow(
+                            icon = Icons.Default.Groups, 
+                            text = "${event.registeredCount}${if (event.maxParticipants > 0) " / ${event.maxParticipants}" else ""} Participants"
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        InfoRow(icon = Icons.Default.History, text = "Posted ${TimeUtils.getRelativeTime(event.createdAt)}")
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Text(text = "About Event", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = event.description,
+                            style = MaterialTheme.typography.bodyLarge,
+                            lineHeight = 24.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        // Discussion Preview
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                         ) {
-                            Text(text = "View Discussion →")
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                Text(text = "Questions & Answers", fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                TextButton(
+                                    onClick = onViewDiscussionClick,
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text(text = "View Discussion →")
+                                }
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
-
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

@@ -11,33 +11,30 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.Attachment
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.rahul.campusconnect.domain.model.Placement
+import coil.compose.AsyncImage
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.presentation.placement.viewmodel.PlacementDetailsViewModel
-import com.rahul.campusconnect.ui.components.EmptyState
-import com.rahul.campusconnect.ui.components.PrimaryButton
+import com.rahul.campusconnect.ui.components.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PlacementDetailsScreen(
     placementId: String,
@@ -46,400 +43,284 @@ fun PlacementDetailsScreen(
     onEditClick: (String) -> Unit,
     navController: NavController,
     viewModel: PlacementDetailsViewModel = hiltViewModel()
-){
+) {
     val context = LocalContext.current
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
 
-    var showDeleteDialog by remember {
-        mutableStateOf(false)
-    }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(placementId) {
         viewModel.loadPlacement(placementId)
     }
 
     LaunchedEffect(uiState.deleted) {
-
         if (uiState.deleted) {
-
             viewModel.resetDeleteState()
-
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
-
             onBackClick()
         }
     }
 
-
-    val placement = uiState.placement
-
-    val scrollState = rememberScrollState()
-
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-
-    if (uiState.error != null) {
-        EmptyState(
-            message = uiState.error.orEmpty(),
-            buttonText = "Retry",
-            onButtonClick = viewModel::refresh
-        )
-        return
-    }
-
-    if (placement == null) {
-        EmptyState(
-            message = "Placement not found"
-        )
-        return
-    }
-
-
-
     if (showDeleteDialog) {
-
         AlertDialog(
-
-            onDismissRequest = {
-                showDeleteDialog = false
-            },
-
-            title = {
-                Text("Delete Placement")
-            },
-
-            text = {
-                Text(
-                    "Are you sure you want to delete this placement? This action can be restored only by an admin."
-                )
-            },
-
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Placement") },
+            text = { Text("Are you sure you want to delete this placement drive? This action is reversible only by admins.") },
             confirmButton = {
-
                 TextButton(
-
-                    enabled = !uiState.deleting,
-
                     onClick = {
-
                         showDeleteDialog = false
-
                         viewModel.deletePlacement()
-                    }
-
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                 ) {
-
-                    if (uiState.deleting) {
-
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp)
-                        )
-
-                    } else {
-
-                        Text("Delete")
-                    }
+                    if (uiState.deleting) CircularProgressIndicator(Modifier.size(18.dp))
+                    else Text("Delete")
                 }
             },
-
             dismissButton = {
-
-                TextButton(
-
-                    onClick = {
-
-                        showDeleteDialog = false
-                    }
-
-                ) {
-
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
             }
         )
     }
 
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Placement Details")
-                },
+                title = { Text("Placement Details") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-
-                    // Share Placement
-                    IconButton(
-                        onClick = {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    buildString {
-                                        append("🏢 ${placement.companyName}\n")
-                                        append("💼 ${placement.jobRole}\n")
-                                        append("💰 ${placement.packageLpa}\n")
-                                        append("📍 ${placement.location}\n\n")
-                                        append("Apply Here:\n${placement.applyLink}")
-                                    }
-                                )
-                            }
-
-                            context.startActivity(
-                                Intent.createChooser(
-                                    shareIntent,
-                                    "Share Placement"
-                                )
-                            )
+                    IconButton(onClick = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, "🏢 ${uiState.placement?.companyName}\n💼 ${uiState.placement?.jobRole}\n💰 ${uiState.placement?.packageLpa}\n📍 ${uiState.placement?.location}\nApply: ${uiState.placement?.applyLink}")
                         }
-                    ) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = "Share"
-                        )
-                    }
-
-                    // Edit Placement
-                    if (uiState.canEdit) {
-                        IconButton(
-                            onClick = {
-                                onEditClick(placement.id)
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = "Edit Placement"
-                            )
-                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Placement"))
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share")
                     }
 
                     if (uiState.canEdit) {
-
-                        IconButton(
-                            onClick = {
-                                showDeleteDialog = true
-                            }
-                        ) {
-
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Placement",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                        IconButton(onClick = { onEditClick(placementId) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
                         }
                     }
                 }
             )
         },
         bottomBar = {
-            Surface(
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-            ) {
-                PrimaryButton(
-                    text = when {
-
-                        placement.deleted ->
-                            "Placement Removed"
-
-                        uiState.isExpired ->
-                            "Application Closed"
-
-                        else ->
-                            "Apply Now"
-                    },
-
-                    enabled = uiState.canApply,
-
-                    onClick = {
-
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(placement.applyLink)
-                        )
-
-                        context.startActivity(intent)
-                    },
-
-                    modifier = Modifier.padding(16.dp)
-                )
+            uiState.placement?.let { placement ->
+                Surface(tonalElevation = 8.dp, shadowElevation = 8.dp) {
+                    PrimaryButton(
+                        text = when {
+                            placement.deleted -> "Placement Removed"
+                            uiState.isExpired -> "Application Closed"
+                            else -> "Apply Now"
+                        },
+                        enabled = uiState.canApply,
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(placement.applyLink))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(scrollState)
-                .padding(24.dp)
-        ) {
-            // Header Row
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Business,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+        when {
+            uiState.isLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-                Spacer(modifier = Modifier.width(20.dp))
-                Column {
-                    Text(
-                        text = placement.companyName,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = placement.jobRole,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                PlacementStatusChip(
-                    placement = placement,
-                    isExpired = uiState.isExpired
+            }
+            uiState.error != null -> {
+                EmptyState(
+                    message = uiState.error.orEmpty(),
+                    buttonText = "Retry",
+                    onButtonClick = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Info Grid
-            Row(modifier = Modifier.fillMaxWidth()) {
-                InfoItem(Icons.Default.CurrencyRupee, "Package", placement.packageLpa, Modifier.weight(1f))
-                InfoItem(Icons.Default.LocationOn, "Location", placement.location, Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                InfoItem(Icons.Default.Work, "Job Type", placement.jobType, Modifier.weight(1f))
-                InfoItem(Icons.Default.Group, "Openings", placement.openings.toString(), Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            DetailSection("Eligibility", placement.eligibility)
-            DetailSection("Deadline", formatDate(placement.deadline))
-
-
-            if (uiState.isExpired) {
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+            uiState.placement != null -> {
+                val placement = uiState.placement!!
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(scrollState)
+                        .padding(24.dp)
                 ) {
+                    // Company Info Header
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (placement.logoUrl.isNotBlank()) {
+                            Card(
+                                modifier = Modifier.size(80.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                AsyncImage(
+                                    model = placement.logoUrl,
+                                    contentDescription = placement.companyName,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Business, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Column {
+                            Text(text = placement.companyName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                            Text(text = placement.jobRole, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            StatusPill(
+                                text = if (uiState.isExpired) "Expired" else placement.status,
+                                containerColor = if (uiState.isExpired) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
+                                contentColor = if (uiState.isExpired) Color(0xFFD32F2F) else Color(0xFF2E7D32)
+                            )
+                        }
+                    }
 
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Quick Info Grid
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        DetailInfoItem(Icons.Default.CurrencyRupee, "Package", placement.packageLpa, Modifier.weight(1f))
+                        DetailInfoItem(Icons.Default.LocationOn, "Location", placement.location, Modifier.weight(1f))
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        DetailInfoItem(Icons.Default.Work, "Job Type", placement.jobType, Modifier.weight(1f))
+                        DetailInfoItem(Icons.Default.Group, "Openings", placement.openings.toString(), Modifier.weight(1f))
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    SectionTitle("Eligibility")
+                    Text(text = placement.eligibility, style = MaterialTheme.typography.bodyLarge)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    SectionTitle("Deadline")
+                    Text(
+                        text = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(placement.deadline)),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (uiState.isExpired) Color.Red else MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    SectionTitle("Required Skills")
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Text(
-                            text = "Applications for this placement have closed.",
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
+                        placement.requiredSkills.forEach { skill ->
+                            SuggestionChip(onClick = {}, label = { Text(skill) })
+                        }
                     }
-                }
-            }
 
+                    Spacer(modifier = Modifier.height(24.dp))
 
+                    SectionTitle("Description")
+                    Text(text = placement.description, style = MaterialTheme.typography.bodyLarge, lineHeight = 24.sp)
 
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text("Required Skills", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(12.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                placement.requiredSkills.forEach { skill ->
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(skill) },
-                        shape = RoundedCornerShape(10.dp)
+                    if (placement.applicationProcess.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        SectionTitle("Application Process")
+                        Text(text = placement.applicationProcess, style = MaterialTheme.typography.bodyLarge, lineHeight = 24.sp)
+                    }
+
+                    if (!placement.attachmentUrl.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        SectionTitle("Resources")
+                        OutlinedCard(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(placement.attachmentUrl))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Rounded.Attachment, null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Job Description PDF", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onViewDiscussionClick,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Questions & Answers", fontWeight = FontWeight.Bold)
+                                Text("Discuss this opportunity with your peers", style = MaterialTheme.typography.bodySmall)
+                            }
+                            Icon(Icons.Default.QuestionAnswer, null)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "Posted ${TimeUtils.getRelativeTime(placement.postedAt)} by ${placement.createdByName}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
                     )
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            DetailSection("Description", placement.description)
-            DetailSection("Application Process", placement.applicationProcess)
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Q&A Entry
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onViewDiscussionClick,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text("Questions & Answers", fontWeight = FontWeight.Bold)
-                        Text(
-                                "Ask questions, view official replies, and discuss with verified students.",
-                        style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    Icon(Icons.Default.QuestionAnswer, contentDescription = null)
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
 
 @Composable
-fun InfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
+private fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun DetailInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+            modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(icon, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
@@ -447,74 +328,4 @@ fun InfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Strin
             Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         }
     }
-}
-
-fun formatDate(timestamp: Long): String {
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    return formatter.format(Date(timestamp))
-}
-
-@Composable
-fun DetailSection(title: String, content: String) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(content, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-
-@Composable
-private fun PlacementStatusChip(
-    placement: Placement,
-    isExpired: Boolean
-) {
-
-    val (text, color) = when {
-
-        placement.deleted ->
-            "Deleted" to MaterialTheme.colorScheme.error
-
-        isExpired ->
-            "Expired" to Color(0xFFD32F2F)
-
-        placement.status.equals("Active", true) ->
-            "Active" to Color(0xFF2E7D32)
-
-        else ->
-            "Closed" to Color(0xFFF57C00)
-    }
-
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = color.copy(alpha = 0.12f)
-    ) {
-        Text(
-            text = text,
-            color = color,
-            modifier = Modifier.padding(
-                horizontal = 12.dp,
-                vertical = 6.dp
-            ),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
-
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun FlowRow(
-    modifier: Modifier = Modifier,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
-    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
-    content: @Composable () -> Unit
-) {
-    androidx.compose.foundation.layout.FlowRow(
-        modifier = modifier,
-        horizontalArrangement = horizontalArrangement,
-        verticalArrangement = verticalArrangement,
-        content = { content() }
-    )
 }

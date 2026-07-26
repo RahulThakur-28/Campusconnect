@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.data.remote
 
+import android.net.Uri
 import com.rahul.campusconnect.domain.model.Placement
 
 interface PlacementRemoteDataSource {
@@ -35,4 +36,17 @@ interface PlacementRemoteDataSource {
     suspend fun getMyPlacements(
         userId: String
     ): Result<List<Placement>>
+
+    suspend fun uploadPlacementLogo(
+        placementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>>
+
+    suspend fun uploadPlacementAttachment(
+        placementId: String,
+        fileUri: Uri,
+        extension: String
+    ): Result<Pair<String, String>>
+
+    suspend fun deleteFile(path: String): Result<Unit>
 }

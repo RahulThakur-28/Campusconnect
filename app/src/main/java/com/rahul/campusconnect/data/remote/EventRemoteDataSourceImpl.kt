@@ -1,13 +1,15 @@
 package com.rahul.campusconnect.data.remote
 
-
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Query
 import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.common.constant.StorageConstants
+import com.rahul.campusconnect.common.storage.StoragePathGenerator
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.Event
 import kotlinx.coroutines.tasks.await
@@ -20,11 +22,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
     private val storageManager: StorageManager
 ) : EventRemoteDataSource {
 
-    /**
-     * Returns the current user's collegeId.
-     */
     private suspend fun getCollegeId(): String {
-
         val uid = auth.currentUser?.uid
             ?: throw IllegalStateException("User is not logged in.")
 
@@ -34,72 +32,8 @@ class EventRemoteDataSourceImpl @Inject constructor(
             .get()
             .await()
 
-        val collegeId = snapshot.getString("collegeId")
-
-        if (collegeId.isNullOrBlank()) {
-            throw IllegalStateException("College ID not found.")
-        }
-
-        return collegeId
-    }
-    override suspend fun getAllEvents(): List<Event> {
-
-        val snapshot = eventsCollection()
-            .whereEqualTo(Constants.DELETED, false)
-            .orderBy(Constants.START_DATE)
-            .get()
-            .await()
-
-        return snapshot.documents.mapNotNull { document ->
-            document.toObject(Event::class.java)
-        }
-    }
-
-    override suspend fun getEventById(
-        eventId: String
-    ): Event? {
-
-        val snapshot = eventsCollection()
-            .document(eventId)
-            .get()
-            .await()
-
-        if (!snapshot.exists()) {
-            return null
-        }
-
-        return snapshot.toObject(Event::class.java)
-    }
-
-    override suspend fun getFeaturedEvents(): List<Event> {
-
-        val snapshot = eventsCollection()
-            .whereEqualTo(Constants.IS_FEATURED, true)
-            .whereEqualTo(Constants.DELETED, false)
-            .orderBy(Constants.START_DATE)
-            .get()
-            .await()
-
-        return snapshot.documents.mapNotNull { document ->
-            document.toObject(Event::class.java)
-        }
-    }
-
-    override suspend fun getUpcomingEvents(): List<Event> {
-
-        val snapshot = eventsCollection()
-            .whereGreaterThanOrEqualTo(
-                Constants.START_DATE,
-                System.currentTimeMillis()
-            )
-            .whereEqualTo(Constants.DELETED, false)
-            .orderBy(Constants.START_DATE)
-            .get()
-            .await()
-
-        return snapshot.documents.mapNotNull { document ->
-            document.toObject(Event::class.java)
-        }
+        return snapshot.getString("collegeId")
+            ?: throw IllegalStateException("College ID not found.")
     }
 
     private suspend fun eventsCollection(): CollectionReference {
@@ -108,222 +42,180 @@ class EventRemoteDataSourceImpl @Inject constructor(
             .collection(Constants.EVENTS)
     }
 
-    override suspend fun createEvent(
-        event: Event
-    ) {
-
-        val eventsRef = eventsCollection()
-
-        val document = if (event.id.isBlank()) {
-            eventsRef.document()
-        } else {
-            eventsRef.document(event.id)
-        }
-
-        document.set(
-            event.copy(
-                id = document.id,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-                deleted = false
-            )
-        ).await()
-    }
-
-
-
-    override suspend fun updateEvent(
-        event: Event
-    ) {
-
-        eventsCollection()
-            .document(event.id)
-            .set(
-                event.copy(
-                    updatedAt = System.currentTimeMillis()
-                )
-            )
-            .await()
-    }
-
-
-
-    override suspend fun deleteEvent(
-        eventId: String
-    ) {
-
-        eventsCollection()
-            .document(eventId)
-            .update(
-                mapOf(
-                    Constants.DELETED to true,
-                    Constants.UPDATED_AT to System.currentTimeMillis()
-                )
-            )
-            .await()
-    }
-
-
-
-    override suspend fun getMyEvents(
-        userId: String
-    ): List<Event> {
-
+    override suspend fun getAllEvents(): Result<List<Event>> = try {
+        Log.d("EVENT_QUERY", "Fetching all events...")
         val snapshot = eventsCollection()
-            .whereEqualTo(Constants.ORGANIZER_ID, userId)
-            .whereEqualTo(Constants.DELETED, false)
-            .orderBy(Constants.CREATED_AT)
+            .whereEqualTo("deleted", false)
+            .orderBy("startDate", Query.Direction.ASCENDING)
             .get()
             .await()
 
-        return snapshot.documents.mapNotNull {
-            it.toObject(Event::class.java)
-        }
+        val events = snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
+        Result.success(events)
+    } catch (e: FirebaseFirestoreException) {
+        Log.e("EVENT_QUERY", "Firestore Error: ${e.message}", e)
+        Result.failure(e)
+    } catch (e: Exception) {
+        Log.e("EVENT_QUERY", "Error: ${e.message}", e)
+        Result.failure(e)
     }
 
-    override suspend fun uploadEventImage(
-        imageUri: Uri
-    ): Result<String> {
+    override suspend fun getEventById(eventId: String): Result<Event?> = try {
+        val snapshot = eventsCollection().document(eventId).get().await()
+        val event = snapshot.toObject(Event::class.java)?.copy(id = snapshot.id)
+        if (event?.deleted == true) Result.success(null) else Result.success(event)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 
-        val fileName = "${UUID.randomUUID()}.jpg"
-        val path = "${StorageConstants.Folder.EVENTS}/$fileName"
+    override suspend fun createEvent(event: Event): Result<String> = try {
+        val document = eventsCollection().document(event.id.ifBlank { generateEventId() })
+        val collegeId = getCollegeId()
+        val finalEvent = event.copy(
+            id = document.id,
+            collegeId = collegeId,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            deleted = false
+        )
+        document.set(finalEvent).await()
+        Log.d("EVENT_CREATE", "Event created: ${document.id}")
+        Result.success(document.id)
+    } catch (e: Exception) {
+        Log.e("EVENT_CREATE", "Error creating event", e)
+        Result.failure(e)
+    }
 
-        Log.d("EVENT_DEBUG", "Bucket = ${StorageConstants.MEDIA_BUCKET}")
-        Log.d("EVENT_DEBUG", "Path = $path")
+    override suspend fun updateEvent(event: Event): Result<Unit> = try {
+        val updatedEvent = event.copy(updatedAt = System.currentTimeMillis())
+        eventsCollection().document(event.id).set(updatedEvent).await()
+        Log.d("EVENT_UPDATE", "Event updated: ${event.id}")
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Log.e("EVENT_UPDATE", "Error updating event", e)
+        Result.failure(e)
+    }
 
-        return storageManager.uploadImage(
+    override suspend fun deleteEvent(eventId: String): Result<Unit> = try {
+        eventsCollection().document(eventId).update(
+            mapOf(
+                "deleted" to true,
+                "updatedAt" to System.currentTimeMillis()
+            )
+        ).await()
+        Log.d("EVENT_DELETE", "Event soft deleted: $eventId")
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Log.e("EVENT_DELETE", "Error deleting event", e)
+        Result.failure(e)
+    }
+
+    override suspend fun getFeaturedEvents(): Result<List<Event>> = try {
+        val snapshot = eventsCollection()
+            .whereEqualTo("isFeatured", true)
+            .whereEqualTo("deleted", false)
+            .orderBy("startDate", Query.Direction.ASCENDING)
+            .get()
+            .await()
+        val events = snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
+        Result.success(events)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getUpcomingEvents(): Result<List<Event>> = try {
+        val snapshot = eventsCollection()
+            .whereGreaterThanOrEqualTo("startDate", System.currentTimeMillis())
+            .whereEqualTo("deleted", false)
+            .orderBy("startDate", Query.Direction.ASCENDING)
+            .get()
+            .await()
+        val events = snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
+        Result.success(events)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getMyEvents(userId: String): Result<List<Event>> = try {
+        val snapshot = eventsCollection()
+            .whereEqualTo("organizerId", userId)
+            .whereEqualTo("deleted", false)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get()
+            .await()
+        val events = snapshot.documents.mapNotNull { it.toObject(Event::class.java)?.copy(id = it.id) }
+        Result.success(events)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun uploadEventImage(eventId: String, imageUri: Uri): Result<Pair<String, String>> = try {
+        val path = StoragePathGenerator.eventBanner(getCollegeId(), eventId)
+        storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
             path = path,
             imageUri = imageUri
-        )
+        ).map { url -> Pair(url, path) }
+    } catch (e: Exception) {
+        Log.e("EVENT_UPLOAD", "Error uploading image", e)
+        Result.failure(e)
     }
 
-    override suspend fun registerForEvent(
-        eventId: String,
-        userId: String
-    ) {
+    override suspend fun deleteFile(path: String): Result<Unit> = try {
+        storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 
-        val eventCollection = eventsCollection()
-
+    override suspend fun registerForEvent(eventId: String, userId: String): Result<Unit> = try {
+        val eventRef = eventsCollection().document(eventId)
         firestore.runTransaction { transaction ->
-
-            val eventRef = eventCollection.document(eventId)
-
-            val registrationRef = eventRef
-                .collection(Constants.REGISTRATIONS)
-                .document(userId)
-
             val eventSnapshot = transaction.get(eventRef)
+            if (!eventSnapshot.exists()) throw IllegalStateException("Event not found")
+            if (eventSnapshot.getBoolean("deleted") == true) throw IllegalStateException("Event deleted")
+            if (eventSnapshot.getBoolean("isRegistrationOpen") == false) throw IllegalStateException("Registration closed")
 
-            // Event exists
-            if (!eventSnapshot.exists()) {
-                throw IllegalStateException("Event not found.")
-            }
+            val registrationRef = eventRef.collection(Constants.REGISTRATIONS).document(userId)
+            if (transaction.get(registrationRef).exists()) throw IllegalStateException("Already registered")
 
-            // Event deleted
-            val Deleted =
-                eventSnapshot.getBoolean(Constants.DELETED) ?: false
+            val registeredCount = eventSnapshot.getLong("registeredCount")?.toInt() ?: 0
+            val maxParticipants = eventSnapshot.getLong("maxParticipants")?.toInt() ?: Int.MAX_VALUE
 
-            if (Deleted) {
-                throw IllegalStateException("This event is no longer available.")
-            }
+            if (registeredCount >= maxParticipants) throw IllegalStateException("Event full")
 
-            // Registration open
-            val isRegistrationOpen =
-                eventSnapshot.getBoolean(Constants.IS_REGISTRATION_OPEN) ?: true
-
-            if (!isRegistrationOpen) {
-                throw IllegalStateException("Registration is closed.")
-            }
-
-            // Already registered
-            if (transaction.get(registrationRef).exists()) {
-                throw IllegalStateException("You are already registered.")
-            }
-
-            val registeredCount =
-                eventSnapshot.getLong(Constants.REGISTERED_COUNT)?.toInt() ?: 0
-
-            val maxParticipants =
-                eventSnapshot.getLong(Constants.MAX_PARTICIPANTS)?.toInt()
-                    ?: Int.MAX_VALUE
-
-            // Capacity check
-            if (registeredCount >= maxParticipants) {
-                throw IllegalStateException("Event is full.")
-            }
-
-            // Create registration document
-            transaction.set(
-                registrationRef,
-                mapOf(
-                    Constants.USER_ID to userId,
-                    Constants.REGISTERED_AT to System.currentTimeMillis()
-                )
-            )
-
-            // Increment participant count
-            transaction.update(
-                eventRef,
-                Constants.REGISTERED_COUNT,
-                registeredCount + 1
-            )
-
-            null
+            transaction.set(registrationRef, mapOf("userId" to userId, "registeredAt" to System.currentTimeMillis()))
+            transaction.update(eventRef, "registeredCount", registeredCount + 1)
         }.await()
+        Log.d("EVENT_REGISTER", "User $userId registered for $eventId")
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Log.e("EVENT_REGISTER", "Registration failed", e)
+        Result.failure(e)
     }
-    override suspend fun unregisterFromEvent(
-        eventId: String,
-        userId: String
-    ) {
 
-        val eventCollection = eventsCollection()
-
+    override suspend fun unregisterFromEvent(eventId: String, userId: String): Result<Unit> = try {
+        val eventRef = eventsCollection().document(eventId)
         firestore.runTransaction { transaction ->
-
-            val eventRef = eventCollection.document(eventId)
-
-            val registrationRef = eventRef
-                .collection(Constants.REGISTRATIONS)
-                .document(userId)
-
-            val registrationSnapshot = transaction.get(registrationRef)
-
-            if (!registrationSnapshot.exists()) {
-                return@runTransaction null
-            }
+            val registrationRef = eventRef.collection(Constants.REGISTRATIONS).document(userId)
+            if (!transaction.get(registrationRef).exists()) return@runTransaction
 
             val eventSnapshot = transaction.get(eventRef)
-
-            val registeredCount =
-                eventSnapshot.getLong(Constants.REGISTERED_COUNT)?.toInt() ?: 0
+            val registeredCount = eventSnapshot.getLong("registeredCount")?.toInt() ?: 0
 
             transaction.delete(registrationRef)
-
-            transaction.update(
-                eventRef,
-                Constants.REGISTERED_COUNT,
-                maxOf(registeredCount - 1, 0)
-            )
-
-            null
+            transaction.update(eventRef, "registeredCount", maxOf(0, registeredCount - 1))
         }.await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
-
-    override suspend fun isUserRegistered(
-        eventId: String,
-        userId: String
-    ): Boolean {
-
-        val snapshot = eventsCollection()
-            .document(eventId)
-            .collection(Constants.REGISTRATIONS)
-            .document(userId)
-            .get()
-            .await()
-
-        return snapshot.exists()
+    override suspend fun isUserRegistered(eventId: String, userId: String): Result<Boolean> = try {
+        val snapshot = eventsCollection().document(eventId).collection(Constants.REGISTRATIONS).document(userId).get().await()
+        Result.success(snapshot.exists())
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
+    override fun generateEventId(): String = UUID.randomUUID().toString()
 }

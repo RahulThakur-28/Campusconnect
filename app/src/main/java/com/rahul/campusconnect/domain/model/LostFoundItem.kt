@@ -5,15 +5,18 @@ data class LostFoundItem(
     val title: String = "",
     val description: String = "",
     val category: String = "",
-    val imageUrl: String = "",
+    val type: String = "LOST", // LOST or FOUND
+    val status: String = "ACTIVE", // ACTIVE or RESOLVED
+    val ownerId: String = "",
+    val ownerName: String = "",
+    val ownerRole: String = "",
+    val contactEmail: String = "",
+    val contactPhone: String? = null,
+    val collegeId: String = "",
     val location: String = "",
-    val reportedBy: String = "",
-    val reportedDate: String = "",
-    val status: String = "",
-    val contact: String = "",
-
-    // Future Ready
-    val isVerified: Boolean = false,
-    val claimedBy: String = "",
-    val createdAt: Long = 0L
+    val imageUrl: String? = null,
+    val imageStoragePath: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val resolvedAt: Long? = null
 )

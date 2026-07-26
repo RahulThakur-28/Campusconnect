@@ -5,86 +5,31 @@ import com.rahul.campusconnect.domain.model.Event
 
 interface EventRemoteDataSource {
 
-    /**
-     * Returns all active events.
-     */
-    suspend fun getAllEvents(): List<Event>
+    suspend fun getAllEvents(): Result<List<Event>>
 
-    /**
-     * Returns a single event by ID.
-     */
-    suspend fun getEventById(
-        eventId: String
-    ): Event?
+    suspend fun getEventById(eventId: String): Result<Event?>
 
-    /**
-     * Creates a new event.
-     */
+    suspend fun createEvent(event: Event): Result<String>
 
-    /**
-     * Updates an existing event.
-     */
-    suspend fun updateEvent(
-        event: Event
-    )
+    suspend fun updateEvent(event: Event): Result<Unit>
 
-    /**
-     * Soft deletes an event.
-     */
-    suspend fun deleteEvent(
-        eventId: String
-    )
+    suspend fun deleteEvent(eventId: String): Result<Unit>
 
-    /**
-     * Returns featured events.
-     */
-    suspend fun getFeaturedEvents(): List<Event>
+    suspend fun getFeaturedEvents(): Result<List<Event>>
 
-    /**
-     * Returns upcoming events.
-     */
-    suspend fun getUpcomingEvents(): List<Event>
+    suspend fun getUpcomingEvents(): Result<List<Event>>
 
-    /**
-     * Returns events created by the given user.
-     */
-    suspend fun getMyEvents(
-        userId: String
-    ): List<Event>
+    suspend fun getMyEvents(userId: String): Result<List<Event>>
 
-    /**
-     * Uploads an event image and returns its public URL.
-     */
-    suspend fun uploadEventImage(
-        imageUri: Uri
-    ): Result<String>
+    suspend fun uploadEventImage(eventId: String, imageUri: Uri): Result<Pair<String, String>>
 
-    /**
-     * Registers a user for an event.
-     */
-    suspend fun registerForEvent(
-        eventId: String,
-        userId: String
-    )
+    suspend fun deleteFile(path: String): Result<Unit>
 
-    /**
-     * Cancels a user's registration.
-     */
-    suspend fun unregisterFromEvent(
-        eventId: String,
-        userId: String
-    )
+    suspend fun registerForEvent(eventId: String, userId: String): Result<Unit>
 
+    suspend fun unregisterFromEvent(eventId: String, userId: String): Result<Unit>
 
-    suspend fun isUserRegistered(
-        eventId: String,
-        userId: String
-    ): Boolean
+    suspend fun isUserRegistered(eventId: String, userId: String): Result<Boolean>
 
-
-    suspend fun createEvent(
-        event: Event
-    )
-
-
+    fun generateEventId(): String
 }

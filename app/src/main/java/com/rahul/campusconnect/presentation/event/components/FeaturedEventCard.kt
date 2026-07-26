@@ -13,18 +13,18 @@ import com.rahul.campusconnect.ui.components.EventCardStyle
 fun FeaturedEventCard(
     event: Event,
     onClick: () -> Unit,
-    onRegisterClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRegisterClick: (() -> Unit)? = null
 ) {
     EventCard(
         event = event,
         imageHeight = 140.dp,
         showAttendance = true,
         showCategory = true,
-        showRegisterButton = true,
+        showRegisterButton = onRegisterClick != null,
         cardStyle = EventCardStyle.Large,
         onClick = onClick,
-        onRegisterClick = onRegisterClick,
+        onRegisterClick = onRegisterClick ?: {},
         modifier = modifier.padding(horizontal = 16.dp)
     )
 }

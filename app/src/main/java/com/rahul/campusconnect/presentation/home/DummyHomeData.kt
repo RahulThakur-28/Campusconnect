@@ -32,7 +32,7 @@ fun dummyHomeState() = HomeUiState(
             description = "Annual coding competition for engineering students.",
             category = "Academic",
 //            bannerUrl = "",
-            date = "Oct 24, 2024",
+//            date = "Oct 24, 2024",
             time = "10:00 AM",
             venue = "Auditorium A",
 //            organizer = "Coding Club",
@@ -47,7 +47,7 @@ fun dummyHomeState() = HomeUiState(
             description = "Hands-on workshop on Generative AI.",
             category = "Workshop",
 //            bannerUrl = "",
-            date = "Nov 02, 2024",
+//            date = "Nov 02, 2024",
             time = "11:30 AM",
             venue = "Lab 104",
 //            organizer = "AI Society",
@@ -103,9 +103,9 @@ fun dummyHomeState() = HomeUiState(
             semester = "4th",
             uploadedBy = "Prof. Sharma",
             thumbnailUrl = "",
-            pdfUrl = "",
-            downloads = 1250,
-            uploadedAt = System.currentTimeMillis()
+////            pdfUrl = "",
+//            downloads = 1250,
+//            uploadedAt = System.currentTimeMillis()
         ),
 
         Note(
@@ -115,9 +115,9 @@ fun dummyHomeState() = HomeUiState(
             semester = "5th",
             uploadedBy = "Rahul Thakur",
             thumbnailUrl = "",
-            pdfUrl = "",
-            downloads = 850,
-            uploadedAt = System.currentTimeMillis()
+//            pdfUrl = "",
+//            downloads = 850,
+//            uploadedAt = System.currentTimeMillis()
         )
 
     ),
@@ -131,10 +131,10 @@ fun dummyHomeState() = HomeUiState(
             category = "Personal",
             imageUrl = "",
             location = "Block B, Room 302",
-            reportedBy = "Amit",
-            reportedDate = "28 Jun",
-            status = "Lost",
-            contact = "9876543210"
+//            reportedBy = "Amit",
+//            reportedDate = "28 Jun",
+//            status = "Lost",
+//            contact = "9876543210"
         ),
 
         LostFoundItem(
@@ -144,10 +144,10 @@ fun dummyHomeState() = HomeUiState(
             category = "Document",
             imageUrl = "",
             location = "Cafeteria",
-            reportedBy = "Suresh",
-            reportedDate = "29 Jun",
-            status = "Found",
-            contact = "9123456789"
+//            reportedBy = "Suresh",
+//            reportedDate = "29 Jun",
+//            status = "Found",
+//            contact = "9123456789"
         )
 
     ),

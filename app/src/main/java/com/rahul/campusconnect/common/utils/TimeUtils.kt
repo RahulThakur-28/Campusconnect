@@ -1,20 +1,15 @@
 package com.rahul.campusconnect.common.utils
 
 import android.text.format.DateUtils
-import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.*
 
 object TimeUtils {
 
-    /**
-     * Converts a timestamp in milliseconds to a relative time string.
-     * Examples: "Just now", "5 minutes ago", "2 hours ago", "Yesterday", "3 days ago".
-     */
     fun getRelativeTime(timestamp: Long): String {
         if (timestamp <= 0) return ""
-        
         val now = System.currentTimeMillis()
         val difference = now - timestamp
-        
         return when {
             difference < DateUtils.MINUTE_IN_MILLIS -> "Just now"
             else -> DateUtils.getRelativeTimeSpanString(
@@ -26,10 +21,9 @@ object TimeUtils {
         }
     }
     
-    /**
-     * Formats a timestamp to a readable date.
-     */
     fun formatDate(timestamp: Long): String {
-        return if (timestamp <= 0) "" else Date(timestamp).toString()
+        if (timestamp <= 0) return ""
+        val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        return formatter.format(Date(timestamp))
     }
 }

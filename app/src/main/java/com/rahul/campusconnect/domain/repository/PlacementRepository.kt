@@ -1,12 +1,11 @@
 package com.rahul.campusconnect.domain.repository
 
+import android.net.Uri
 import com.rahul.campusconnect.domain.model.Placement
 
 interface PlacementRepository {
 
     suspend fun getPlacements(): Result<List<Placement>>
-
-
 
     suspend fun generatePlacementId(): String
 
@@ -37,4 +36,17 @@ interface PlacementRepository {
     suspend fun getMyPlacements(
         userId: String
     ): Result<List<Placement>>
+
+    suspend fun uploadPlacementLogo(
+        placementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>>
+
+    suspend fun uploadPlacementAttachment(
+        placementId: String,
+        fileUri: Uri,
+        extension: String
+    ): Result<Pair<String, String>>
+
+    suspend fun deleteFile(path: String): Result<Unit>
 }

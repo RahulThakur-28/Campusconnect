@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.domain.model.Note
 import java.util.Locale
 
@@ -27,7 +28,7 @@ fun NoteCard(
     onClick: () -> Unit = {},
     onDownload: () -> Unit = {}
 ) {
-    val downloadsText = formatDownloads(note.downloads)
+    val downloadsText = formatDownloads(note.downloadCount)
 
     Card(
         modifier = modifier
@@ -45,7 +46,7 @@ fun NoteCard(
             CardImageHeader(
                 imageUrl = note.thumbnailUrl,
                 category = note.subject,
-                categoryColor = Color(0xFF2563EB) // Primary Blue for Notes
+                categoryColor = Color(0xFF2563EB)
             )
 
             Column(
@@ -62,7 +63,7 @@ fun NoteCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${note.department} • Semester ${note.semester}",
+                    text = "${note.branch} • Semester ${note.semester}",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -84,7 +85,7 @@ fun NoteCard(
                     Spacer(modifier = Modifier.width(6.dp))
 
                     Text(
-                        text = note.uploadedBy,
+                        text = note.uploadedByName.ifBlank { "Anonymous" },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -101,6 +102,14 @@ fun NoteCard(
                             tint = Color(0xFF2563EB)
                         )
                     }
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    Text(
+                        text = TimeUtils.getRelativeTime(note.createdAt),
+                        fontSize = 11.sp,
+                        color = Color.Gray
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -134,7 +143,7 @@ fun NoteCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${note.pages} Pages",
+                            text = note.fileSize,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -161,7 +170,7 @@ fun NoteCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Download Notes",
+                        text = "Open / Download",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )

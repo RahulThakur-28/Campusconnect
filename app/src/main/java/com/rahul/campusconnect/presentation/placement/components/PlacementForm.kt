@@ -3,24 +3,23 @@ package com.rahul.campusconnect.presentation.placement.components
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Attachment
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.rahul.campusconnect.core.imagepicker.CropType
 import com.rahul.campusconnect.core.imagepicker.ImagePicker
 import com.rahul.campusconnect.core.imagepicker.ImagePickerState
@@ -36,290 +35,92 @@ import java.util.Locale
     ExperimentalLayoutApi::class
 )
 @Composable
-
 fun PlacementForm(
-
     initialPlacement: Placement? = null,
-
     imagePickerState: ImagePickerState,
-
     onImageSelected: (Uri) -> Unit,
-
     onRemoveImage: () -> Unit,
-
-    onSubmit: (Placement) -> Unit,
-
+    onSubmit: (Placement, Uri?, Boolean) -> Unit,
     buttonText: String,
-
     modifier: Modifier = Modifier
 ) {
-
     // =========================================================
     // FORM STATE
     // =========================================================
 
-    var selectedLogoUri by remember {
-        mutableStateOf<Uri?>(null)
-    }
-
-    val logoPickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
-        ) { uri ->
-
-            selectedLogoUri = uri
-        }
-
-    var companyName by remember {
-        mutableStateOf(initialPlacement?.companyName ?: "")
-    }
-
-    var jobRole by remember {
-        mutableStateOf(initialPlacement?.jobRole ?: "")
-    }
-
-    var packageLpa by remember {
-        mutableStateOf(initialPlacement?.packageLpa ?: "")
-    }
-
-    var location by remember {
-        mutableStateOf(initialPlacement?.location ?: "")
-    }
-
-    var jobType by remember {
-        mutableStateOf(initialPlacement?.jobType ?: "")
-    }
-
-    var deadline by remember {
-        mutableStateOf(initialPlacement?.deadline ?: 0L)
-    }
-    var openings by remember {
-        mutableStateOf(
-            initialPlacement?.openings
-                ?.takeIf { it > 0 }
-                ?.toString()
-                ?: ""
-        )
-    }
-
-    var eligibility by remember {
-        mutableStateOf(initialPlacement?.eligibility ?: "")
-    }
-
-
-    var applyLink by remember {
-        mutableStateOf(initialPlacement?.applyLink ?: "")
-    }
-
-    var description by remember {
-        mutableStateOf(initialPlacement?.description ?: "")
-    }
-
+    var companyName by remember { mutableStateOf(initialPlacement?.companyName ?: "") }
+    var jobRole by remember { mutableStateOf(initialPlacement?.jobRole ?: "") }
+    var packageLpa by remember { mutableStateOf(initialPlacement?.packageLpa ?: "") }
+    var location by remember { mutableStateOf(initialPlacement?.location ?: "") }
+    var jobType by remember { mutableStateOf(initialPlacement?.jobType ?: "") }
+    var mode by remember { mutableStateOf(initialPlacement?.mode ?: "On Campus") }
+    var category by remember { mutableStateOf(initialPlacement?.category ?: "IT") }
+    var deadline by remember { mutableStateOf(initialPlacement?.deadline ?: 0L) }
+    var openings by remember { mutableStateOf(initialPlacement?.openings?.takeIf { it > 0 }?.toString() ?: "") }
+    var eligibility by remember { mutableStateOf(initialPlacement?.eligibility ?: "") }
+    var applyLink by remember { mutableStateOf(initialPlacement?.applyLink ?: "") }
+    var description by remember { mutableStateOf(initialPlacement?.description ?: "") }
+    var applicationProcess by remember { mutableStateOf(initialPlacement?.applicationProcess ?: "") }
     var requiredSkills by remember {
-        mutableStateOf(
-            initialPlacement?.requiredSkills
-                ?.joinToString(", ")
-                ?: ""
-        )
+        mutableStateOf(initialPlacement?.requiredSkills?.joinToString(", ") ?: "")
+    }
+
+    var selectedAttachmentUri by remember { mutableStateOf<Uri?>(null) }
+    var removeAttachment by remember { mutableStateOf(false) }
+
+    val attachmentPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedAttachmentUri = uri
+            removeAttachment = false
+        }
     }
 
     // =========================================================
     // UI STATE
     // =========================================================
 
-    var showErrors by remember {
-        mutableStateOf(false)
-    }
+    var showErrors by remember { mutableStateOf(false) }
+    var jobTypeExpanded by remember { mutableStateOf(false) }
+    var modeExpanded by remember { mutableStateOf(false) }
+    var categoryExpanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    var jobTypeExpanded by remember {
-        mutableStateOf(false)
-    }
+    val jobTypes = listOf("Full-time", "Internship", "Intern + PPO", "Part-time", "Contract")
+    val modes = listOf("On Campus", "Off Campus", "Remote")
+    val categories = listOf("IT", "Finance", "Core", "Startup", "Other")
 
-    var showDatePicker by remember {
-        mutableStateOf(false)
-    }
-
-    val jobTypes = listOf(
-        "Full-time",
-        "Internship",
-        "Intern + PPO",
-        "Part-time",
-        "Contract"
-    )
-
-// =========================================================
-// VALIDATION
-// =========================================================
     // =========================================================
     // VALIDATION
     // =========================================================
 
-    val companyNameError = when {
-
-        !showErrors -> null
-
-        companyName.isBlank() ->
-            "Company name is required"
-
-        companyName.length < 2 ->
-            "Enter a valid company name"
-
-        companyName.length > 100 ->
-            "Company name is too long"
-
-        else -> null
-    }
-
-
-    val jobRoleError = when {
-
-        !showErrors -> null
-
-        jobRole.isBlank() ->
-            "Job role is required"
-
-        jobRole.length < 2 ->
-            "Enter a valid job role"
-
-        jobRole.length > 100 ->
-            "Job role is too long"
-
-        else -> null
-    }
-
-
-    val packageLpaError = when {
-
-        !showErrors -> null
-
-        packageLpa.isBlank() ->
-            "Package / Stipend is required"
-
-        else -> null
-    }
-
-
-    val jobTypeError = when {
-
-        !showErrors -> null
-
-        jobType.isBlank() ->
-            "Please select a job type"
-
-        else -> null
-    }
-
-
-    val locationError = when {
-
-        !showErrors -> null
-
-        location.isBlank() ->
-            "Location is required"
-
-        else -> null
-    }
-
-
+    val companyNameError = if (showErrors && companyName.isBlank()) "Company name is required" else null
+    val jobRoleError = if (showErrors && jobRole.isBlank()) "Job role is required" else null
+    val packageLpaError = if (showErrors && packageLpa.isBlank()) "Package detail is required" else null
+    val locationError = if (showErrors && location.isBlank()) "Location is required" else null
     val openingsError = when {
-
         !showErrors -> null
-
-        openings.isBlank() ->
-            "Number of openings is required"
-
-        openings.toIntOrNull() == null ->
-            "Enter a valid number"
-
-        (openings.toIntOrNull() ?: 0) <= 0 ->
-            "Openings must be greater than 0"
-
+        openings.isBlank() -> "Number of openings is required"
+        openings.toIntOrNull() == null -> "Enter a valid number"
+        (openings.toIntOrNull() ?: 0) <= 0 -> "Must be > 0"
         else -> null
     }
-
-
-    val eligibilityError = when {
-
-        !showErrors -> null
-
-        eligibility.isBlank() ->
-            "Eligibility criteria is required"
-
-        else -> null
-    }
-
-
-    val deadlineError = when {
-
-        !showErrors -> null
-
-        deadline == 0L ->
-            "Application deadline is required"
-
-        else -> null
-    }
-
-
+    val eligibilityError = if (showErrors && eligibility.isBlank()) "Eligibility is required" else null
+    val deadlineError = if (showErrors && deadline == 0L) "Deadline is required" else null
     val applyLinkError = when {
-
         !showErrors -> null
-
-        applyLink.isBlank() ->
-            "Application link is required"
-
-        !applyLink.startsWith("https://") &&
-                !applyLink.startsWith("http://") ->
-            "Enter a valid URL starting with https://"
-
+        applyLink.isBlank() -> "Apply link is required"
+        !applyLink.startsWith("http") -> "Enter valid URL"
         else -> null
     }
+    val descriptionError = if (showErrors && description.length < 20) "Min 20 characters required" else null
+    val requiredSkillsError = if (showErrors && requiredSkills.isBlank()) "Add at least one skill" else null
 
-
-    val descriptionError = when {
-
-        !showErrors -> null
-
-        description.isBlank() ->
-            "Description is required"
-
-        description.length < 20 ->
-            "Description must be at least 20 characters"
-
-        description.length > 2000 ->
-            "Description cannot exceed 2000 characters"
-
-        else -> null
-    }
-
-
-    val requiredSkillsError = when {
-
-        !showErrors -> null
-
-        requiredSkills.isBlank() ->
-            "Add at least one required skill"
-
-        else -> null
-    }
-
-
-    val isFormValid =
-        companyName.length in 2..100 &&
-                jobRole.length in 2..100 &&
-                packageLpa.isNotBlank() &&
-                jobType.isNotBlank() &&
-                location.isNotBlank() &&
-                (openings.toIntOrNull() ?: 0) > 0 &&
-                eligibility.isNotBlank() &&
-                deadline != 0L &&
-                applyLink.isNotBlank() &&
-                (
-                        applyLink.startsWith("https://") ||
-                                applyLink.startsWith("http://")
-                        ) &&
-                description.length in 20..2000 &&
-                requiredSkills.isNotBlank()
-
+    val isFormValid = companyName.isNotBlank() && jobRole.isNotBlank() && packageLpa.isNotBlank() &&
+            jobType.isNotBlank() && location.isNotBlank() && (openings.toIntOrNull() ?: 0) > 0 &&
+            eligibility.isNotBlank() && deadline != 0L && applyLink.startsWith("http") &&
+            description.length >= 20 && requiredSkills.isNotBlank()
 
     Column(
         modifier = modifier
@@ -329,459 +130,304 @@ fun PlacementForm(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         ImagePicker(
-
             imageUri = imagePickerState.imageUri,
-
             imageUrl = imagePickerState.imageUrl,
-
             cropType = CropType.PROFILE,
-
             title = "Company Logo",
-
-            subtitle = "Upload company logo",
-
+            subtitle = "Upload company logo (1:1)",
             onImageSelected = onImageSelected,
-
             onRemoveImage = onRemoveImage
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
-        // =====================================================
-        // COMPANY NAME
-        // =====================================================
+        Spacer(modifier = Modifier.height(12.dp))
 
         AppTextField(
             value = companyName,
-            onValueChange = {
-                if (it.length <= 100) {
-                    companyName = it
-                }
-            },
-            label = "Company Name",
-            placeholder = "e.g. Google, Microsoft, Amazon"
+            onValueChange = { if (it.length <= 100) companyName = it },
+            label = "Company Name *",
+            placeholder = "e.g. Google, Microsoft"
         )
-
         ErrorText(companyNameError)
-
-
-        // =====================================================
-        // JOB ROLE
-        // =====================================================
 
         AppTextField(
             value = jobRole,
-            onValueChange = {
-                if (it.length <= 100) {
-                    jobRole = it
-                }
-            },
-            label = "Job Role",
+            onValueChange = { if (it.length <= 100) jobRole = it },
+            label = "Job Role *",
             placeholder = "e.g. Software Engineer"
         )
-
         ErrorText(jobRoleError)
 
-
-        // =====================================================
-        // PACKAGE / STIPEND
-        // =====================================================
-
-        AppTextField(
-            value = packageLpa,
-            onValueChange = {
-                packageLpa = it
-            },
-            label = "Package / Stipend",
-            placeholder = "e.g. 18 LPA or ₹60,000/month"
-        )
-
-        ErrorText(packageLpaError)
-
-
-        // =====================================================
-        // JOB TYPE
-        // =====================================================
-
-        ExposedDropdownMenuBox(
-            expanded = jobTypeExpanded,
-            onExpandedChange = {
-                jobTypeExpanded = !jobTypeExpanded
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.weight(1f)) {
+                AppTextField(
+                    value = packageLpa,
+                    onValueChange = { packageLpa = it },
+                    label = "Package *",
+                    placeholder = "12 LPA"
+                )
+                ErrorText(packageLpaError)
             }
-        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                AppTextField(
+                    value = openings,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) openings = it.take(4) },
+                    label = "Openings *",
+                    placeholder = "5"
+                )
+                ErrorText(openingsError)
+            }
+        }
 
-            OutlinedTextField(
-                value = jobType,
-                onValueChange = {},
-                readOnly = true,
-                label = {
-                    Text("Job Type")
-                },
-                placeholder = {
-                    Text("Select Job Type")
-                },
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = null
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Job Type Dropdown
+            Column(modifier = Modifier.weight(1f)) {
+                ExposedDropdownMenuBox(
+                    expanded = jobTypeExpanded,
+                    onExpandedChange = { jobTypeExpanded = !jobTypeExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = jobType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Job Type *") },
+                        trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, null) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        shape = RoundedCornerShape(18.dp)
                     )
-                },
-                isError = jobTypeError != null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-                shape = RoundedCornerShape(18.dp)
-            )
-
-            ExposedDropdownMenu(
-                expanded = jobTypeExpanded,
-                onDismissRequest = {
-                    jobTypeExpanded = false
-                }
-            ) {
-
-                jobTypes.forEach { type ->
-
-                    DropdownMenuItem(
-                        text = {
-                            Text(type)
-                        },
-                        onClick = {
-
-                            jobType = type
-                            jobTypeExpanded = false
+                    ExposedDropdownMenu(
+                        expanded = jobTypeExpanded,
+                        onDismissRequest = { jobTypeExpanded = false }
+                    ) {
+                        jobTypes.forEach { type ->
+                            DropdownMenuItem(text = { Text(type) }, onClick = { jobType = type; jobTypeExpanded = false })
                         }
+                    }
+                }
+            }
+
+            // Mode Dropdown
+            Column(modifier = Modifier.weight(1f)) {
+                ExposedDropdownMenuBox(
+                    expanded = modeExpanded,
+                    onExpandedChange = { modeExpanded = !modeExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = mode,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Drive Mode *") },
+                        trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, null) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        shape = RoundedCornerShape(18.dp)
                     )
+                    ExposedDropdownMenu(
+                        expanded = modeExpanded,
+                        onDismissRequest = { modeExpanded = false }
+                    ) {
+                        modes.forEach { m ->
+                            DropdownMenuItem(text = { Text(m) }, onClick = { mode = m; modeExpanded = false })
+                        }
+                    }
                 }
             }
         }
 
-        ErrorText(jobTypeError)
-
-        // =====================================================
-        // LOCATION
-        // =====================================================
+        // Category Dropdown
+        ExposedDropdownMenuBox(
+            expanded = categoryExpanded,
+            onExpandedChange = { categoryExpanded = !categoryExpanded }
+        ) {
+            OutlinedTextField(
+                value = category,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Category *") },
+                trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, null) },
+                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                shape = RoundedCornerShape(18.dp)
+            )
+            ExposedDropdownMenu(
+                expanded = categoryExpanded,
+                onDismissRequest = { categoryExpanded = false }
+            ) {
+                categories.forEach { cat ->
+                    DropdownMenuItem(text = { Text(cat) }, onClick = { category = cat; categoryExpanded = false })
+                }
+            }
+        }
 
         AppTextField(
             value = location,
-            onValueChange = {
-                location = it
-            },
-            label = "Location",
-            placeholder = "e.g. Bengaluru / Remote / Hybrid"
+            onValueChange = { location = it },
+            label = "City/Location *",
+            placeholder = "e.g. Bengaluru / Remote"
         )
-
         ErrorText(locationError)
-
-
-        // =====================================================
-        // OPENINGS
-        // =====================================================
-
-        AppTextField(
-            value = openings,
-            onValueChange = { newValue ->
-
-                if (newValue.all { it.isDigit() }) {
-                    openings = newValue.take(4)
-                }
-            },
-            label = "Number of Openings",
-            placeholder = "e.g. 5"
-        )
-
-        ErrorText(openingsError)
-
-
-        // =====================================================
-        // ELIGIBILITY
-        // =====================================================
 
         AppTextField(
             value = eligibility,
-            onValueChange = {
-                eligibility = it
-            },
-            label = "Eligibility Criteria",
-            placeholder = "e.g. CSE/IT, 7.5+ CGPA, No Active Backlogs"
+            onValueChange = { eligibility = it },
+            label = "Eligibility *",
+            placeholder = "e.g. B.Tech (CSE/IT), 7.0+ CGPA"
         )
-
         ErrorText(eligibilityError)
 
-
-        // =====================================================
-        // APPLICATION DEADLINE
-        // =====================================================
-
-        Text(
-            text = "Application Deadline",
-            style = MaterialTheme.typography.labelLarge
-        )
-
+        Text(text = "Application Deadline *", style = MaterialTheme.typography.labelLarge)
         OutlinedCard(
-            onClick = {
-                showDatePicker = true
-            },
+            onClick = { showDatePicker = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp)
         ) {
-
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                Icon(
-                    imageVector = Icons.Outlined.CalendarMonth,
-                    contentDescription = null
-                )
-
+                Icon(Icons.Outlined.CalendarMonth, null)
                 Spacer(modifier = Modifier.width(12.dp))
-
                 Text(
-                    text = if (deadline == 0L) {
-                        "Select application deadline"
-                    } else {
-                        SimpleDateFormat(
-                            "dd MMM yyyy",
-                            Locale.getDefault()
-                        ).format(Date(deadline))
-                    }
+                    text = if (deadline == 0L) "Select deadline"
+                    else SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(deadline))
                 )
             }
         }
-
         ErrorText(deadlineError)
-
-        // =====================================================
-        // APPLICATION LINK
-        // =====================================================
 
         AppTextField(
             value = applyLink,
-            onValueChange = {
-                applyLink = it.trim()
-            },
-            label = "Application Link",
-            placeholder = "https://company.com/careers/..."
+            onValueChange = { applyLink = it.trim() },
+            label = "Application Link *",
+            placeholder = "https://company.com/jobs/..."
         )
-
         ErrorText(applyLinkError)
-
-
-        // =====================================================
-        // JOB DESCRIPTION
-        // =====================================================
 
         AppTextField(
             value = description,
-            onValueChange = {
-
-                if (it.length <= 2000) {
-                    description = it
-                }
-            },
-            label = "Job Description",
-            placeholder = "Describe the role, responsibilities, eligibility, interview process and other important details...",
+            onValueChange = { if (it.length <= 2000) description = it },
+            label = "Job Description *",
+            placeholder = "Details about the role...",
             singleLine = false,
-            modifier = Modifier.height(180.dp)
+            modifier = Modifier.height(150.dp)
         )
+        ErrorText(descriptionError)
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            ErrorText(descriptionError)
-
-            Text(
-                text = "${description.length}/2000",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-
-        // =====================================================
-        // REQUIRED SKILLS
-        // =====================================================
+        AppTextField(
+            value = applicationProcess,
+            onValueChange = { applicationProcess = it },
+            label = "Application Process",
+            placeholder = "Step 1: Resume Shortlisting, Step 2: Online Test...",
+            singleLine = false,
+            modifier = Modifier.height(100.dp)
+        )
 
         AppTextField(
             value = requiredSkills,
-            onValueChange = {
-                requiredSkills = it
-            },
-            label = "Required Skills",
-            placeholder = "Java, Kotlin, DSA, SQL, Firebase"
+            onValueChange = { requiredSkills = it },
+            label = "Required Skills *",
+            placeholder = "Java, Kotlin, DSA (comma separated)"
         )
-
         ErrorText(requiredSkillsError)
 
-
-        // =====================================================
-        // SKILLS PREVIEW
-        // =====================================================
-
-        val skills = remember(requiredSkills) {
-            requiredSkills
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
-                .distinct()
-        }
-
-        if (skills.isNotEmpty()) {
-
-            Text(
-                text = "Skills Preview",
-                style = MaterialTheme.typography.labelLarge
-            )
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        // Attachment UI
+        Text(text = "Job Description PDF (Optional)", style = MaterialTheme.typography.labelLarge)
+        if (selectedAttachmentUri != null || (initialPlacement?.attachmentUrl != null && !removeAttachment)) {
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
             ) {
-
-                skills.forEach { skill ->
-
-                    SuggestionChip(
-                        onClick = {},
-                        label = {
-                            Text(skill)
-                        }
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.Attachment, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (selectedAttachmentUri != null) "New File Selected" else "Current PDF Attachment",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    IconButton(onClick = {
+                        selectedAttachmentUri = null
+                        removeAttachment = true
+                    }) {
+                        Icon(Icons.Rounded.Close, null, tint = MaterialTheme.colorScheme.error)
+                    }
                 }
+            }
+        } else {
+            OutlinedButton(
+                onClick = { attachmentPickerLauncher.launch("application/pdf") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Rounded.Attachment, null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Select JD PDF")
             }
         }
 
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
-        // =====================================================
-        // SUBMIT
-        // =====================================================
+        Spacer(modifier = Modifier.height(24.dp))
 
         PrimaryButton(
             text = buttonText,
             onClick = {
-
                 showErrors = true
-
                 if (isFormValid) {
-
-                    val placement = (
-                            initialPlacement ?: Placement()
-                            ).copy(
-
-                            companyName = companyName.trim(),
-
-                            jobRole = jobRole.trim(),
-
-                            packageLpa = packageLpa.trim(),
-
-                            location = location.trim(),
-
-                            jobType = jobType,
-
-                            openings = openings.toIntOrNull() ?: 0,
-
-                            eligibility = eligibility.trim(),
-
-                            deadline = deadline,
-
-                            applyLink = applyLink.trim(),
-
-                            description = description.trim(),
-
-                            requiredSkills = skills
-                        )
-
-                    onSubmit(placement)
+                    val skills = requiredSkills.split(",").map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+                    val placement = (initialPlacement ?: Placement()).copy(
+                        companyName = companyName.trim(),
+                        jobRole = jobRole.trim(),
+                        packageLpa = packageLpa.trim(),
+                        location = location.trim(),
+                        jobType = jobType,
+                        mode = mode,
+                        category = category,
+                        openings = openings.toIntOrNull() ?: 0,
+                        eligibility = eligibility.trim(),
+                        deadline = deadline,
+                        applyLink = applyLink.trim(),
+                        description = description.trim(),
+                        applicationProcess = applicationProcess.trim(),
+                        requiredSkills = skills
+                    )
+                    onSubmit(placement, selectedAttachmentUri, removeAttachment)
                 }
             }
         )
 
-        Spacer(
-            modifier = Modifier.height(40.dp)
-        )
-
-
-        // =========================================================
-        // DEADLINE DATE PICKER
-        // =========================================================
+        Spacer(modifier = Modifier.height(32.dp))
 
         if (showDatePicker) {
-
             val datePickerState = rememberDatePickerState()
-
             DatePickerDialog(
-
-                onDismissRequest = {
-                    showDatePicker = false
-                },
-
+                onDismissRequest = { showDatePicker = false },
                 confirmButton = {
-
-                    TextButton(
-
-                        onClick = {
-
-                            datePickerState.selectedDateMillis?.let { millis ->
-
-                                val formatter = SimpleDateFormat(
-                                    "dd MMM yyyy",
-                                    Locale.getDefault()
-                                )
-
-                                deadline = millis
-                            }
-
-                            showDatePicker = false
-                        }
-
-                    ) {
-                        Text("Select")
-                    }
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { deadline = it }
+                        showDatePicker = false
+                    }) { Text("OK") }
                 },
-
                 dismissButton = {
-
-                    TextButton(
-
-                        onClick = {
-                            showDatePicker = false
-                        }
-
-                    ) {
-                        Text("Cancel")
-                    }
+                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
                 }
-
             ) {
-
-                DatePicker(
-                    state = datePickerState
-                )
+                DatePicker(state = datePickerState)
             }
         }
     }
 }
 
 @Composable
-private fun ErrorText(
-    error: String?
-) {
-
+private fun ErrorText(error: String?) {
     if (error != null) {
-
         Text(
             text = error,
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = 4.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 2.dp)
         )
     }
 }
-

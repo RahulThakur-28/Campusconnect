@@ -27,6 +27,13 @@ class DiscussionRemoteDataSourceImpl @Inject constructor(
             }
     }
 
+    override suspend fun getQuestionById(collegeId: String, questionId: String): Result<Question?> = try {
+        val doc = pathProvider.discussions(collegeId).document(questionId).get().await()
+        Result.success(doc.toObject(Question::class.java)?.copy(id = doc.id))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     override fun getAnswers(collegeId: String, questionId: String): Flow<List<Answer>> {
         return pathProvider.discussions(collegeId)
             .document(questionId)
@@ -75,6 +82,17 @@ class DiscussionRemoteDataSourceImpl @Inject constructor(
             .update("likeCount", FieldValue.increment(1))
             .await()
         Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getQuestionsByUser(collegeId: String, userId: String): Result<List<Question>> = try {
+        val snapshot = pathProvider.discussions(collegeId)
+            .whereEqualTo("userId", userId)
+            .get()
+            .await()
+        val questions = snapshot.documents.mapNotNull { it.toObject(Question::class.java)?.copy(id = it.id) }
+        Result.success(questions)
     } catch (e: Exception) {
         Result.failure(e)
     }

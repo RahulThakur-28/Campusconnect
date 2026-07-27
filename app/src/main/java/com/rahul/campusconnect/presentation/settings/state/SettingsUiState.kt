@@ -1,14 +1,18 @@
 package com.rahul.campusconnect.presentation.settings.state
 
+import com.rahul.campusconnect.domain.model.AppTheme
+import com.rahul.campusconnect.domain.model.User
+import com.rahul.campusconnect.domain.repository.NotificationPreferences
+
 data class SettingsUiState(
-    val isDarkMode: Boolean = false,
-    val pushNotificationsEnabled: Boolean = true,
-    val emailNotificationsEnabled: Boolean = true,
-    val eventNotificationsEnabled: Boolean = true,
-    val placementNotificationsEnabled: Boolean = true,
-    val announcementNotificationsEnabled: Boolean = true,
-    val notesNotificationsEnabled: Boolean = true,
-    val lostFoundNotificationsEnabled: Boolean = true,
+    val user: User? = null,
+    val theme: AppTheme = AppTheme.SYSTEM,
+    val notificationPreferences: NotificationPreferences = NotificationPreferences(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
     val appVersion: String = "1.0.0",
-    val campusConnectVersion: String = "v1.0-stable"
+    val buildNumber: String = "1",
+    val deviceInfo: String = "",
+    val loginTime: String = "",
+    val authProvider: String = ""
 )

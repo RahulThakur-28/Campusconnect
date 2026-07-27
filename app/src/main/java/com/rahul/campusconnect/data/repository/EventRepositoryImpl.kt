@@ -4,12 +4,16 @@ import android.net.Uri
 import com.rahul.campusconnect.common.session.SessionManager
 import com.rahul.campusconnect.data.remote.EventRemoteDataSource
 import com.rahul.campusconnect.domain.model.Event
+import com.rahul.campusconnect.domain.model.Notification
+import com.rahul.campusconnect.domain.model.NotificationType
 import com.rahul.campusconnect.domain.repository.EventRepository
+import com.rahul.campusconnect.domain.repository.NotificationRepository
 import javax.inject.Inject
 
 class EventRepositoryImpl @Inject constructor(
     private val remoteDataSource: EventRemoteDataSource,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val notificationRepository: NotificationRepository
 ) : EventRepository {
 
     private fun getCollegeId(): String {
@@ -20,7 +24,22 @@ class EventRepositoryImpl @Inject constructor(
 
     override suspend fun getEventById(eventId: String): Result<Event?> = remoteDataSource.getEventById(getCollegeId(), eventId)
 
-    override suspend fun createEvent(event: Event): Result<String> = remoteDataSource.createEvent(getCollegeId(), event)
+    override suspend fun createEvent(event: Event): Result<String> {
+        val result = remoteDataSource.createEvent(getCollegeId(), event)
+        result.onSuccess { id ->
+            notificationRepository.sendNotification(
+                Notification(
+                    userId = "ALL",
+                    title = "New Event: ${event.title}",
+                    message = "At ${event.venue} on ${event.time}",
+                    type = NotificationType.EVENT,
+                    relatedId = id,
+                    collegeId = event.collegeId
+                )
+            )
+        }
+        return result
+    }
 
     override suspend fun updateEvent(event: Event): Result<Unit> = remoteDataSource.updateEvent(getCollegeId(), event)
 

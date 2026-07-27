@@ -21,6 +21,9 @@ interface UserRepository {
 
     suspend fun uploadProfileImage(imageUri: Uri): Result<String>
 
+    suspend fun getUsersByCollege(collegeId: String): Result<List<User>>
+
+    suspend fun updateUserRole(uid: String, collegeId: String, newRole: com.rahul.campusconnect.domain.model.UserRole): Result<Unit>
 
     suspend fun getCurrentUser(): Result<User>
 

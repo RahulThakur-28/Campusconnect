@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import com.rahul.campusconnect.domain.model.NotificationType
 fun NotificationItem(
     notification: Notification,
     onNotificationClick: (Notification) -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = if (notification.isRead) {
@@ -35,9 +37,11 @@ fun NotificationItem(
         NotificationType.ANNOUNCEMENT -> Icons.Default.Campaign to Color(0xFF2563EB)
         NotificationType.EVENT -> Icons.Default.Event to Color(0xFF7C3AED)
         NotificationType.PLACEMENT -> Icons.Default.Work to Color(0xFF10B981)
-        NotificationType.NOTE -> Icons.Default.Description to Color(0xFFF59E0B)
+        NotificationType.VERIFICATION_APPROVED -> Icons.Default.Verified to Color(0xFF10B981)
+        NotificationType.VERIFICATION_REJECTED -> Icons.Default.Error to Color(0xFFEF4444)
+        NotificationType.DISCUSSION_REPLY -> Icons.Default.QuestionAnswer to Color(0xFF2563EB)
         NotificationType.LOST_FOUND -> Icons.Default.Search to Color(0xFFEF4444)
-        NotificationType.GENERAL -> Icons.Default.Notifications to Color(0xFF6B7280)
+        else -> Icons.Default.Notifications to Color(0xFF6B7280)
     }
 
     Row(
@@ -86,11 +90,15 @@ fun NotificationItem(
                 if (!notification.isRead) {
                     Box(
                         modifier = Modifier
-                            .padding(start = 8.dp)
+                            .padding(horizontal = 8.dp)
                             .size(8.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary)
                     )
+                }
+                
+                IconButton(onClick = onDelete, modifier = Modifier.size(20.dp)) {
+                    Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                 }
             }
 

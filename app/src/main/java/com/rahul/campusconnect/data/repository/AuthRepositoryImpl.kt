@@ -1,5 +1,6 @@
 package com.rahul.campusconnect.data.repository
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.rahul.campusconnect.common.session.PreferenceManager
 import com.rahul.campusconnect.common.session.SessionManager
@@ -58,6 +59,47 @@ class AuthRepositoryImpl @Inject constructor(
             auth.signOut()
             sessionManager.clearSession()
             preferenceManager.clear()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun changePassword(newPassword: String): Result<Unit> {
+        return try {
+            auth.currentUser?.updatePassword(newPassword)?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun reauthenticate(password: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("User not logged in")
+            val credential = EmailAuthProvider.getCredential(user.email!!, password)
+            user.reauthenticate(credential).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("User not logged in")
+            val uid = user.uid
+            val collegeId = preferenceManager.getCollegeId() ?: throw Exception("College ID missing")
+            
+            // 1. Delete Firestore data
+            userRemoteDataSource.deleteUser(uid, collegeId).getOrThrow()
+            
+            // 2. Delete Auth Account
+            user.delete().await()
+            
+            // 3. Clear session
+            logout()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

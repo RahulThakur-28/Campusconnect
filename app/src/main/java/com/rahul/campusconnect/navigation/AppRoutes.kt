@@ -92,12 +92,22 @@ sealed class AppRoutes(val route: String) {
 
     object EditProfile : AppRoutes("edit_profile")
 
+    object RequestVerification : AppRoutes("request_verification")
+
+    object AdminVerificationRequests : AppRoutes("admin_verification_requests")
+
 
     //---------------------------routes for settings ----------------------------------------------------------
 
     object MyActivity : AppRoutes("my_activity/{category}")
 
     object Settings : AppRoutes("settings")
+
+    object ChangePassword : AppRoutes("change_password")
+
+    object DeleteAccount : AppRoutes("delete_account")
+
+    object BugReport : AppRoutes("bug_report")
 
     object NotificationSettings : AppRoutes("notification_settings")
 

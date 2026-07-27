@@ -18,5 +18,7 @@ data class AnnouncementUiState(
         get() = !isLoading && filteredAnnouncements.isEmpty()
 
     val canPublishAnnouncement: Boolean
-        get() = userRole == UserRole.VERIFIED_TEACHER || userRole == UserRole.ADMIN
+        get() = userRole == UserRole.VERIFIED_TEACHER || 
+                userRole == UserRole.ADMIN || 
+                userRole == UserRole.PLACEMENT_CELL
 }

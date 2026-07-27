@@ -8,6 +8,7 @@ import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.data.repository.EventRepositoryImpl
 import com.rahul.campusconnect.domain.repository.EventRepository
+import com.rahul.campusconnect.domain.repository.NotificationRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,8 +37,13 @@ object EventModule {
     @Singleton
     fun provideEventRepository(
         remoteDataSource: EventRemoteDataSource,
-        sessionManager: SessionManager
+        sessionManager: SessionManager,
+        notificationRepository: NotificationRepository
     ): EventRepository {
-        return EventRepositoryImpl(remoteDataSource, sessionManager)
+        return EventRepositoryImpl(
+            remoteDataSource,
+            sessionManager,
+            notificationRepository
+        )
     }
 }

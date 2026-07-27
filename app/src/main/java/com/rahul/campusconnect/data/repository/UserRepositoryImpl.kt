@@ -2,6 +2,7 @@ package com.rahul.campusconnect.data.repository
 
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ListenerRegistration
 import com.rahul.campusconnect.common.session.PreferenceManager
 import com.rahul.campusconnect.common.session.SessionManager
 import com.rahul.campusconnect.data.remote.UserRemoteDataSource
@@ -20,12 +21,16 @@ class UserRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : UserRepository {
 
+    private var userListener: ListenerRegistration? = null
+
     override val currentUser: StateFlow<User?> = sessionManager.currentUser
 
     override suspend fun loadUserSession(): Result<Unit> {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
             val collegeId = preferenceManager.getCollegeId() ?: return Result.failure(Exception("College ID missing in session"))
+            
+            startUserListener(uid, collegeId)
             
             val user = remoteDataSource.getUserProfile(uid, collegeId)
             if (user != null) {
@@ -39,6 +44,13 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun startUserListener(uid: String, collegeId: String) {
+        userListener?.remove()
+        userListener = remoteDataSource.getUserListener(uid, collegeId) { user ->
+            sessionManager.updateSession(user)
+        }
+    }
+
     override suspend fun getUserProfile(uid: String, collegeId: String): Result<User?> {
         return try {
             val user = remoteDataSource.getUserProfile(uid, collegeId)
@@ -47,7 +59,6 @@ class UserRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-
 
     override suspend fun updateProfile(user: User): Result<Unit> {
         return try {
@@ -83,17 +94,30 @@ class UserRepositoryImpl @Inject constructor(
         return remoteDataSource.uploadProfileImage(imageUri)
     }
 
+    override suspend fun getUsersByCollege(collegeId: String): Result<List<User>> {
+        return remoteDataSource.getUsersByCollege(collegeId)
+    }
+
+    override suspend fun updateUserRole(
+        uid: String,
+        collegeId: String,
+        newRole: com.rahul.campusconnect.domain.model.UserRole
+    ): Result<Unit> {
+        return remoteDataSource.updateUserRole(uid, collegeId, newRole.name)
+    }
+
     override suspend fun getCurrentUser(): Result<User> {
         val user = sessionManager.currentUser.value
         return if (user != null) {
             Result.success(user)
         } else {
-            // Fallback to load session if not available
             loadUserSession().map { sessionManager.currentUser.value!! }
         }
     }
 
     override fun clearSession() {
+        userListener?.remove()
+        userListener = null
         sessionManager.clearSession()
     }
 }

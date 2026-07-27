@@ -7,6 +7,7 @@ import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.data.repository.AnnouncementRepositoryImpl
 import com.rahul.campusconnect.domain.repository.AnnouncementRepository
+import com.rahul.campusconnect.domain.repository.NotificationRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,8 +34,13 @@ object AnnouncementModule {
     @Singleton
     fun provideAnnouncementRepository(
         remoteDataSource: AnnouncementRemoteDataSource,
-        sessionManager: SessionManager
+        sessionManager: SessionManager,
+        notificationRepository: NotificationRepository
     ): AnnouncementRepository {
-        return AnnouncementRepositoryImpl(remoteDataSource, sessionManager)
+        return AnnouncementRepositoryImpl(
+            remoteDataSource,
+            sessionManager,
+            notificationRepository
+        )
     }
 }

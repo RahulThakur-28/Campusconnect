@@ -68,6 +68,7 @@ object Constants {
     const val NOTES = "notes"
     const val LOST_FOUND = "lost_found"
     const val NOTIFICATIONS = "notifications"
+    const val VERIFICATION_REQUESTS = "verification_requests"
 
     // -------------------------
     // Firebase Storage

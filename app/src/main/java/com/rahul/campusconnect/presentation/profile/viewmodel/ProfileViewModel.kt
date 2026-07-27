@@ -5,11 +5,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.campusconnect.domain.model.User
-import com.rahul.campusconnect.domain.repository.AuthRepository
-import com.rahul.campusconnect.domain.repository.UserRepository
+import com.rahul.campusconnect.domain.repository.*
 import com.rahul.campusconnect.presentation.profile.state.EditProfileUiState
 import com.rahul.campusconnect.presentation.profile.state.ProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,7 +17,14 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val notesRepository: NotesRepository,
+    private val eventRepository: EventRepository,
+    private val placementRepository: PlacementRepository,
+    private val announcementRepository: AnnouncementRepository,
+    private val qaRepository: EventQARepository,
+    private val lostFoundRepository: LostFoundRepository,
+    private val verificationRepository: VerificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -46,9 +53,57 @@ class ProfileViewModel @Inject constructor(
                             profileImage = user.profileImage
                         )
                     }
+                    loadMyContent(user.uid)
+                    checkVerificationStatus(user.uid, user.collegeId)
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun checkVerificationStatus(userId: String, collegeId: String) {
+        viewModelScope.launch {
+            verificationRepository.getRequestByUserId(userId, collegeId).onSuccess { request ->
+                _uiState.update { it.copy(verificationRequest = request) }
+            }
+        }
+    }
+
+    private fun loadMyContent(userId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val notesDeferred = async { notesRepository.getMyNotes(userId) }
+                val eventsDeferred = async { eventRepository.getMyEvents(userId) }
+                val placementsDeferred = async { placementRepository.getMyPlacements(userId) }
+                val announcementsDeferred = async { announcementRepository.getMyAnnouncements(userId) }
+                val discussionsDeferred = async { qaRepository.getMyQuestions(userId) }
+                val lostFoundDeferred = async { lostFoundRepository.getMyItems(userId) }
+
+                val notes = notesDeferred.await().getOrDefault(emptyList())
+                val events = eventsDeferred.await().getOrDefault(emptyList())
+                val placements = placementsDeferred.await().getOrDefault(emptyList())
+                val announcements = announcementsDeferred.await().getOrDefault(emptyList())
+                val discussions = discussionsDeferred.await().getOrDefault(emptyList())
+                val lostFound = lostFoundDeferred.await().getOrDefault(emptyList())
+
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    notesCount = notes.size,
+                    eventsCount = events.size,
+                    placementsCount = placements.size,
+                    announcementsCount = announcements.size,
+                    discussionsCount = discussions.size,
+                    myNotes = notes,
+                    myEvents = events,
+                    myPlacements = placements,
+                    myAnnouncements = announcements,
+                    myQuestions = discussions,
+                    myLostFoundItems = lostFound
+                ) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load content") }
+            }
+        }
     }
 
     fun uploadProfileImage(uri: Uri) {
@@ -117,4 +172,17 @@ class ProfileViewModel @Inject constructor(
     fun clearError() = _uiState.update { it.copy(error = null) }
     fun clearEditError() = _editProfileState.update { it.copy(error = null) }
     fun resetSuccess() = _editProfileState.update { it.copy(isSuccess = false) }
+    
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            userRepository.loadUserSession().onSuccess {
+                _uiState.value.user.let { 
+                    loadMyContent(it.uid)
+                    checkVerificationStatus(it.uid, it.collegeId)
+                }
+            }
+            _uiState.update { it.copy(isRefreshing = false) }
+        }
+    }
 }

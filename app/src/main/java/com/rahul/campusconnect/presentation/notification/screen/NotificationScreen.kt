@@ -42,7 +42,6 @@ fun NotificationScreen(
         }
     }
 
-    // Grouping by time
     val groupedNotifications = remember(filteredNotifications) {
         filteredNotifications.groupBy { notification ->
             when {
@@ -59,18 +58,14 @@ fun NotificationScreen(
                 title = { Text("Notifications", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.markAllAsRead() }) {
-                        Icon(
-                            imageVector = Icons.Default.DoneAll,
-                            contentDescription = "Mark all as read"
-                        )
+                    if (uiState.notifications.any { !it.isRead }) {
+                        IconButton(onClick = { viewModel.markAllAsRead() }) {
+                            Icon(Icons.Default.DoneAll, contentDescription = "Mark all as read")
+                        }
                     }
                 }
             )
@@ -86,26 +81,16 @@ fun NotificationScreen(
                 onFilterSelected = viewModel::onFilterSelected
             )
 
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+            if (uiState.isLoading && !uiState.isRefreshing) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else if (filteredNotifications.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    EmptyState(
-                        message = "You're all caught up\nNew campus updates will appear here."
-                    )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    EmptyState(message = "You're all caught up\nNew campus updates will appear here.")
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
                     listOf("Today", "Yesterday", "Earlier").forEach { groupTitle ->
                         val groupItems = groupedNotifications[groupTitle]
                         if (!groupItems.isNullOrEmpty()) {
@@ -124,7 +109,8 @@ fun NotificationScreen(
                                     onNotificationClick = {
                                         viewModel.markAsRead(it.id)
                                         onNotificationClick(it)
-                                    }
+                                    },
+                                    onDelete = { viewModel.deleteNotification(notification.id) }
                                 )
                                 HorizontalDivider(
                                     thickness = 0.5.dp,

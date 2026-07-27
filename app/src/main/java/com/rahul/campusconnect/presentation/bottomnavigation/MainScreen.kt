@@ -1,14 +1,14 @@
 package com.rahul.campusconnect.presentation.bottomnavigation
 
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun MainScreen() {
+fun MainScreen(rootNavController: NavController) {
 
     // One NavController shared by BottomBar and MainNavigation
     val navController = rememberNavController()
@@ -23,6 +23,7 @@ fun MainScreen() {
 
         MainNavigation(
             navController = navController,
+            rootNavController = rootNavController,
             modifier = Modifier.padding(innerPadding)
         )
     }

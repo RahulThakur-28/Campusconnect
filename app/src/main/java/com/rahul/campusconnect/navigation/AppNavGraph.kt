@@ -26,7 +26,7 @@ fun AppNavGraph() {
     ) {
 
         composable(AppRoutes.Main.route) {
-            MainScreen()
+            MainScreen(rootNavController = navController)
         }
 
 

@@ -32,19 +32,55 @@ fun NavController.navigateToHelpSupport() {
     this.navigate(AppRoutes.HelpSupport.route)
 }
 
+fun NavController.navigateToChangePassword() {
+    this.navigate(AppRoutes.ChangePassword.route)
+}
+
+fun NavController.navigateToDeleteAccount() {
+    this.navigate(AppRoutes.DeleteAccount.route)
+}
+
+fun NavController.navigateToBugReport() {
+    this.navigate(AppRoutes.BugReport.route)
+}
+
 fun NavGraphBuilder.settingsGraph(
     navController: NavHostController,
-    onEditProfileClick: () -> Unit
+    onEditProfileClick: () -> Unit,
+    onLogoutSuccess: () -> Unit
 ) {
     composable(route = AppRoutes.Settings.route) {
         SettingsScreen(
             onBackClick = { navController.popBackStack() },
             onEditProfileClick = onEditProfileClick,
+            onChangePasswordClick = { navController.navigateToChangePassword() },
             onNotificationSettingsClick = { navController.navigateToNotificationSettings() },
             onAboutClick = { navController.navigateToAbout() },
             onHelpSupportClick = { navController.navigateToHelpSupport() },
             onPrivacyPolicyClick = { navController.navigateToPrivacyPolicy() },
-            onTermsClick = { navController.navigateToTerms() }
+            onTermsClick = { navController.navigateToTerms() },
+            onBugReportClick = { navController.navigateToBugReport() },
+            onDeleteAccountClick = { navController.navigateToDeleteAccount() },
+            onLogoutSuccess = onLogoutSuccess
+        )
+    }
+
+    composable(route = AppRoutes.ChangePassword.route) {
+        ChangePasswordScreen(
+            onBackClick = { navController.popBackStack() }
+        )
+    }
+
+    composable(route = AppRoutes.DeleteAccount.route) {
+        DeleteAccountScreen(
+            onBackClick = { navController.popBackStack() },
+            onDeleteSuccess = onLogoutSuccess
+        )
+    }
+
+    composable(route = AppRoutes.BugReport.route) {
+        BugReportScreen(
+            onBackClick = { navController.popBackStack() }
         )
     }
 
@@ -74,7 +110,8 @@ fun NavGraphBuilder.settingsGraph(
 
     composable(route = AppRoutes.HelpSupport.route) {
         HelpSupportScreen(
-            onBackClick = { navController.popBackStack() }
+            onBackClick = { navController.popBackStack() },
+            onBugReportClick = { navController.navigateToBugReport() }
         )
     }
 }

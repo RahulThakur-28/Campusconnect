@@ -1,18 +1,17 @@
 package com.rahul.campusconnect.presentation.bottomnavigation
 
-
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.announcement.navigation.announcementGraph
+import com.rahul.campusconnect.presentation.discussion.navigation.discussionGraph
 import com.rahul.campusconnect.presentation.event.navigation.eventGraph
 import com.rahul.campusconnect.presentation.event.navigation.navigateToCreateEvent
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
-import com.rahul.campusconnect.presentation.event.navigation.navigateToPastEvents
-import com.rahul.campusconnect.presentation.event.navigation.navigateToUpcomingEvents
 import com.rahul.campusconnect.presentation.home.HomeScreen
 import com.rahul.campusconnect.presentation.lostfound.navigation.lostFoundGraph
 import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostFoundDetails
@@ -31,100 +30,43 @@ import com.rahul.campusconnect.presentation.settings.navigation.settingsGraph
 @Composable
 fun MainNavigation(
     navController: NavHostController,
+    rootNavController: NavController,
     modifier: Modifier = Modifier
 ) {
-
     NavHost(
         navController = navController,
         startDestination = AppRoutes.Home.route,
         modifier = modifier
     ) {
-
-        // ---------------- Home ----------------
-
-        composable(
-            route = AppRoutes.Home.route
-        ) {
-            HomeScreen(
-                navController = navController
-            )
+        composable(route = AppRoutes.Home.route) {
+            HomeScreen(navController = navController)
         }
-
-
-        // ---------------- Events ----------------
 
         eventGraph(
             navController = navController,
-            onBackClick = {
-                navController.popBackStack()
-            },
-
-            onViewDiscussionClick = { eventId ->
-                // Discussion navigation will be implemented in Phase 3 or as needed
-            }
+            onBackClick = { navController.popBackStack() },
+            onViewDiscussionClick = { /* Handled in discussionGraph */ }
         )
-
-
-        // ---------------- Placements ----------------
 
         placementGraph(
             navController = navController,
-            onBackClick = {
-                navController.popBackStack()
-            },
-            onPlacementClick = { placementId ->
-                navController.navigateToPlacementDetails(placementId)
-            },
-            onEditPlacementClick = { placementId ->
-                navController.navigateToEditPlacement(placementId)
-            },
-            onViewDiscussionClick = {
-                // TODO: Navigate to Placement Discussion
-            },
-            onCreatePlacementClick = {
-                navController.navigateToCreatePlacement()
-            }
+            onBackClick = { navController.popBackStack() },
+            onPlacementClick = { id -> navController.navigateToPlacementDetails(id) },
+            onEditPlacementClick = { id -> navController.navigateToEditPlacement(id) },
+            onViewDiscussionClick = { /* Handled in discussionGraph */ },
+            onCreatePlacementClick = { navController.navigateToCreatePlacement() }
         )
 
-        // ---------------- Announcements ----------------
-
-        announcementGraph(
-            navController = navController
-        )
-
-
-
-
-        // ---------------- More ----------------
-
-        moreGraph(
-            navController = navController
-        )
-
-
-
-
-
-        // ---------------- Notes ----------------
+        announcementGraph(navController = navController)
+        moreGraph(navController = navController)
         notesGraph(navController)
-
-
-
-
-
-        // ---------------- Lost & Found ----------------
         lostFoundGraph(navController)
+        discussionGraph(navController)
 
-
-
-
-
-
-        // ---------------- Profile ----------------
         profileGraph(
             navController = navController,
             onLogoutClick = {
-                navController.navigate(AppRoutes.Login.route) {
+                rootNavController.navigate(AppRoutes.Login.route) {
                     popUpTo(0) { inclusive = true }
                 }
             },
@@ -135,25 +77,17 @@ fun MainNavigation(
             onLostFoundClick = { itemId -> navController.navigateToLostFoundDetails(itemId) }
         )
 
-
-
-        // ---------------- Settings ----------------
         settingsGraph(
             navController = navController,
-            onEditProfileClick = { navController.navigate(AppRoutes.EditProfile.route) }
+            onEditProfileClick = { navController.navigate(AppRoutes.EditProfile.route) },
+            onLogoutSuccess = {
+                rootNavController.navigate(AppRoutes.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
         )
 
-        // ---------------- Notifications ----------------
         notificationGraph(navController)
-
-        // ---------------- Search ----------------
         searchGraph(navController)
-
     }
-
-
-
-
-
-
 }

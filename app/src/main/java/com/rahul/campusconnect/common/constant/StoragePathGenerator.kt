@@ -106,4 +106,11 @@ object StoragePathGenerator {
     ): String {
         return "colleges/$collegeId/${StorageConstants.Folder.LOST_FOUND}/$itemId.jpg"
     }
+
+    fun verificationDocument(
+        collegeId: String,
+        userId: String
+    ): String {
+        return "colleges/$collegeId/verification/$userId.jpg"
+    }
 }

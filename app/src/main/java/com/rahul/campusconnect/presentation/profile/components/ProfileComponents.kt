@@ -20,6 +20,7 @@ fun SettingsRow(
     title: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     showChevron: Boolean = true
 ) {
@@ -47,13 +48,21 @@ fun SettingsRow(
         
         Spacer(modifier = Modifier.width(16.dp))
         
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            color = contentColor,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = contentColor
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        }
         
         if (showChevron) {
             Icon(

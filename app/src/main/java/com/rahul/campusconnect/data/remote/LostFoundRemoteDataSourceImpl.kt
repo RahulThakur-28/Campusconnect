@@ -71,6 +71,18 @@ class LostFoundRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
+    override suspend fun getMyItems(collegeId: String, userId: String): Result<List<LostFoundItem>> = try {
+        val snapshot = pathProvider.lostFound(collegeId)
+            .whereEqualTo("ownerId", userId)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get()
+            .await()
+        val items = snapshot.documents.mapNotNull { it.toObject(LostFoundItem::class.java)?.copy(id = it.id) }
+        Result.success(items)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     override suspend fun uploadImage(collegeId: String, itemId: String, imageUri: Uri): Result<Pair<String, String>> = try {
         val path = StoragePathGenerator.lostFoundImage(collegeId, itemId)
         storageManager.uploadImage(

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rahul.campusconnect.domain.repository.NotificationType
 import com.rahul.campusconnect.presentation.settings.components.SettingSwitchItem
 import com.rahul.campusconnect.presentation.settings.viewmodel.SettingsViewModel
 import com.rahul.campusconnect.ui.components.SectionHeader
@@ -25,6 +26,7 @@ fun NotificationSettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val prefs = uiState.notificationPreferences
 
     Scaffold(
         topBar = {
@@ -44,52 +46,43 @@ fun NotificationSettingsScreen(
                 .padding(padding)
                 .verticalScroll(scrollState)
         ) {
-            SectionHeader(title = "GENERAL", actionText = null)
-            SettingSwitchItem(
-                title = "Push Notifications",
-                subtitle = "Enable or disable all push notifications",
-                icon = Icons.Outlined.NotificationsActive,
-                checked = uiState.pushNotificationsEnabled,
-                onCheckedChange = viewModel::togglePushNotifications
-            )
-            SettingSwitchItem(
-                title = "Email Notifications",
-                subtitle = "Receive updates via your college email",
-                icon = Icons.Outlined.Email,
-                checked = uiState.emailNotificationsEnabled,
-                onCheckedChange = viewModel::toggleEmailNotifications
-            )
-
-            SectionHeader(title = "MODULE SPECIFIC", actionText = null)
+            SectionHeader(title = "MODULE ALERTS", actionText = null)
+            
             SettingSwitchItem(
                 title = "Announcements",
                 icon = Icons.Outlined.Campaign,
-                checked = uiState.announcementNotificationsEnabled,
-                onCheckedChange = viewModel::toggleAnnouncementNotifications
+                checked = prefs.announcements,
+                onCheckedChange = { viewModel.updateNotificationPreference(NotificationType.ANNOUNCEMENTS, it) }
             )
             SettingSwitchItem(
                 title = "Events",
                 icon = Icons.Outlined.Event,
-                checked = uiState.eventNotificationsEnabled,
-                onCheckedChange = viewModel::toggleEventNotifications
+                checked = prefs.events,
+                onCheckedChange = { viewModel.updateNotificationPreference(NotificationType.EVENTS, it) }
             )
             SettingSwitchItem(
                 title = "Placements",
                 icon = Icons.Outlined.WorkOutline,
-                checked = uiState.placementNotificationsEnabled,
-                onCheckedChange = viewModel::togglePlacementNotifications
+                checked = prefs.placements,
+                onCheckedChange = { viewModel.updateNotificationPreference(NotificationType.PLACEMENTS, it) }
             )
             SettingSwitchItem(
                 title = "Study Notes",
                 icon = Icons.Outlined.Description,
-                checked = uiState.notesNotificationsEnabled,
-                onCheckedChange = viewModel::toggleNotesNotifications
+                checked = prefs.notes,
+                onCheckedChange = { viewModel.updateNotificationPreference(NotificationType.NOTES, it) }
             )
             SettingSwitchItem(
                 title = "Lost & Found",
                 icon = Icons.Outlined.Search,
-                checked = uiState.lostFoundNotificationsEnabled,
-                onCheckedChange = viewModel::toggleLostFoundNotifications
+                checked = prefs.lostFound,
+                onCheckedChange = { viewModel.updateNotificationPreference(NotificationType.LOST_FOUND, it) }
+            )
+            SettingSwitchItem(
+                title = "Discussion Replies",
+                icon = Icons.Outlined.QuestionAnswer,
+                checked = prefs.discussionReplies,
+                onCheckedChange = { viewModel.updateNotificationPreference(NotificationType.DISCUSSION_REPLIES, it) }
             )
             
             Spacer(modifier = Modifier.height(32.dp))

@@ -4,12 +4,16 @@ import android.net.Uri
 import com.rahul.campusconnect.common.session.SessionManager
 import com.rahul.campusconnect.data.remote.AnnouncementRemoteDataSource
 import com.rahul.campusconnect.domain.model.Announcement
+import com.rahul.campusconnect.domain.model.Notification
+import com.rahul.campusconnect.domain.model.NotificationType
 import com.rahul.campusconnect.domain.repository.AnnouncementRepository
+import com.rahul.campusconnect.domain.repository.NotificationRepository
 import javax.inject.Inject
 
 class AnnouncementRepositoryImpl @Inject constructor(
     private val remoteDataSource: AnnouncementRemoteDataSource,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val notificationRepository: NotificationRepository
 ) : AnnouncementRepository {
 
     private fun getCollegeId(): String {
@@ -25,7 +29,20 @@ class AnnouncementRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createAnnouncement(announcement: Announcement): Result<String> {
-        return remoteDataSource.createAnnouncement(getCollegeId(), announcement)
+        val result = remoteDataSource.createAnnouncement(getCollegeId(), announcement)
+        result.onSuccess { id ->
+            notificationRepository.sendNotification(
+                Notification(
+                    userId = "ALL",
+                    title = "New Announcement: ${announcement.title}",
+                    message = announcement.description.take(100),
+                    type = NotificationType.ANNOUNCEMENT,
+                    relatedId = id,
+                    collegeId = announcement.collegeId
+                )
+            )
+        }
+        return result
     }
 
     override suspend fun updateAnnouncement(announcement: Announcement): Result<Unit> {

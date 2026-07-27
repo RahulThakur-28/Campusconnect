@@ -4,8 +4,10 @@ import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.common.constant.StorageConstants
+import com.rahul.campusconnect.common.storage.StoragePathGenerator
 import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.remote.storage.StorageManager
 import com.rahul.campusconnect.domain.model.College
@@ -29,6 +31,15 @@ class UserRemoteDataSourceImpl @Inject constructor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    override fun getUserListener(uid: String, collegeId: String, onUpdate: (User?) -> Unit): ListenerRegistration {
+        return pathProvider.users(collegeId)
+            .document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                onUpdate(snapshot?.toObject(User::class.java))
+            }
     }
 
     override suspend fun saveUser(user: User): Result<Unit> {
@@ -85,6 +96,34 @@ class UserRemoteDataSourceImpl @Inject constructor(
                 .document(user.uid)
                 .set(user)
                 .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUserRole(uid: String, collegeId: String, newRole: String): Result<Unit> = try {
+        pathProvider.users(collegeId).document(uid).update("role", newRole).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getUsersByCollege(collegeId: String): Result<List<User>> = try {
+        val snapshot = pathProvider.users(collegeId).get().await()
+        val users = snapshot.documents.mapNotNull { it.toObject(User::class.java)?.copy(uid = it.id) }
+        Result.success(users)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun deleteUser(uid: String, collegeId: String): Result<Unit> {
+        return try {
+            // Delete profile image if exists
+            val path = StoragePathGenerator.profileImage(collegeId, uid)
+            storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+
+            pathProvider.users(collegeId).document(uid).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

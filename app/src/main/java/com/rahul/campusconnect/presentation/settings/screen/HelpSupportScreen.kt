@@ -1,5 +1,8 @@
 package com.rahul.campusconnect.presentation.settings.screen
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +12,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rahul.campusconnect.presentation.settings.components.SettingItem
@@ -17,9 +21,11 @@ import com.rahul.campusconnect.ui.components.SectionHeader
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpSupportScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onBugReportClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -43,7 +49,7 @@ fun HelpSupportScreen(
             
             FaqItem(
                 question = "How do I verify my student status?",
-                answer = "Go to Profile -> Edit Profile and upload your student ID. Our team will review it within 24 hours."
+                answer = "Go to Profile -> Verification to upload your student ID. Our team will review it within 24 hours."
             )
             FaqItem(
                 question = "Can I download notes for offline use?",
@@ -51,7 +57,7 @@ fun HelpSupportScreen(
             )
             FaqItem(
                 question = "How do I report a found item?",
-                answer = "Navigate to the Lost & Found module and click the '+' button in the top right corner."
+                answer = "Navigate to the Lost & Found module and click the '+' button in the bottom right corner."
             )
 
             SectionHeader(title = "CONTACT US", actionText = null)
@@ -59,13 +65,13 @@ fun HelpSupportScreen(
                 title = "Email Support",
                 subtitle = "support@campusconnect.com",
                 icon = Icons.Outlined.Email,
-                onClick = { /* TODO: Intent to Email */ }
+                onClick = { openEmail(context) }
             )
             SettingItem(
                 title = "Report a Bug",
                 subtitle = "Let us know what's broken",
                 icon = Icons.Outlined.BugReport,
-                onClick = { /* TODO */ }
+                onClick = onBugReportClick
             )
             SettingItem(
                 title = "Chat Support",
@@ -104,4 +110,12 @@ fun FaqItem(question: String, answer: String) {
             )
         }
     }
+}
+
+private fun openEmail(context: Context) {
+    val intent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:support@campusconnect.com")
+        putExtra(Intent.EXTRA_SUBJECT, "CampusConnect Support Request")
+    }
+    context.startActivity(intent)
 }

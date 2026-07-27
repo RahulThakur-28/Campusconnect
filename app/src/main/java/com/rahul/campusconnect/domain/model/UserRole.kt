@@ -5,7 +5,8 @@ enum class UserRole {
     VERIFIED_STUDENT,
     VERIFIED_TEACHER,
     PLACEMENT_CELL,
-    ADMIN;
+    ADMIN,
+    SUPER_ADMIN;
 
     val displayName: String
         get() = name

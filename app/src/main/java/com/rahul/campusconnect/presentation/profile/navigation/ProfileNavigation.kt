@@ -8,14 +8,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.rahul.campusconnect.navigation.AppRoutes
-import com.rahul.campusconnect.presentation.profile.screen.EditProfileScreen
-import com.rahul.campusconnect.presentation.profile.screen.MyActivityScreen
-import com.rahul.campusconnect.presentation.profile.screen.ProfileScreen
+import com.rahul.campusconnect.presentation.profile.screen.*
 import com.rahul.campusconnect.presentation.settings.navigation.navigateToAbout
 import com.rahul.campusconnect.presentation.settings.navigation.navigateToHelpSupport
 import com.rahul.campusconnect.presentation.settings.navigation.navigateToNotificationSettings
 import com.rahul.campusconnect.presentation.settings.navigation.navigateToPrivacyPolicy
-import com.rahul.campusconnect.presentation.settings.navigation.navigateToTerms
 
 fun NavController.navigateToProfile(navOptions: NavOptions? = null) {
     this.navigate(AppRoutes.Profile.route, navOptions)
@@ -27,6 +24,18 @@ fun NavController.navigateToEditProfile() {
 
 fun NavController.navigateToMyActivity(category: String) {
     this.navigate("my_activity/$category")
+}
+
+fun NavController.navigateToRequestVerification() {
+    this.navigate(AppRoutes.RequestVerification.route)
+}
+
+fun NavController.navigateToAdminVerification() {
+    this.navigate(AppRoutes.AdminVerificationRequests.route)
+}
+
+fun NavController.navigateToUserManagement() {
+    this.navigate("user_management")
 }
 
 fun NavGraphBuilder.profileGraph(
@@ -45,17 +54,37 @@ fun NavGraphBuilder.profileGraph(
                 navController.navigateToMyActivity(category)
             },
             onSettingsClick = onSettingsClick,
-
             onAboutClick = { navController.navigateToAbout() },
             onPrivacyPolicyClick = { navController.navigateToPrivacyPolicy() },
             onHelpSupportClick = { navController.navigateToHelpSupport() },
             onLogoutClick = onLogoutClick,
-            onNotificationSettingsClick = { navController.navigateToNotificationSettings() }
+            onNotificationSettingsClick = { navController.navigateToNotificationSettings() },
+            onVerificationClick = { navController.navigateToRequestVerification() },
+            onAdminVerificationClick = { navController.navigateToAdminVerification() },
+            onUserManagementClick = { navController.navigateToUserManagement() }
         )
     }
 
     composable(route = AppRoutes.EditProfile.route) {
         EditProfileScreen(
+            onBackClick = { navController.popBackStack() }
+        )
+    }
+
+    composable(route = AppRoutes.RequestVerification.route) {
+        RequestVerificationScreen(
+            onBackClick = { navController.popBackStack() }
+        )
+    }
+
+    composable(route = AppRoutes.AdminVerificationRequests.route) {
+        AdminVerificationScreen(
+            onBackClick = { navController.popBackStack() }
+        )
+    }
+    
+    composable(route = "user_management") {
+        UserManagementScreen(
             onBackClick = { navController.popBackStack() }
         )
     }
@@ -71,7 +100,9 @@ fun NavGraphBuilder.profileGraph(
             onNoteClick = onNoteClick,
             onEventClick = onEventClick,
             onPlacementClick = onPlacementClick,
-            onLostFoundClick = onLostFoundClick
+            onLostFoundClick = onLostFoundClick,
+            onAnnouncementClick = { id -> navController.navigate("announcement_details/$id") },
+            onDiscussionClick = { id -> navController.navigate("discussion_details/$id") }
         )
     }
 }

@@ -13,6 +13,7 @@ import com.rahul.campusconnect.presentation.lostfound.navigation.navigateToLostF
 import com.rahul.campusconnect.presentation.notes.navigation.navigateToNoteDetails
 import com.rahul.campusconnect.presentation.notification.screen.NotificationScreen
 import com.rahul.campusconnect.presentation.placement.navigation.navigateToPlacementDetails
+import com.rahul.campusconnect.presentation.profile.navigation.navigateToProfile
 
 fun NavController.navigateToNotifications(navOptions: NavOptions? = null) {
     this.navigate(AppRoutes.Notifications.route, navOptions)
@@ -29,33 +30,35 @@ fun NavGraphBuilder.notificationGraph(
             onNotificationClick = { notification ->
                 when (notification.type) {
                     NotificationType.ANNOUNCEMENT -> {
-                        notification.referenceId?.let {
+                        notification.relatedId?.let {
                             navController.navigateToAnnouncementDetails(it)
                         }
                     }
                     NotificationType.EVENT -> {
-                        notification.referenceId?.let {
+                        notification.relatedId?.let {
                             navController.navigateToEventDetails(it)
                         }
                     }
                     NotificationType.PLACEMENT -> {
-                        notification.referenceId?.let {
+                        notification.relatedId?.let {
                             navController.navigateToPlacementDetails(it)
                         }
                     }
                     NotificationType.LOST_FOUND -> {
-                        notification.referenceId?.let {
+                        notification.relatedId?.let {
                             navController.navigateToLostFoundDetails(it)
                         }
                     }
-                    NotificationType.NOTE -> {
-                        notification.referenceId?.let {
-                            navController.navigateToNoteDetails(it)
+                    NotificationType.VERIFICATION_APPROVED,
+                    NotificationType.VERIFICATION_REJECTED -> {
+                        navController.navigateToProfile()
+                    }
+                    NotificationType.DISCUSSION_REPLY -> {
+                        notification.relatedId?.let {
+                            navController.navigate("discussion_details/$it")
                         }
                     }
-                    NotificationType.GENERAL -> {
-                        // Stay on screen or navigate to general details
-                    }
+                    NotificationType.GENERAL -> { }
                 }
             }
         )

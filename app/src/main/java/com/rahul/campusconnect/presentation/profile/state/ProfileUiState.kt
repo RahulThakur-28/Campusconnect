@@ -1,20 +1,26 @@
 package com.rahul.campusconnect.presentation.profile.state
 
-import com.rahul.campusconnect.domain.model.Event
-import com.rahul.campusconnect.domain.model.LostFoundItem
-import com.rahul.campusconnect.domain.model.Note
-import com.rahul.campusconnect.domain.model.Placement
-import com.rahul.campusconnect.domain.model.User
+import com.rahul.campusconnect.domain.model.*
 
 data class ProfileUiState(
     val user: User = User(),
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
     
-    // Placeholder lists for Phase 2 migration
+    val notesCount: Int = 0,
+    val eventsCount: Int = 0,
+    val placementsCount: Int = 0,
+    val announcementsCount: Int = 0,
+    val discussionsCount: Int = 0,
+    
     val myNotes: List<Note> = emptyList(),
     val myEvents: List<Event> = emptyList(),
     val myPlacements: List<Placement> = emptyList(),
-    val myLostFoundItems: List<LostFoundItem> = emptyList()
+    val myAnnouncements: List<Announcement> = emptyList(),
+    val myQuestions: List<Question> = emptyList(),
+    val myLostFoundItems: List<LostFoundItem> = emptyList(),
+    
+    val verificationRequest: VerificationRequest? = null,
+    val isRefreshing: Boolean = false
 )

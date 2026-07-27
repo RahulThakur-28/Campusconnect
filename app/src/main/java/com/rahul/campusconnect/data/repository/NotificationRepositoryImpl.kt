@@ -14,24 +14,29 @@ class NotificationRepositoryImpl @Inject constructor(
 ) : NotificationRepository {
 
     private fun getCollegeId(): String? = sessionManager.getCollegeId()
+    private fun getUserId(): String? = sessionManager.getUid()
 
-    override fun getNotifications(): Flow<List<Notification>> {
-        val collegeId = getCollegeId() ?: return emptyFlow()
-        return remoteDataSource.getNotifications(collegeId)
+    override fun getNotifications(collegeId: String, userId: String): Flow<List<Notification>> {
+        return remoteDataSource.getNotifications(collegeId, userId)
     }
 
-    override suspend fun markAsRead(notificationId: String): Result<Unit> {
-        val collegeId = getCollegeId() ?: return Result.failure(Exception("No college ID"))
+    override fun getUnreadCount(collegeId: String, userId: String): Flow<Int> {
+        return remoteDataSource.getUnreadCount(collegeId, userId)
+    }
+
+    override suspend fun markAsRead(collegeId: String, notificationId: String): Result<Unit> {
         return remoteDataSource.markAsRead(collegeId, notificationId)
     }
 
-    override suspend fun markAllAsRead(): Result<Unit> {
-        val collegeId = getCollegeId() ?: return Result.failure(Exception("No college ID"))
-        return remoteDataSource.markAllAsRead(collegeId)
+    override suspend fun markAllAsRead(collegeId: String, userId: String): Result<Unit> {
+        return remoteDataSource.markAllAsRead(collegeId, userId)
     }
 
-    override suspend fun deleteNotification(notificationId: String): Result<Unit> {
-        val collegeId = getCollegeId() ?: return Result.failure(Exception("No college ID"))
+    override suspend fun deleteNotification(collegeId: String, notificationId: String): Result<Unit> {
         return remoteDataSource.deleteNotification(collegeId, notificationId)
+    }
+
+    override suspend fun sendNotification(notification: Notification): Result<Unit> {
+        return remoteDataSource.sendNotification(notification)
     }
 }

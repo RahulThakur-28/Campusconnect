@@ -10,6 +10,7 @@ interface LostFoundRemoteDataSource {
     suspend fun updateItem(collegeId: String, item: LostFoundItem): Result<Unit>
     suspend fun deleteItem(collegeId: String, itemId: String, imagePath: String?): Result<Unit>
     suspend fun markAsResolved(collegeId: String, itemId: String): Result<Unit>
+    suspend fun getMyItems(collegeId: String, userId: String): Result<List<LostFoundItem>>
     suspend fun uploadImage(collegeId: String, itemId: String, imageUri: Uri): Result<Pair<String, String>>
     suspend fun deleteFile(path: String): Result<Unit>
     fun generateItemId(): String

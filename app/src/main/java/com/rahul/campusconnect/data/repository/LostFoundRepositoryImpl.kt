@@ -20,6 +20,7 @@ class LostFoundRepositoryImpl @Inject constructor(
     override suspend fun updateItem(item: LostFoundItem): Result<Unit> = remoteDataSource.updateItem(getCollegeId(), item)
     override suspend fun deleteItem(itemId: String, imagePath: String?): Result<Unit> = remoteDataSource.deleteItem(getCollegeId(), itemId, imagePath)
     override suspend fun markAsResolved(itemId: String): Result<Unit> = remoteDataSource.markAsResolved(getCollegeId(), itemId)
+    override suspend fun getMyItems(userId: String): Result<List<LostFoundItem>> = remoteDataSource.getMyItems(getCollegeId(), userId)
     override suspend fun uploadImage(itemId: String, imageUri: Uri): Result<Pair<String, String>> = remoteDataSource.uploadImage(getCollegeId(), itemId, imageUri)
     override suspend fun deleteFile(path: String): Result<Unit> = remoteDataSource.deleteFile(path)
 }

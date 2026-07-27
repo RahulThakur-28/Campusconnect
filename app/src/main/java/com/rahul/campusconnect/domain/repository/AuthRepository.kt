@@ -17,5 +17,11 @@ interface AuthRepository {
 
     suspend fun logout(): Result<Unit>
 
+    suspend fun changePassword(newPassword: String): Result<Unit>
+
+    suspend fun reauthenticate(password: String): Result<Unit>
+
+    suspend fun deleteAccount(): Result<Unit>
+
     fun isUserLoggedIn(): Boolean
 }

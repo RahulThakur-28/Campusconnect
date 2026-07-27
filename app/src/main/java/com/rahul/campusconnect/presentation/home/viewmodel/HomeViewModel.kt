@@ -19,7 +19,8 @@ class HomeViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val placementRepository: PlacementRepository,
     private val notesRepository: NotesRepository,
-    private val lostFoundRepository: LostFoundRepository
+    private val lostFoundRepository: LostFoundRepository,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -27,7 +28,21 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeUser()
+        observeNotifications()
         loadAllData()
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun observeNotifications() {
+        userRepository.currentUser
+            .filterNotNull()
+            .flatMapLatest { user ->
+                notificationRepository.getUnreadCount(user.collegeId, user.uid)
+            }
+            .onEach { count ->
+                _uiState.update { it.copy(notificationCount = count) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeUser() {

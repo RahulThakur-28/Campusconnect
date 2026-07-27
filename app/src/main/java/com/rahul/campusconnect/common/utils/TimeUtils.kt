@@ -26,4 +26,10 @@ object TimeUtils {
         val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         return formatter.format(Date(timestamp))
     }
+
+    fun formatDateTime(timestamp: Long): String {
+        if (timestamp <= 0) return ""
+        val formatter = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+        return formatter.format(Date(timestamp))
+    }
 }

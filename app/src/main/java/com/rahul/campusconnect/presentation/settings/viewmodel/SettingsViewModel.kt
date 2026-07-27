@@ -1,57 +1,82 @@
 package com.rahul.campusconnect.presentation.settings.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.rahul.campusconnect.BuildConfig
+import com.rahul.campusconnect.common.utils.DeviceUtils
+import com.rahul.campusconnect.common.utils.TimeUtils
+import com.rahul.campusconnect.domain.model.AppTheme
+import com.rahul.campusconnect.domain.repository.AuthRepository
+import com.rahul.campusconnect.domain.repository.NotificationType
+import com.rahul.campusconnect.domain.repository.SettingsRepository
+import com.rahul.campusconnect.domain.repository.UserRepository
 import com.rahul.campusconnect.presentation.settings.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
+class SettingsViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
+    private val settingsRepository: SettingsRepository,
+    private val auth: FirebaseAuth
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SettingsUiState())
+    private val _uiState = MutableStateFlow(SettingsUiState(
+        appVersion = BuildConfig.VERSION_NAME,
+        buildNumber = BuildConfig.VERSION_CODE.toString(),
+        deviceInfo = DeviceUtils.getDeviceInfo()
+    ))
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    fun toggleDarkMode(enabled: Boolean) {
-        _uiState.update { it.copy(isDarkMode = enabled) }
+    init {
+        observeData()
     }
 
-    fun togglePushNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(pushNotificationsEnabled = enabled) }
+    private fun observeData() {
+        auth.currentUser?.let { firebaseUser ->
+            val provider = firebaseUser.providerData.lastOrNull()?.providerId ?: "Firebase"
+            val loginTime = firebaseUser.metadata?.lastSignInTimestamp?.let { 
+                TimeUtils.formatDateTime(it)
+            } ?: "Unknown"
+            
+            _uiState.update { it.copy(
+                authProvider = provider,
+                loginTime = loginTime
+            ) }
+        }
+
+        userRepository.currentUser
+            .onEach { user -> _uiState.update { it.copy(user = user) } }
+            .launchIn(viewModelScope)
+
+        settingsRepository.getTheme()
+            .onEach { theme -> _uiState.update { it.copy(theme = theme) } }
+            .launchIn(viewModelScope)
+
+        settingsRepository.getNotificationPreferences()
+            .onEach { prefs -> _uiState.update { it.copy(notificationPreferences = prefs) } }
+            .launchIn(viewModelScope)
     }
 
-    fun toggleEmailNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(emailNotificationsEnabled = enabled) }
+    fun setTheme(theme: AppTheme) {
+        viewModelScope.launch {
+            settingsRepository.setTheme(theme)
+        }
     }
 
-    fun toggleEventNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(eventNotificationsEnabled = enabled) }
-    }
-
-    fun togglePlacementNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(placementNotificationsEnabled = enabled) }
-    }
-
-    fun toggleAnnouncementNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(announcementNotificationsEnabled = enabled) }
-    }
-
-    fun toggleNotesNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(notesNotificationsEnabled = enabled) }
-    }
-
-    fun toggleLostFoundNotifications(enabled: Boolean) {
-        _uiState.update { it.copy(lostFoundNotificationsEnabled = enabled) }
+    fun updateNotificationPreference(type: NotificationType, enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateNotificationPreference(type, enabled)
+        }
     }
 
     fun logout() {
-        // Implement logout logic
-    }
-
-    fun deleteAccount() {
-        // Implement delete account logic
+        viewModelScope.launch {
+            authRepository.logout()
+        }
     }
 }

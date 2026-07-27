@@ -52,4 +52,12 @@ class FirestorePathProvider @Inject constructor(
     fun reports(collegeId: String): CollectionReference {
         return college(collegeId).collection("reports")
     }
+
+    fun verificationRequests(collegeId: String): CollectionReference {
+        return college(collegeId).collection(Constants.VERIFICATION_REQUESTS)
+    }
+
+    fun bugReports(collegeId: String): CollectionReference {
+        return college(collegeId).collection("bug_reports")
+    }
 }

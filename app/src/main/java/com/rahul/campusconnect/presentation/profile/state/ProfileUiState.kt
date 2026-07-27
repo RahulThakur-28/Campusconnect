@@ -18,7 +18,7 @@ data class ProfileUiState(
     val myEvents: List<Event> = emptyList(),
     val myPlacements: List<Placement> = emptyList(),
     val myAnnouncements: List<Announcement> = emptyList(),
-    val myQuestions: List<Question> = emptyList(),
+    val myQuestions: List<Discussion> = emptyList(),
     val myLostFoundItems: List<LostFoundItem> = emptyList(),
     
     val verificationRequest: VerificationRequest? = null,

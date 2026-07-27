@@ -25,6 +25,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.rahul.campusconnect.common.utils.TimeUtils
+import com.rahul.campusconnect.domain.model.DiscussionParentType
+import com.rahul.campusconnect.presentation.discussion.components.DiscussionSection
 import com.rahul.campusconnect.presentation.event.components.RegisterButton
 import com.rahul.campusconnect.presentation.event.viewmodel.EventDetailsViewModel
 import com.rahul.campusconnect.ui.components.CardImageHeader
@@ -221,23 +223,11 @@ fun EventDetailsScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        // Discussion Preview
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        ) {
-                            Column(modifier = Modifier.padding(20.dp)) {
-                                Text(text = "Questions & Answers", fontWeight = FontWeight.Bold)
-                                Spacer(modifier = Modifier.height(12.dp))
-                                TextButton(
-                                    onClick = onViewDiscussionClick,
-                                    modifier = Modifier.align(Alignment.End)
-                                ) {
-                                    Text(text = "View Discussion →")
-                                }
-                            }
-                        }
+                        // Reusable Discussion Module
+                        DiscussionSection(
+                            moduleType = DiscussionParentType.EVENT,
+                            moduleId = eventId
+                        )
 
                         Spacer(modifier = Modifier.height(32.dp))
                     }

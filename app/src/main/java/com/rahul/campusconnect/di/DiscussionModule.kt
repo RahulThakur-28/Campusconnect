@@ -5,7 +5,7 @@ import com.rahul.campusconnect.data.remote.DiscussionRemoteDataSource
 import com.rahul.campusconnect.data.remote.DiscussionRemoteDataSourceImpl
 import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
 import com.rahul.campusconnect.data.repository.DiscussionRepositoryImpl
-import com.rahul.campusconnect.domain.repository.EventQARepository
+import com.rahul.campusconnect.domain.repository.DiscussionRepository
 import com.rahul.campusconnect.domain.repository.NotificationRepository
 import dagger.Module
 import dagger.Provides
@@ -27,11 +27,11 @@ object DiscussionModule {
 
     @Provides
     @Singleton
-    fun provideEventQARepository(
+    fun provideDiscussionRepository(
         remoteDataSource: DiscussionRemoteDataSource,
         sessionManager: SessionManager,
         notificationRepository: NotificationRepository
-    ): EventQARepository {
+    ): DiscussionRepository {
         return DiscussionRepositoryImpl(
             remoteDataSource,
             sessionManager,

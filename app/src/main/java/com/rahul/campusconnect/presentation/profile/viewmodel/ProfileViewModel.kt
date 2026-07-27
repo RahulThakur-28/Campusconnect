@@ -22,7 +22,7 @@ class ProfileViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val placementRepository: PlacementRepository,
     private val announcementRepository: AnnouncementRepository,
-    private val qaRepository: EventQARepository,
+    private val discussionRepository: DiscussionRepository,
     private val lostFoundRepository: LostFoundRepository,
     private val verificationRepository: VerificationRepository
 ) : ViewModel() {
@@ -76,7 +76,7 @@ class ProfileViewModel @Inject constructor(
                 val eventsDeferred = async { eventRepository.getMyEvents(userId) }
                 val placementsDeferred = async { placementRepository.getMyPlacements(userId) }
                 val announcementsDeferred = async { announcementRepository.getMyAnnouncements(userId) }
-                val discussionsDeferred = async { qaRepository.getMyQuestions(userId) }
+                val discussionsDeferred = async { discussionRepository.getMyDiscussions(userId) }
                 val lostFoundDeferred = async { lostFoundRepository.getMyItems(userId) }
 
                 val notes = notesDeferred.await().getOrDefault(emptyList())
@@ -173,6 +173,14 @@ class ProfileViewModel @Inject constructor(
     fun clearEditError() = _editProfileState.update { it.copy(error = null) }
     fun resetSuccess() = _editProfileState.update { it.copy(isSuccess = false) }
     
+    fun deleteDiscussion(discussionId: String) {
+        viewModelScope.launch {
+            discussionRepository.deleteQuestion(discussionId).onSuccess {
+                refresh()
+            }
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true) }

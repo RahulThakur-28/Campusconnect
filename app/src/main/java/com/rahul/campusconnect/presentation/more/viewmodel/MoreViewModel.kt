@@ -30,10 +30,12 @@ class MoreViewModel @Inject constructor(
                     _uiState.update { state ->
                         state.copy(
                             userName = it.fullName,
-                            role = it.role.displayName,
+                            email = it.email,
+                            role = it.role,
                             department = it.department,
                             academicYear = it.academicYear,
-                            isVerified = it.verificationStatus == "VERIFIED",
+                            collegeName = it.collegeName,
+                            isVerified = it.isVerified,
                             profilePictureUrl = it.profileImage
                         )
                     }
@@ -42,9 +44,4 @@ class MoreViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            authRepository.logout()
-        }
-    }
 }

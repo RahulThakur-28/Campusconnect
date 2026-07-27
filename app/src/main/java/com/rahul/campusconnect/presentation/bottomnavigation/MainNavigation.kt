@@ -7,8 +7,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.rahul.campusconnect.navigation.AppRoutes
+import com.rahul.campusconnect.domain.model.DiscussionParentType
 import com.rahul.campusconnect.presentation.announcement.navigation.announcementGraph
 import com.rahul.campusconnect.presentation.discussion.navigation.discussionGraph
+import com.rahul.campusconnect.presentation.discussion.navigation.navigateToDiscussion
 import com.rahul.campusconnect.presentation.event.navigation.eventGraph
 import com.rahul.campusconnect.presentation.event.navigation.navigateToCreateEvent
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
@@ -45,7 +47,9 @@ fun MainNavigation(
         eventGraph(
             navController = navController,
             onBackClick = { navController.popBackStack() },
-            onViewDiscussionClick = { /* Handled in discussionGraph */ }
+            onViewDiscussionClick = { eventId ->
+                navController.navigateToDiscussion(eventId, DiscussionParentType.EVENT)
+            }
         )
 
         placementGraph(
@@ -53,7 +57,9 @@ fun MainNavigation(
             onBackClick = { navController.popBackStack() },
             onPlacementClick = { id -> navController.navigateToPlacementDetails(id) },
             onEditPlacementClick = { id -> navController.navigateToEditPlacement(id) },
-            onViewDiscussionClick = { /* Handled in discussionGraph */ },
+            onViewDiscussionClick = { placementId ->
+                navController.navigateToDiscussion(placementId, DiscussionParentType.PLACEMENT)
+            },
             onCreatePlacementClick = { navController.navigateToCreatePlacement() }
         )
 
@@ -74,7 +80,8 @@ fun MainNavigation(
             onNoteClick = { noteId -> navController.navigateToNoteDetails(noteId) },
             onEventClick = { eventId -> navController.navigateToEventDetails(eventId) },
             onPlacementClick = { placementId -> navController.navigateToPlacementDetails(placementId) },
-            onLostFoundClick = { itemId -> navController.navigateToLostFoundDetails(itemId) }
+            onLostFoundClick = { itemId -> navController.navigateToLostFoundDetails(itemId) },
+            onBackClick = { navController.popBackStack() }
         )
 
         settingsGraph(

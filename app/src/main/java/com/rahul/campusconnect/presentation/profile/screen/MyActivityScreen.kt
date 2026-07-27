@@ -142,11 +142,16 @@ fun MyActivityScreen(
                             if (uiState.myQuestions.isEmpty()) {
                                 item { EmptyState(message = "No questions asked.") }
                             } else {
-                                items(uiState.myQuestions, key = { it.id }) { question ->
+                                items(uiState.myQuestions, key = { it.discussionId }) { discussion ->
                                     QuestionCard(
-                                        question = question,
+                                        discussion = discussion,
+                                        currentUserId = uiState.user.uid,
                                         onLikeClick = { /* Handled in details screen */ },
-                                        onViewDiscussionClick = { onDiscussionClick(question.id) }
+                                        onReplyClick = { onDiscussionClick(discussion.discussionId) },
+                                        onEditClick = { onDiscussionClick(discussion.discussionId) },
+                                        onDeleteClick = { viewModel.deleteDiscussion(discussion.discussionId) },
+                                        onReportClick = { /* No-op for personal content */ },
+                                        onCardClick = { onDiscussionClick(discussion.discussionId) }
                                     )
                                 }
                             }

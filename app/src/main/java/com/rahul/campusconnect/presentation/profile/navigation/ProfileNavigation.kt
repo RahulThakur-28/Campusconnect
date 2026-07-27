@@ -45,10 +45,12 @@ fun NavGraphBuilder.profileGraph(
     onNoteClick: (String) -> Unit,
     onEventClick: (String) -> Unit,
     onPlacementClick: (String) -> Unit,
-    onLostFoundClick: (String) -> Unit
+    onLostFoundClick: (String) -> Unit,
+    onBackClick: () -> Unit
 ) {
     composable(route = AppRoutes.Profile.route) {
         ProfileScreen(
+            onBackClick = onBackClick,
             onEditProfileClick = { navController.navigateToEditProfile() },
             onMyActivityClick = { category ->
                 navController.navigateToMyActivity(category)

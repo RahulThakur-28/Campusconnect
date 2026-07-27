@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.presentation.more.state.MoreUiState
 
 @Composable
@@ -72,13 +73,21 @@ fun MoreHeader(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            val roleText = when (state.role) {
+                UserRole.STUDENT -> "🎓 Student"
+                UserRole.VERIFIED_STUDENT -> "✅ Verified Student"
+                UserRole.VERIFIED_TEACHER -> "👨‍🏫 Verified Teacher"
+                UserRole.PLACEMENT_CELL -> "💼 Placement Cell"
+                UserRole.ADMIN -> "🛡 College Admin"
+                UserRole.SUPER_ADMIN -> "🌍 Super Admin"
+            }
+
             Text(
-                text = state.role,
+                text = roleText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold
             )
-
             Text(
 
                 text = "${state.department} • ${state.academicYear}",

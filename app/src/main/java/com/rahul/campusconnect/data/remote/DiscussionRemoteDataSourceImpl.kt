@@ -4,9 +4,9 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.snapshots
 import com.rahul.campusconnect.data.remote.firestore.FirestorePathProvider
-import com.rahul.campusconnect.domain.model.Answer
+import com.rahul.campusconnect.domain.model.Discussion
 import com.rahul.campusconnect.domain.model.DiscussionParentType
-import com.rahul.campusconnect.domain.model.Question
+import com.rahul.campusconnect.domain.model.Reply
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -16,50 +16,73 @@ class DiscussionRemoteDataSourceImpl @Inject constructor(
     private val pathProvider: FirestorePathProvider
 ) : DiscussionRemoteDataSource {
 
-    override fun getQuestions(collegeId: String, parentId: String, parentType: DiscussionParentType): Flow<List<Question>> {
+    override fun getDiscussions(
+        collegeId: String,
+        moduleType: DiscussionParentType,
+        moduleId: String
+    ): Flow<List<Discussion>> {
         return pathProvider.discussions(collegeId)
-            .whereEqualTo("parentId", parentId)
-            .whereEqualTo("parentType", parentType.name)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .whereEqualTo("moduleType", moduleType.name)
+            .whereEqualTo("moduleId", moduleId)
             .snapshots()
             .map { snapshot ->
-                snapshot.documents.mapNotNull { it.toObject(Question::class.java)?.copy(id = it.id) }
+                snapshot.documents.mapNotNull { 
+                    it.toObject(Discussion::class.java)?.copy(discussionId = it.id) 
+                }.filter { !it.isDeleted }
             }
     }
 
-    override suspend fun getQuestionById(collegeId: String, questionId: String): Result<Question?> = try {
-        val doc = pathProvider.discussions(collegeId).document(questionId).get().await()
-        Result.success(doc.toObject(Question::class.java)?.copy(id = doc.id))
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
-    override fun getAnswers(collegeId: String, questionId: String): Flow<List<Answer>> {
-        return pathProvider.discussions(collegeId)
-            .document(questionId)
-            .collection("answers")
-            .orderBy("createdAt", Query.Direction.ASCENDING)
-            .snapshots()
-            .map { snapshot ->
-                snapshot.documents.mapNotNull { it.toObject(Answer::class.java)?.copy(id = it.id) }
-            }
-    }
-
-    override suspend fun saveQuestion(collegeId: String, question: Question): Result<Unit> = try {
-        val doc = pathProvider.discussions(collegeId).document()
-        pathProvider.discussions(collegeId).document(doc.id).set(question.copy(id = doc.id, collegeId = collegeId)).await()
+    override suspend fun saveDiscussion(collegeId: String, discussion: Discussion): Result<Unit> = try {
+        val ref = pathProvider.discussions(collegeId).document()
+        val finalDiscussion = discussion.copy(
+            discussionId = ref.id,
+            collegeId = collegeId,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        ref.set(finalDiscussion).await()
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
     }
 
-    override suspend fun saveAnswer(collegeId: String, answer: Answer): Result<Unit> = try {
-        val questionRef = pathProvider.discussions(collegeId).document(answer.questionId)
-        val answerRef = questionRef.collection("answers").document()
+    override suspend fun updateDiscussion(
+        collegeId: String,
+        discussionId: String,
+        updates: Map<String, Any>
+    ): Result<Unit> = try {
+        pathProvider.discussions(collegeId).document(discussionId).update(updates).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override fun getReplies(collegeId: String, discussionId: String): Flow<List<Reply>> {
+        return pathProvider.discussions(collegeId)
+            .document(discussionId)
+            .collection("replies")
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.mapNotNull { it.toObject(Reply::class.java)?.copy(replyId = it.id) }
+                    .filter { !it.isDeleted }
+                    .sortedWith(compareByDescending<Reply> { it.isOfficial }.thenBy { it.createdAt })
+            }
+    }
+
+    override suspend fun saveReply(collegeId: String, reply: Reply): Result<Unit> = try {
+        val discussionRef = pathProvider.discussions(collegeId).document(reply.discussionId)
+        val replyRef = discussionRef.collection("replies").document()
         
-        pathProvider.discussions(collegeId).firestore.runTransaction { transaction ->
-            transaction.set(answerRef, answer.copy(id = answerRef.id, collegeId = collegeId))
-            transaction.update(questionRef, "answerCount", FieldValue.increment(1))
+        val finalReply = reply.copy(
+            replyId = replyRef.id,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+
+        pathProvider.colleges().firestore.runTransaction { transaction ->
+            transaction.set(replyRef, finalReply)
+            transaction.update(discussionRef, "replyCount", FieldValue.increment(1))
+            transaction.update(discussionRef, "updatedAt", System.currentTimeMillis())
         }.await()
         
         Result.success(Unit)
@@ -67,32 +90,52 @@ class DiscussionRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun likeQuestion(collegeId: String, questionId: String): Result<Unit> = try {
-        pathProvider.discussions(collegeId).document(questionId).update("likeCount", FieldValue.increment(1)).await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
-    override suspend fun likeAnswer(collegeId: String, questionId: String, answerId: String): Result<Unit> = try {
+    override suspend fun updateReply(
+        collegeId: String,
+        discussionId: String,
+        replyId: String,
+        updates: Map<String, Any>
+    ): Result<Unit> = try {
         pathProvider.discussions(collegeId)
-            .document(questionId)
-            .collection("answers")
-            .document(answerId)
-            .update("likeCount", FieldValue.increment(1))
+            .document(discussionId)
+            .collection("replies")
+            .document(replyId)
+            .update(updates)
             .await()
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
     }
 
-    override suspend fun getQuestionsByUser(collegeId: String, userId: String): Result<List<Question>> = try {
+    override suspend fun reportContent(collegeId: String, report: Map<String, Any>): Result<Unit> = try {
+        pathProvider.reports(collegeId).add(report).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getDiscussionById(
+        collegeId: String,
+        discussionId: String
+    ): Result<Discussion?> = try {
+        val doc = pathProvider.discussions(collegeId).document(discussionId).get().await()
+        Result.success(doc.toObject(Discussion::class.java)?.copy(discussionId = doc.id))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getDiscussionsByUser(
+        collegeId: String,
+        userId: String
+    ): Result<List<Discussion>> = try {
         val snapshot = pathProvider.discussions(collegeId)
-            .whereEqualTo("userId", userId)
+            .whereEqualTo("createdBy", userId)
+            .whereEqualTo("isDeleted", false)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .await()
-        val questions = snapshot.documents.mapNotNull { it.toObject(Question::class.java)?.copy(id = it.id) }
-        Result.success(questions)
+        val discussions = snapshot.documents.mapNotNull { it.toObject(Discussion::class.java)?.copy(discussionId = it.id) }
+        Result.success(discussions)
     } catch (e: Exception) {
         Result.failure(e)
     }

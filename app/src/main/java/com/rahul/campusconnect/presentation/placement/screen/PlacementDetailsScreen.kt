@@ -28,6 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.rahul.campusconnect.common.utils.TimeUtils
+import com.rahul.campusconnect.domain.model.DiscussionParentType
+import com.rahul.campusconnect.presentation.discussion.components.DiscussionSection
 import com.rahul.campusconnect.presentation.placement.viewmodel.PlacementDetailsViewModel
 import com.rahul.campusconnect.ui.components.*
 import java.text.SimpleDateFormat
@@ -272,23 +274,11 @@ fun PlacementDetailsScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = onViewDiscussionClick,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Questions & Answers", fontWeight = FontWeight.Bold)
-                                Text("Discuss this opportunity with your peers", style = MaterialTheme.typography.bodySmall)
-                            }
-                            Icon(Icons.Default.QuestionAnswer, null)
-                        }
-                    }
+                    // Reusable Discussion Module
+                    DiscussionSection(
+                        moduleType = DiscussionParentType.PLACEMENT,
+                        moduleId = placementId
+                    )
 
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(

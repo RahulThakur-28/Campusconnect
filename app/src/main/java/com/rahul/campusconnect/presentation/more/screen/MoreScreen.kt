@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.more.viewmodel.MoreViewModel
 import com.rahul.campusconnect.presentation.notification.navigation.navigateToNotifications
@@ -71,9 +72,11 @@ fun MoreScreen(
         ) {
             ProfileCard(
                 userName = uiState.userName,
+                email = uiState.email,
                 role = uiState.role,
                 department = uiState.department,
                 academicYear = uiState.academicYear,
+                collegeName = uiState.collegeName,
                 isVerified = uiState.isVerified,
                 profileImageUrl = uiState.profilePictureUrl
             )
@@ -107,7 +110,7 @@ fun MoreScreen(
                     icon = Icons.Outlined.VerifiedUser,
                     iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     iconColor = MaterialTheme.colorScheme.tertiary,
-                    onClick = { /* Navigate to status/request */ }
+                    onClick = { navController.navigate(AppRoutes.RequestVerification.route) }
                 )
             }
 
@@ -178,10 +181,7 @@ fun MoreScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            
-            LogoutButton(onClick = { viewModel.logout() })
-            
-            Spacer(modifier = Modifier.height(32.dp))
+
         }
     }
 }
@@ -189,9 +189,11 @@ fun MoreScreen(
 @Composable
 private fun ProfileCard(
     userName: String,
-    role: String,
+    email: String,
+    role: UserRole,
     department: String,
     academicYear: String,
+    collegeName: String,
     isVerified: Boolean,
     profileImageUrl: String?
 ) {
@@ -237,30 +239,17 @@ private fun ProfileCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(5.dp))
-                    if (isVerified) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Outlined.VerifiedUser,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.tertiary
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = role,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    } else {
-                        Text(
-                            text = role,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = email,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    
+                    Spacer(modifier = Modifier.height(6.dp))
+                    
+                    RoleBadge(role = role)
                 }
             }
 
@@ -272,12 +261,44 @@ private fun ProfileCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ProfileInfoItem(value = department, label = "Department", modifier = Modifier.weight(1f))
+                ProfileInfoItem(value = department, label = "Dept", modifier = Modifier.weight(1f))
                 ProfileInfoDivider()
                 ProfileInfoItem(value = academicYear, label = "Year", modifier = Modifier.weight(1f))
                 ProfileInfoDivider()
-                ProfileInfoItem(value = if (isVerified) "Verified" else "Student", label = "Status", modifier = Modifier.weight(1f))
+                ProfileInfoItem(value = collegeName, label = "College", modifier = Modifier.weight(1f))
             }
+        }
+    }
+}
+
+@Composable
+fun RoleBadge(role: UserRole) {
+    val (text, color, icon) = when (role) {
+        UserRole.STUDENT -> Triple("Student", Color(0xFF64748B), "🎓")
+        UserRole.VERIFIED_STUDENT -> Triple("Verified Student", Color(0xFF10B981), "✅")
+        UserRole.VERIFIED_TEACHER -> Triple("Verified Teacher", Color(0xFF3B82F6), "👨‍🏫")
+        UserRole.PLACEMENT_CELL -> Triple("Placement Cell", Color(0xFFF59E0B), "💼")
+        UserRole.ADMIN -> Triple("College Admin", Color(0xFFEF4444), "🛡")
+        UserRole.SUPER_ADMIN -> Triple("Super Admin", Color(0xFF8B5CF6), "🌍")
+    }
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = color.copy(alpha = 0.1f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = icon, fontSize = 12.sp)
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -287,10 +308,11 @@ private fun ProfileInfoItem(value: String, label: String, modifier: Modifier = M
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(3.dp))
         Text(

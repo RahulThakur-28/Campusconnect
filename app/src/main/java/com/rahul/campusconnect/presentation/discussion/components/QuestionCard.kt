@@ -1,145 +1,183 @@
 package com.rahul.campusconnect.presentation.discussion.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.rahul.campusconnect.domain.model.Question
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.rahul.campusconnect.common.utils.TimeUtils
+import com.rahul.campusconnect.domain.model.Discussion
 import com.rahul.campusconnect.domain.model.UserRole
 
 @Composable
 fun QuestionCard(
-    question: Question,
+    discussion: Discussion,
+    currentUserId: String,
     onLikeClick: () -> Unit,
-    onViewDiscussionClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onReplyClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onReportClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    onCardClick: () -> Unit = {},
+    currentUserRole: String = ""
 ) {
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+    var showMenu by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onCardClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header: User Info
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Text(
-                        text = question.userName.take(1),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    if (discussion.createdByPhoto.isNotBlank()) {
+                        AsyncImage(
+                            model = discussion.createdByPhoto,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = discussion.createdByName.take(1), fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = question.userName,
+                            text = discussion.createdByName,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        if (question.userRole != UserRole.STUDENT) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer
-                            ) {
-                                Text(
-                                    text = question.userRole.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
+                        if (discussion.isVerified) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.Default.Verified, null, modifier = Modifier.size(14.dp), tint = Color(0xFF2563EB))
                         }
                     }
                     Text(
-                        text = "Just now", // Replace with relative time if needed
+                        text = "${discussion.createdByRole.displayName} • ${TimeUtils.getRelativeTime(discussion.createdAt)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray
                     )
+                }
+
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Default.MoreVert, null, tint = Color.Gray)
+                    }
+                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                        val canDelete = discussion.createdBy == currentUserId || 
+                                       currentUserRole == UserRole.ADMIN.name || 
+                                       currentUserRole == UserRole.SUPER_ADMIN.name
+                        
+                        if (discussion.createdBy == currentUserId) {
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                onClick = { onEditClick(); showMenu = false },
+                                leadingIcon = { Icon(Icons.Default.Edit, null) }
+                            )
+                        }
+                        
+                        if (canDelete) {
+                            DropdownMenuItem(
+                                text = { Text("Delete", color = Color.Red) },
+                                onClick = { onDeleteClick(); showMenu = false },
+                                leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color.Red) }
+                            )
+                        }
+                        
+                        if (discussion.createdBy != currentUserId) {
+                            DropdownMenuItem(
+                                text = { Text("Report") },
+                                onClick = { onReportClick("Inappropriate content"); showMenu = false },
+                                leadingIcon = { Icon(Icons.Default.Report, null) }
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Title & Question
             Text(
-                text = question.content,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                text = discussion.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = discussion.question,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Footer: Likes & Replies
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    val isLiked = discussion.likedBy.contains(currentUserId)
                     IconButton(onClick = onLikeClick, modifier = Modifier.size(24.dp)) {
                         Icon(
                             imageVector = Icons.Outlined.ThumbUp,
                             contentDescription = "Like",
-                            modifier = Modifier.size(18.dp),
-                            tint = Color.Gray
+                            modifier = Modifier.size(20.dp),
+                            tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.Gray
                         )
                     }
                     Text(
-                        text = question.likeCount.toString(),
+                        text = discussion.likeCount.toString(),
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(start = 4.dp),
-                        color = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = "${question.answerCount} Answers",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray
+                        color = if (isLiked) MaterialTheme.colorScheme.primary else Color.Gray
                     )
                 }
 
-                if (question.hasOfficialAnswer) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color(0xFF2E7D32),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Official Answer",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF2E7D32),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                TextButton(
+                    onClick = onReplyClick,
+                    contentPadding = PaddingValues(horizontal = 12.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Outlined.Chat, null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "${discussion.replyCount} Replies", style = MaterialTheme.typography.labelLarge)
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TextButton(
-                onClick = onViewDiscussionClick,
-                modifier = Modifier.align(Alignment.End),
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) {
-                Text(text = "View Discussion →")
             }
         }
     }

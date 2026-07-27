@@ -17,7 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rahul.campusconnect.presentation.discussion.components.AnswerCard
+import com.rahul.campusconnect.presentation.discussion.components.EditDiscussionDialog
+import com.rahul.campusconnect.presentation.discussion.components.EditReplyDialog
 import com.rahul.campusconnect.presentation.discussion.components.QuestionCard
+import com.rahul.campusconnect.presentation.discussion.components.ReplyInput
 import com.rahul.campusconnect.presentation.discussion.viewmodel.QuestionThreadViewModel
 import com.rahul.campusconnect.ui.components.EmptyState
 
@@ -32,8 +35,11 @@ fun QuestionThreadScreen(
     val answers by viewModel.answers.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val currentUserId by viewModel.currentUserId.collectAsStateWithLifecycle()
+    val currentUserRole by viewModel.currentUserRole.collectAsStateWithLifecycle()
 
-    var answerText by remember { mutableStateOf("") }
+    var editingQuestion by remember { mutableStateOf(false) }
+    var editingReply by remember { mutableStateOf<com.rahul.campusconnect.domain.model.Reply?>(null) }
 
     LaunchedEffect(questionId) {
         viewModel.loadThread(questionId)
@@ -51,36 +57,9 @@ fun QuestionThreadScreen(
             )
         },
         bottomBar = {
-            Surface(tonalElevation = 8.dp) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .navigationBarsPadding(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = answerText,
-                        onValueChange = { answerText = it },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Write an answer...") },
-                        shape = RoundedCornerShape(24.dp),
-                        maxLines = 4
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    FilledIconButton(
-                        onClick = {
-                            if (answerText.isNotBlank()) {
-                                viewModel.submitAnswer(answerText)
-                                answerText = ""
-                            }
-                        },
-                        enabled = answerText.isNotBlank()
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.Send, null)
-                    }
-                }
-            }
+            ReplyInput(
+                onSendClick = { message -> viewModel.submitAnswer(message) }
+            )
         }
     ) { padding ->
         if (isLoading && question == null) {
@@ -98,9 +77,14 @@ fun QuestionThreadScreen(
                 question?.let {
                     item {
                         QuestionCard(
-                            question = it,
-                            onLikeClick = { viewModel.likeQuestion(it.id) },
-                            onViewDiscussionClick = {} // Already on this screen
+                            discussion = it,
+                            currentUserId = currentUserId,
+                            currentUserRole = currentUserRole,
+                            onLikeClick = { viewModel.likeQuestion(it.discussionId) },
+                            onReplyClick = { /* Already in thread */ },
+                            onEditClick = { editingQuestion = true },
+                            onDeleteClick = { viewModel.deleteQuestion(); onBackClick() },
+                            onReportClick = { reason -> viewModel.report(it.discussionId, "DISCUSSION", reason) }
                         )
                     }
                 }
@@ -123,10 +107,15 @@ fun QuestionThreadScreen(
                         )
                     }
                 } else {
-                    items(answers, key = { it.id }) { answer ->
+                    items(answers, key = { it.replyId }) { reply ->
                         AnswerCard(
-                            answer = answer,
-                            onLikeClick = { viewModel.likeAnswer(answer.id) }
+                            reply = reply,
+                            currentUserId = currentUserId,
+                            currentUserRole = currentUserRole,
+                            onLikeClick = { viewModel.likeAnswer(reply.replyId) },
+                            onEditClick = { editingReply = reply },
+                            onDeleteClick = { viewModel.deleteReply(reply.replyId) },
+                            onReportClick = { reason -> viewModel.report(reply.replyId, "REPLY", reason) }
                         )
                     }
                 }
@@ -134,5 +123,28 @@ fun QuestionThreadScreen(
                 item { Spacer(Modifier.height(80.dp)) }
             }
         }
+    }
+
+    if (editingQuestion && question != null) {
+        EditDiscussionDialog(
+            initialTitle = question!!.title,
+            initialQuestion = question!!.question,
+            onDismiss = { editingQuestion = false },
+            onSubmit = { title, q ->
+                viewModel.editQuestion(title, q)
+                editingQuestion = false
+            }
+        )
+    }
+
+    editingReply?.let { reply ->
+        EditReplyDialog(
+            initialMessage = reply.message,
+            onDismiss = { editingReply = null },
+            onSubmit = { message ->
+                viewModel.editReply(reply.replyId, message)
+                editingReply = null
+            }
+        )
     }
 }

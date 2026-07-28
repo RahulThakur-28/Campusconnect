@@ -9,13 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.rahul.campusconnect.presentation.event.components.EventLoadingShimmer
 import com.rahul.campusconnect.presentation.event.viewmodel.MyEventsViewModel
 import com.rahul.campusconnect.ui.components.EmptyState
 import com.rahul.campusconnect.ui.components.EventCard
@@ -47,7 +47,7 @@ fun MyEventsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Events", fontWeight = FontWeight.Bold) },
+                title = { Text("Managed Events", fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -62,19 +62,18 @@ fun MyEventsScreen(
             modifier = Modifier.padding(padding)
         ) {
             if (uiState.isLoading && !uiState.isRefreshing) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                EventLoadingShimmer()
             } else if (uiState.isEmpty) {
                 EmptyState(
-                    message = "You haven't organized any events yet.",
+                    message = "No Managed Events",
+                    description = "Events you create will appear here. Start organizing your first event!",
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     items(
                         items = uiState.events,

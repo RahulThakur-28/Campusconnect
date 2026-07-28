@@ -5,13 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,42 +29,32 @@ fun LostFoundCard(
     onClick: () -> Unit = {},
     onContactClick: () -> Unit = {}
 ) {
-
     val statusColor = when (item.status) {
-        "ACTIVE" -> if (item.type == "LOST") Color(0xFFDC2626) else Color(0xFF16A34A)
-        "RESOLVED" -> Color(0xFF6B7280)
-        else -> Color.Gray
+        "ACTIVE" -> if (item.type == "LOST") Color(0xFFEF4444) else Color(0xFF10B981)
+        "RESOLVED" -> Color(0xFF64748B)
+        else -> MaterialTheme.colorScheme.outline
     }
 
-    val statusBackground = statusColor.copy(alpha = 0.1f)
-
-    val categoryColor = when (item.type) {
-        "LOST" -> Color(0xFFDC2626)
-        else -> Color(0xFF16A34A)
-    }
+    val typeLabel = if (item.type == "LOST") "LOST" else "FOUND"
+    val categoryColor = if (item.type == "LOST") Color(0xFFEF4444) else Color(0xFF10B981)
 
     val cardModifier = if (fullWidth) {
         modifier.fillMaxWidth()
     } else {
-        modifier.width(260.dp)
+        modifier.width(280.dp)
     }
 
-    Card(
+    ElevatedCard(
         modifier = cardModifier.clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        shape = RoundedCornerShape(CardConstants.CornerRadius),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardConstants.Elevation)
     ) {
-
         Column {
             if (!item.imageUrl.isNullOrEmpty()) {
                 CardImageHeader(
                     imageUrl = item.imageUrl,
-                    category = item.category,
+                    category = typeLabel,
                     categoryColor = categoryColor,
                     height = 140.dp
                 )
@@ -71,95 +62,87 @@ fun LostFoundCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp)
+                        .height(110.dp)
                         .background(
-                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            brush = Brush.verticalGradient(
                                 colors = if (item.type == "LOST") 
-                                    listOf(Color(0xFFFECACA), Color(0xFFFEE2E2)) 
+                                    listOf(Color(0xFFFECACA).copy(alpha = 0.5f), Color(0xFFFEE2E2).copy(alpha = 0.5f)) 
                                 else 
-                                    listOf(Color(0xFFBBF7D0), Color(0xFFDCFCE7))
+                                    listOf(Color(0xFFBBF7D0).copy(alpha = 0.5f), Color(0xFFDCFCE7).copy(alpha = 0.5f))
                             )
                         )
-                        .padding(12.dp),
+                        .padding(16.dp),
                     contentAlignment = Alignment.BottomStart
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(50.dp),
-                        color = categoryColor
-                    ) {
-                        Text(
-                            text = item.category,
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
+                    StatusPill(
+                        text = typeLabel,
+                        containerColor = categoryColor,
+                        contentColor = Color.White
+                    )
                 }
             }
 
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-
+            Column(modifier = Modifier.padding(18.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Text(
                         text = item.title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     Surface(
-                        color = statusBackground,
+                        color = statusColor.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(50.dp)
                     ) {
                         Text(
                             text = item.status,
                             color = statusColor,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = item.description,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        modifier = Modifier.size(15.dp),
-                        tint = Color.Gray
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = item.location,
-                        fontSize = 12.sp,
-                        color = Color.Gray,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(modifier = Modifier.background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -168,8 +151,8 @@ fun LostFoundCard(
                 ) {
                     Text(
                         text = TimeUtils.getRelativeTime(item.createdAt),
-                        fontSize = 11.sp,
-                        color = Color.Gray
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                     
                     if (fullWidth && item.status == "ACTIVE") {
@@ -177,25 +160,28 @@ fun LostFoundCard(
                             OutlinedButton(
                                 onClick = onContactClick,
                                 shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                                modifier = Modifier.height(32.dp)
+                                modifier = Modifier.height(34.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                             ) {
                                 Icon(Icons.Default.Phone, null, Modifier.size(14.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("Contact", fontSize = 11.sp)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Contact", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = onClick,
                                 shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                                modifier = Modifier.height(32.dp)
+                                modifier = Modifier.height(34.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                             ) {
-                                Text("Details", fontSize = 11.sp)
+                                Text("Details", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
-                    } else if (fullWidth) {
-                        TextButton(onClick = onClick) {
-                            Text("View Details", fontSize = 12.sp)
+                    } else {
+                        TextButton(
+                            onClick = onClick,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("View Details", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
                         }
                     }
                 }

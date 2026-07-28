@@ -19,20 +19,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
+object CardConstants {
+    val CornerRadius = 24.dp
+    val Elevation = 4.dp
+    val Padding = 16.dp
+}
+
 @Composable
 fun CardImageHeader(
     imageUrl: String?,
     category: String,
     categoryColor: Color,
     modifier: Modifier = Modifier,
-    height: Dp = 135.dp,
-    gradientColors: List<Color> = listOf(Color(0xFF8B5CF6), Color(0xFF6366F1))
+    height: Dp = 140.dp,
+    gradientColors: List<Color> = listOf(Color(0xFF2563EB), Color(0xFF3B82F6))
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .clip(RoundedCornerShape(topStart = CardConstants.CornerRadius, topEnd = CardConstants.CornerRadius))
             .background(Brush.verticalGradient(gradientColors))
     ) {
         if (!imageUrl.isNullOrEmpty()) {
@@ -42,21 +48,33 @@ fun CardImageHeader(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
+            // Gradient Overlay for text readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
+                        )
+                    )
+            )
         }
 
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(12.dp),
-            shape = RoundedCornerShape(50.dp),
-            color = categoryColor
+                .padding(14.dp),
+            shape = RoundedCornerShape(100.dp),
+            color = categoryColor,
+            tonalElevation = 4.dp
         ) {
             Text(
                 text = category,
                 color = Color.White,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                letterSpacing = 0.5.sp
             )
         }
     }
@@ -71,15 +89,17 @@ fun StatusPill(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(50.dp),
-        color = containerColor
+        shape = RoundedCornerShape(100.dp),
+        color = containerColor.copy(alpha = 0.15f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, containerColor.copy(alpha = 0.2f))
     ) {
         Text(
-            text = text,
-            color = contentColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            text = text.uppercase(),
+            color = containerColor,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            letterSpacing = 0.5.sp
         )
     }
 }

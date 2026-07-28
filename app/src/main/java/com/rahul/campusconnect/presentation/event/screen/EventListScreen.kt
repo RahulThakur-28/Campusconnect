@@ -31,18 +31,18 @@ fun EventListScreen(
 
     val events = when (type) {
         EventListType.UPCOMING -> uiState.events.filter { it.startDate > System.currentTimeMillis() }
-        EventListType.PAST -> uiState.events.filter { it.endDate < System.currentTimeMillis() }
+        EventListType.PAST -> uiState.events.filter { it.endDate < System.currentTimeMillis() && it.endDate > 0 }
     }
 
     val title = when (type) {
         EventListType.UPCOMING -> "Upcoming Events"
-        EventListType.PAST -> "Past Events"
+        EventListType.PAST -> "Past Events Archive"
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = title, fontWeight = FontWeight.Bold) },
+                title = { Text(text = title, fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -52,12 +52,16 @@ fun EventListScreen(
         }
     ) { innerPadding ->
         if (events.isEmpty()) {
-            EmptyState(message = "No events found", modifier = Modifier.padding(innerPadding).fillMaxSize())
+            EmptyState(
+                message = "No Events Found",
+                description = "There are no events in this category at the moment.",
+                modifier = Modifier.padding(innerPadding).fillMaxSize()
+            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 items(items = events, key = { it.id }) { event ->
                     EventCard(

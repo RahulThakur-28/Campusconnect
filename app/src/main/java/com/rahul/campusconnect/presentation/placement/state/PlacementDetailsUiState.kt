@@ -16,7 +16,10 @@ data class PlacementDetailsUiState(
         get() = userRole == UserRole.ADMIN || userRole == UserRole.PLACEMENT_CELL
 
     val canApply: Boolean
-        get() = placement != null && !placement.deleted && placement.status.equals("Active", true)
+        get() = placement != null && 
+                !placement.deleted && 
+                !isExpired &&
+                (placement.status.equals("Active", true) || placement.status.equals("Open", true) || placement.status.equals("Closing Soon", true))
 
     val isExpired: Boolean
         get() = placement?.deadline?.let { it < System.currentTimeMillis() && it > 0 } ?: false

@@ -10,7 +10,8 @@ data class EventDetailsUiState(
     val isDeleted: Boolean = false,
     val userRole: UserRole = UserRole.STUDENT,
     val currentUserId: String = "",
-    val error: String? = null
+    val error: String? = null,
+    val successMessage: String? = null
 ) {
     val canEdit: Boolean
         get() = userRole == UserRole.ADMIN || event?.organizerId == currentUserId

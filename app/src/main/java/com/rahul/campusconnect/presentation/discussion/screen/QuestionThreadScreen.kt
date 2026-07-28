@@ -37,15 +37,31 @@ fun QuestionThreadScreen(
     val error by viewModel.error.collectAsStateWithLifecycle()
     val currentUserId by viewModel.currentUserId.collectAsStateWithLifecycle()
     val currentUserRole by viewModel.currentUserRole.collectAsStateWithLifecycle()
+    val isDeleted by viewModel.isDeleted.collectAsStateWithLifecycle()
 
     var editingQuestion by remember { mutableStateOf(false) }
     var editingReply by remember { mutableStateOf<com.rahul.campusconnect.domain.model.Reply?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(questionId) {
         viewModel.loadThread(questionId)
     }
 
+    LaunchedEffect(isDeleted) {
+        if (isDeleted) {
+            onBackClick()
+        }
+    }
+
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Discussion", fontWeight = FontWeight.Bold) },
@@ -83,7 +99,7 @@ fun QuestionThreadScreen(
                             onLikeClick = { viewModel.likeQuestion(it.discussionId) },
                             onReplyClick = { /* Already in thread */ },
                             onEditClick = { editingQuestion = true },
-                            onDeleteClick = { viewModel.deleteQuestion(); onBackClick() },
+                            onDeleteClick = { viewModel.deleteQuestion() },
                             onReportClick = { reason -> viewModel.report(it.discussionId, "DISCUSSION", reason) }
                         )
                     }

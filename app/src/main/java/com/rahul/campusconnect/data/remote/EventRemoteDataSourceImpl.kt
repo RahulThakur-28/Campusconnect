@@ -24,7 +24,6 @@ class EventRemoteDataSourceImpl @Inject constructor(
     override suspend fun getAllEvents(collegeId: String): Result<List<Event>> = try {
         Log.d("EVENT_QUERY", "Fetching all events for college: $collegeId")
         val snapshot = pathProvider.events(collegeId)
-            .whereEqualTo("deleted", false)
             .orderBy("startDate", Query.Direction.ASCENDING)
             .get()
             .await()
@@ -39,7 +38,7 @@ class EventRemoteDataSourceImpl @Inject constructor(
     override suspend fun getEventById(collegeId: String, eventId: String): Result<Event?> = try {
         val snapshot = pathProvider.events(collegeId).document(eventId).get().await()
         val event = snapshot.toObject(Event::class.java)?.copy(id = snapshot.id)
-        if (event?.deleted == true) Result.success(null) else Result.success(event)
+        Result.success(event)
     } catch (e: Exception) {
         Result.failure(e)
     }
@@ -68,12 +67,28 @@ class EventRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun deleteEvent(collegeId: String, eventId: String): Result<Unit> = try {
-        pathProvider.events(collegeId).document(eventId).update(
-            mapOf(
-                "deleted" to true,
-                "updatedAt" to System.currentTimeMillis()
-            )
-        ).await()
+        val eventRef = pathProvider.events(collegeId).document(eventId)
+        val eventSnapshot = eventRef.get().await()
+        val event = eventSnapshot.toObject(Event::class.java)
+
+        // 1. Delete image from storage if exists
+        event?.imageStoragePath?.let { path ->
+            if (path.isNotBlank()) {
+                storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+            }
+        }
+
+        // 2. Delete registrations subcollection
+        val registrations = eventRef.collection(Constants.REGISTRATIONS).get().await()
+        val batch = firestore.batch()
+        for (doc in registrations.documents) {
+            batch.delete(doc.reference)
+        }
+        
+        // 3. Delete the event document
+        batch.delete(eventRef)
+        batch.commit().await()
+
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
@@ -82,7 +97,6 @@ class EventRemoteDataSourceImpl @Inject constructor(
     override suspend fun getFeaturedEvents(collegeId: String): Result<List<Event>> = try {
         val snapshot = pathProvider.events(collegeId)
             .whereEqualTo("isFeatured", true)
-            .whereEqualTo("deleted", false)
             .orderBy("startDate", Query.Direction.ASCENDING)
             .get()
             .await()
@@ -95,7 +109,6 @@ class EventRemoteDataSourceImpl @Inject constructor(
     override suspend fun getUpcomingEvents(collegeId: String): Result<List<Event>> = try {
         val snapshot = pathProvider.events(collegeId)
             .whereGreaterThanOrEqualTo("startDate", System.currentTimeMillis())
-            .whereEqualTo("deleted", false)
             .orderBy("startDate", Query.Direction.ASCENDING)
             .get()
             .await()
@@ -108,7 +121,6 @@ class EventRemoteDataSourceImpl @Inject constructor(
     override suspend fun getMyEvents(collegeId: String, userId: String): Result<List<Event>> = try {
         val snapshot = pathProvider.events(collegeId)
             .whereEqualTo("organizerId", userId)
-            .whereEqualTo("deleted", false)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .await()
@@ -140,7 +152,6 @@ class EventRemoteDataSourceImpl @Inject constructor(
         firestore.runTransaction { transaction ->
             val eventSnapshot = transaction.get(eventRef)
             if (!eventSnapshot.exists()) throw IllegalStateException("Event not found")
-            if (eventSnapshot.getBoolean("deleted") == true) throw IllegalStateException("Event deleted")
             if (eventSnapshot.getBoolean("isRegistrationOpen") == false) throw IllegalStateException("Registration closed")
 
             val registrationRef = eventRef.collection(Constants.REGISTRATIONS).document(userId)

@@ -80,7 +80,11 @@ class CreateEventViewModel @Inject constructor(
                 eventRepository.createEvent(event)
                     .onSuccess {
                         Log.d("EVENT_CREATE", "Event created successfully: $eventId")
-                        _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                        _uiState.update { it.copy(
+                            isLoading = false, 
+                            isSuccess = true,
+                            successMessage = "Event Created Successfully"
+                        ) }
                     }
                     .onFailure { exception ->
                         _uiState.update { it.copy(isLoading = false, error = exception.message ?: "Failed to create event") }
@@ -97,5 +101,9 @@ class CreateEventViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
     }
 }

@@ -105,8 +105,10 @@ private fun HomeScreenContent(
             // ---------------- Search ----------------
             item {
                 SearchBar(
+                    hint = "Search CampusConnect...",
+                    readOnly = true,
                     onClick = onSearchClick,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
                 )
             }
 
@@ -141,7 +143,7 @@ private fun HomeScreenContent(
                     ) {
                         if (state.announcements.isNotEmpty()) {
                             Column(
-                                modifier = Modifier.padding(horizontal = 20.dp),
+                                modifier = Modifier.padding(horizontal = 24.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 state.announcements.forEach { announcement ->
@@ -166,7 +168,7 @@ private fun HomeScreenContent(
                     ) {
                         if (state.events.isNotEmpty()) {
                             LazyRow(
-                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(items = state.events, key = { it.id }) { event ->
@@ -190,7 +192,7 @@ private fun HomeScreenContent(
                     ) {
                         if (state.placements.isNotEmpty()) {
                             LazyRow(
-                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(items = state.placements, key = { it.id }) { placement ->
@@ -214,7 +216,7 @@ private fun HomeScreenContent(
                     ) {
                         if (state.notes.isNotEmpty()) {
                             LazyRow(
-                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(items = state.notes, key = { it.id }) { note ->
@@ -239,7 +241,7 @@ private fun HomeScreenContent(
                     ) {
                         if (state.lostFoundItems.isNotEmpty()) {
                             LazyRow(
-                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(items = state.lostFoundItems, key = { it.id }) { item ->

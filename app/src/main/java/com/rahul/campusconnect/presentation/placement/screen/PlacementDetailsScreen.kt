@@ -11,16 +11,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.Attachment
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,6 +53,7 @@ fun PlacementDetailsScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -58,27 +63,33 @@ fun PlacementDetailsScreen(
 
     LaunchedEffect(uiState.deleted) {
         if (uiState.deleted) {
-            viewModel.resetDeleteState()
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            navController.previousBackStackEntry?.savedStateHandle?.set("snackbar_message", "Placement Deleted Successfully")
             onBackClick()
+        }
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
         }
     }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Placement") },
-            text = { Text("Are you sure you want to delete this placement drive? This action is reversible only by admins.") },
+            title = { Text("Delete Placement", fontWeight = FontWeight.Bold) },
+            text = { Text("Are you sure you want to PERMANENTLY delete this placement drive? This action cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
                         viewModel.deletePlacement()
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    if (uiState.deleting) CircularProgressIndicator(Modifier.size(18.dp))
-                    else Text("Delete")
+                    Text("Hard Delete", fontWeight = FontWeight.ExtraBold)
                 }
             },
             dismissButton = {
@@ -88,9 +99,20 @@ fun PlacementDetailsScreen(
     }
 
     Scaffold(
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                val isDelete = data.visuals.message.contains("Deleted", ignoreCase = true)
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = if (isDelete) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = if (isDelete) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.inverseOnSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             TopAppBar(
-                title = { Text("Placement Details") },
+                title = { Text("Drive Details", fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -104,15 +126,15 @@ fun PlacementDetailsScreen(
                         }
                         context.startActivity(Intent.createChooser(shareIntent, "Share Placement"))
                     }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
+                        Icon(Icons.Rounded.Share, contentDescription = "Share")
                     }
 
                     if (uiState.canEdit) {
                         IconButton(onClick = { onEditClick(placementId) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                            Icon(Icons.Rounded.Edit, contentDescription = "Edit")
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                            Icon(Icons.Rounded.DeleteForever, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -120,173 +142,259 @@ fun PlacementDetailsScreen(
         },
         bottomBar = {
             uiState.placement?.let { placement ->
-                Surface(tonalElevation = 8.dp, shadowElevation = 8.dp) {
-                    PrimaryButton(
-                        text = when {
-                            placement.deleted -> "Placement Removed"
-                            uiState.isExpired -> "Application Closed"
-                            else -> "Apply Now"
-                        },
-                        enabled = uiState.canApply,
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(placement.applyLink))
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.padding(16.dp)
-                    )
+                Surface(
+                    tonalElevation = 8.dp, 
+                    shadowElevation = 16.dp,
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Box(modifier = Modifier.padding(24.dp).navigationBarsPadding()) {
+                        PrimaryButton(
+                            text = when {
+                                uiState.isExpired -> "Application Closed"
+                                else -> "Apply Now"
+                            },
+                            enabled = uiState.canApply,
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(placement.applyLink))
+                                context.startActivity(intent)
+                            }
+                        )
+                    }
                 }
             }
         }
     ) { padding ->
-        when {
-            uiState.isLoading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                uiState.isLoading && uiState.placement == null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(strokeWidth = 3.dp)
+                    }
                 }
-            }
-            uiState.error != null -> {
-                EmptyState(
-                    message = uiState.error.orEmpty(),
-                    buttonText = "Retry",
-                    onButtonClick = viewModel::refresh,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            uiState.placement != null -> {
-                val placement = uiState.placement!!
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(scrollState)
-                        .padding(24.dp)
-                ) {
-                    // Company Info Header
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (placement.logoUrl.isNotBlank()) {
-                            Card(
-                                modifier = Modifier.size(80.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                uiState.placement != null -> {
+                    val placement = uiState.placement!!
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .verticalScroll(scrollState)
+                    ) {
+                        // Header Section
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(100.dp),
+                                shape = RoundedCornerShape(24.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                                shadowElevation = 4.dp
                             ) {
-                                AsyncImage(
-                                    model = placement.logoUrl,
-                                    contentDescription = placement.companyName,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
+                                if (placement.logoUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = placement.logoUrl,
+                                        contentDescription = placement.companyName,
+                                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                } else {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = placement.companyName.take(1).uppercase(),
+                                            style = MaterialTheme.typography.displayMedium,
+                                            fontWeight = FontWeight.Black,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
                             }
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Business, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Column {
-                            Text(text = placement.companyName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                            Text(text = placement.jobRole, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                            Spacer(modifier = Modifier.height(4.dp))
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            
+                            Text(
+                                text = placement.companyName,
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            
+                            Text(
+                                text = placement.jobRole,
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
                             StatusPill(
                                 text = if (uiState.isExpired) "Expired" else placement.status,
-                                containerColor = if (uiState.isExpired) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
-                                contentColor = if (uiState.isExpired) Color(0xFFD32F2F) else Color(0xFF2E7D32)
+                                containerColor = if (uiState.isExpired) MaterialTheme.colorScheme.error else Color(0xFF10B981),
+                                contentColor = Color.White
                             )
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Quick Info Grid
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        DetailInfoItem(Icons.Default.CurrencyRupee, "Package", placement.packageLpa, Modifier.weight(1f))
-                        DetailInfoItem(Icons.Default.LocationOn, "Location", placement.location, Modifier.weight(1f))
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        DetailInfoItem(Icons.Default.Work, "Job Type", placement.jobType, Modifier.weight(1f))
-                        DetailInfoItem(Icons.Default.Group, "Openings", placement.openings.toString(), Modifier.weight(1f))
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    SectionTitle("Eligibility")
-                    Text(text = placement.eligibility, style = MaterialTheme.typography.bodyLarge)
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    SectionTitle("Deadline")
-                    Text(
-                        text = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(placement.deadline)),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (uiState.isExpired) Color.Red else MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    SectionTitle("Required Skills")
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        placement.requiredSkills.forEach { skill ->
-                            SuggestionChip(onClick = {}, label = { Text(skill) })
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    SectionTitle("Description")
-                    Text(text = placement.description, style = MaterialTheme.typography.bodyLarge, lineHeight = 24.sp)
-
-                    if (placement.applicationProcess.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        SectionTitle("Application Process")
-                        Text(text = placement.applicationProcess, style = MaterialTheme.typography.bodyLarge, lineHeight = 24.sp)
-                    }
-
-                    if (!placement.attachmentUrl.isNullOrEmpty()) {
-                        Spacer(modifier = Modifier.height(32.dp))
-                        SectionTitle("Resources")
-                        OutlinedCard(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(placement.attachmentUrl))
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Rounded.Attachment, null, tint = MaterialTheme.colorScheme.primary)
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text("Job Description PDF", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                        // Info Grid
+                        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                InfoCard(
+                                    icon = Icons.Rounded.CurrencyRupee,
+                                    label = "Package",
+                                    value = placement.packageLpa,
+                                    modifier = Modifier.weight(1f),
+                                    contentColor = Color(0xFF10B981)
+                                )
+                                InfoCard(
+                                    icon = Icons.Rounded.LocationOn,
+                                    label = "Location",
+                                    value = placement.location,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                InfoCard(
+                                    icon = Icons.Rounded.Work,
+                                    label = "Job Type",
+                                    value = placement.jobType,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                InfoCard(
+                                    icon = Icons.Rounded.Group,
+                                    label = "Openings",
+                                    value = placement.openings.toString(),
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                            SectionHeader(title = "Eligibility", actionText = null)
+                            Text(
+                                text = placement.eligibility,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            SectionHeader(title = "Required Skills", actionText = null)
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                placement.requiredSkills.forEach { skill ->
+                                    SuggestionChip(
+                                        onClick = {},
+                                        label = { Text(skill, fontWeight = FontWeight.Bold) },
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = SuggestionChipDefaults.suggestionChipColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        border = null
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            SectionHeader(title = "Description", actionText = null)
+                            Text(
+                                text = placement.description,
+                                style = MaterialTheme.typography.bodyLarge,
+                                lineHeight = 26.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            if (placement.applicationProcess.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(32.dp))
+                                SectionHeader(title = "Application Process", actionText = null)
+                                Text(
+                                    text = placement.applicationProcess,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    lineHeight = 26.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (!placement.attachmentUrl.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(32.dp))
+                                SectionHeader(title = "Resources", actionText = null)
+                                Surface(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(placement.attachmentUrl))
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Rounded.Attachment, null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Column {
+                                            Text("Job Description PDF", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                            Text("Tap to view or download", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(40.dp))
+
+                            // Reusable Discussion Module
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(24.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                            ) {
+                                DiscussionSection(
+                                    moduleType = DiscussionParentType.PLACEMENT,
+                                    moduleId = placementId
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(40.dp))
+                            
+                            HorizontalDivider(modifier = Modifier.alpha(0.3f))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Rounded.Person, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Posted by ${placement.createdByName}",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    Text(
+                                        text = TimeUtils.getRelativeTime(placement.postedAt),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(48.dp))
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Reusable Discussion Module
-                    DiscussionSection(
-                        moduleType = DiscussionParentType.PLACEMENT,
-                        moduleId = placementId
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Text(
-                        text = "Posted ${TimeUtils.getRelativeTime(placement.postedAt)} by ${placement.createdByName}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
         }
@@ -294,28 +402,41 @@ fun PlacementDetailsScreen(
 }
 
 @Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-}
-
-@Composable
-private fun DetailInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-            Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+private fun InfoCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    contentColor: Color = MaterialTheme.colorScheme.primary
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = contentColor
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = label, 
+                style = MaterialTheme.typography.labelSmall, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = value, 
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

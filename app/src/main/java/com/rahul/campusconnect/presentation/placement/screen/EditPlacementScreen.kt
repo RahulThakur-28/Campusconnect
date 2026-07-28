@@ -3,13 +3,16 @@ package com.rahul.campusconnect.presentation.placement.screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -26,6 +29,7 @@ fun EditPlacementScreen(
     viewModel: EditPlacementViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var imagePickerState by remember { mutableStateOf(ImagePickerState()) }
     var removeLogo by remember { mutableStateOf(false) }
@@ -46,18 +50,36 @@ fun EditPlacementScreen(
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            navController.previousBackStackEntry?.savedStateHandle?.set("snackbar_message", "Placement Updated Successfully")
             onBackClick()
             viewModel.resetSuccessState()
         }
     }
 
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = Color(0xFF10B981),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             TopAppBar(
-                title = { Text(text = "Edit Placement Drive", fontWeight = FontWeight.Bold) },
+                title = { Text(text = "Edit Drive Details", fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -65,8 +87,10 @@ fun EditPlacementScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
             when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                uiState.isLoading && uiState.placement == null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(strokeWidth = 3.dp)
+                    }
                 }
                 uiState.placement != null -> {
                     PlacementForm(
@@ -81,7 +105,8 @@ fun EditPlacementScreen(
                             imagePickerState = imagePickerState.copy(imageUri = null, imageUrl = null)
                             removeLogo = true
                         },
-                        buttonText = "Update Drive",
+                        buttonText = "Save Changes",
+                        isLoading = uiState.isSubmitting,
                         onSubmit = { updatedPlacement, attachmentUri, removeAttachment ->
                             viewModel.updatePlacement(
                                 placement = updatedPlacement,
@@ -94,26 +119,6 @@ fun EditPlacementScreen(
                     )
                 }
             }
-
-            if (uiState.isSubmitting) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
         }
-    }
-
-    uiState.error?.let { error ->
-        AlertDialog(
-            onDismissRequest = { viewModel.clearError() },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearError() }) { Text("OK") }
-            },
-            title = { Text("Error") },
-            text = { Text(error) }
-        )
     }
 }

@@ -100,7 +100,12 @@ class EditEventViewModel @Inject constructor(
             eventRepository.updateEvent(updatedEvent)
                 .onSuccess {
                     Log.d("EVENT_UPDATE", "Event updated: ${currentEvent.id}")
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true, event = updatedEvent) }
+                    _uiState.update { it.copy(
+                        isLoading = false, 
+                        isSuccess = true, 
+                        event = updatedEvent,
+                        successMessage = "Event Updated Successfully"
+                    ) }
                 }
                 .onFailure { exception ->
                     _uiState.update { it.copy(isLoading = false, error = exception.message) }
@@ -114,5 +119,9 @@ class EditEventViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
     }
 }

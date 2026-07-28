@@ -1,29 +1,25 @@
 package com.rahul.campusconnect.presentation.event.components
 
 import android.net.Uri
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccessTime
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.People
+import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rahul.campusconnect.core.imagepicker.CropType
 import com.rahul.campusconnect.core.imagepicker.ImagePicker
-import com.rahul.campusconnect.ui.components.PrimaryButton
-import com.rahul.campusconnect.ui.components.auth.AppTextField
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.rahul.campusconnect.ui.components.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventForm(
     modifier: Modifier = Modifier,
@@ -74,12 +70,6 @@ fun EventForm(
         "Cultural", "Placement", "Competition", "Technical", "Fest"
     )
 
-    var categoryExpanded by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-
-    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -98,194 +88,144 @@ fun EventForm(
             onRemoveImage = onRemoveImage
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        AppTextField(
+        CampusTextField(
             value = title,
             onValueChange = onTitleChange,
-            label = "Event Title *",
-            placeholder = "Enter event title",
+            label = "Event Title",
+            placeholder = "What is the event called?",
+            leadingIcon = Icons.Rounded.Title,
             isError = titleError != null,
             errorMessage = titleError
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        AppTextField(
+        CampusTextField(
             value = description,
             onValueChange = onDescriptionChange,
-            label = "Description *",
-            placeholder = "Describe the event...",
+            label = "Description",
+            placeholder = "Provide full details about the event",
+            leadingIcon = Icons.Rounded.Description,
             singleLine = false,
-            modifier = Modifier.height(120.dp),
+            modifier = Modifier.height(140.dp),
             isError = descriptionError != null,
             errorMessage = descriptionError
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Category Dropdown
-        ExposedDropdownMenuBox(
-            expanded = categoryExpanded,
-            onExpandedChange = { categoryExpanded = !categoryExpanded }
-        ) {
-            OutlinedTextField(
-                value = category,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Category *") },
-                placeholder = { Text("Select event category") },
-                trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, null) },
-                isError = categoryError != null,
-                modifier = Modifier.fillMaxWidth().menuAnchor(),
-                shape = RoundedCornerShape(18.dp)
+        CampusDropdownField(
+            label = "Category",
+            selectedItem = category,
+            items = categories,
+            onItemSelected = onCategoryChange,
+            placeholder = "Select Category",
+            isError = categoryError != null,
+            errorMessage = categoryError
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            CampusDatePickerField(
+                label = "Date",
+                selectedDate = startDate,
+                onDateSelected = onStartDateChange,
+                isError = dateError != null,
+                errorMessage = dateError,
+                modifier = Modifier.weight(1f)
             )
-            ExposedDropdownMenu(
-                expanded = categoryExpanded,
-                onDismissRequest = { categoryExpanded = false }
-            ) {
-                categories.forEach { item ->
-                    DropdownMenuItem(
-                        text = { Text(item) },
-                        onClick = {
-                            onCategoryChange(item)
-                            categoryExpanded = false
-                        }
-                    )
-                }
-            }
+
+            CampusTimePickerField(
+                label = "Time",
+                selectedTime = time,
+                onTimeSelected = onTimeChange,
+                isError = timeError != null,
+                errorMessage = timeError,
+                modifier = Modifier.weight(1f)
+            )
         }
-        if (categoryError != null) ErrorText(categoryError)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Date Picker Trigger
-        Text(text = "Start Date *", style = MaterialTheme.typography.labelLarge)
-        Spacer(modifier = Modifier.height(6.dp))
-        OutlinedCard(
-            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
-            shape = RoundedCornerShape(18.dp),
-            border = if (dateError != null) BorderStroke(1.dp, MaterialTheme.colorScheme.error) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
-                Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(text = if (startDate == 0L) "Select event date" else dateFormatter.format(Date(startDate)))
-            }
-        }
-        if (dateError != null) ErrorText(dateError)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Time Picker Trigger
-        Text(text = "Start Time *", style = MaterialTheme.typography.labelLarge)
-        Spacer(modifier = Modifier.height(6.dp))
-        OutlinedCard(
-            modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true },
-            shape = RoundedCornerShape(18.dp),
-            border = if (timeError != null) BorderStroke(1.dp, MaterialTheme.colorScheme.error) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
-                Icon(imageVector = Icons.Outlined.AccessTime, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(text = time.ifBlank { "Select event time" })
-            }
-        }
-        if (timeError != null) ErrorText(timeError)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AppTextField(
+        CampusTextField(
             value = venue,
             onValueChange = onVenueChange,
-            label = "Venue *",
-            placeholder = "Enter event venue",
+            label = "Venue",
+            placeholder = "Where will it happen?",
+            leadingIcon = Icons.Rounded.LocationOn,
             isError = venueError != null,
             errorMessage = venueError
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            AppTextField(
+        Row(
+            modifier = Modifier.fillMaxWidth(), 
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CampusTextField(
                 value = maxParticipants,
                 onValueChange = onMaxParticipantsChange,
                 label = "Max Participants",
                 placeholder = "0 for unlimited",
-                modifier = Modifier.weight(1f)
+                leadingIcon = Icons.Rounded.People,
+                modifier = Modifier.weight(1.2f)
             )
             
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Registration", style = MaterialTheme.typography.labelLarge)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = if (isRegistrationOpen) "Open" else "Closed", style = MaterialTheme.typography.bodyMedium)
-                    Switch(checked = isRegistrationOpen, onCheckedChange = onRegistrationOpenChange)
+            Column(
+                modifier = Modifier.weight(0.8f),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "Registration", 
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (isRegistrationOpen) "Open" else "Closed", 
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isRegistrationOpen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Switch(
+                        checked = isRegistrationOpen, 
+                        onCheckedChange = onRegistrationOpenChange,
+                        scale = 0.8f
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         PrimaryButton(
-            text = if (isLoading) loadingText else buttonText,
+            text = buttonText,
             onClick = onSubmit,
-            enabled = !isLoading
+            isLoading = isLoading
         )
 
         Spacer(modifier = Modifier.height(64.dp))
     }
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { onStartDateChange(it) }
-                    showDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState(initialHour = 10, initialMinute = 0, is24Hour = false)
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val hour = timePickerState.hour
-                    val minute = timePickerState.minute
-                    val amPm = if (hour >= 12) "PM" else "AM"
-                    val displayHour = when {
-                        hour == 0 -> 12
-                        hour > 12 -> hour - 12
-                        else -> hour
-                    }
-                    val formattedTime = String.format(Locale.getDefault(), "%02d:%02d %s", displayHour, minute, amPm)
-                    onTimeChange(formattedTime)
-                    showTimePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
-            },
-            text = { TimePicker(state = timePickerState) }
-        )
-    }
 }
 
+// Helper to scale components like Switch if needed, though not standard. 
+// For now keeping it simple.
 @Composable
-private fun ErrorText(error: String) {
-    Text(
-        text = error,
-        color = MaterialTheme.colorScheme.error,
-        style = MaterialTheme.typography.bodySmall,
-        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+fun Switch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    scale: Float = 1f
+) {
+    androidx.compose.material3.Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier.scale(scale)
     )
 }

@@ -29,11 +29,10 @@ fun AnnouncementCard(
         onClick = onCardClick,
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(CardConstants.CornerRadius),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardConstants.Elevation),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
             // Optional Banner Image
@@ -41,33 +40,37 @@ fun AnnouncementCard(
                 CardImageHeader(
                     imageUrl = announcement.imageUrl,
                     category = announcement.category,
-                    categoryColor = Color(0xFF2563EB),
+                    categoryColor = MaterialTheme.colorScheme.primary,
                     height = 140.dp
                 )
             } else {
                 // Category Chip when no image
-                Row(modifier = Modifier.padding(start = 16.dp, top = 16.dp)) {
+                Row(modifier = Modifier.padding(start = 20.dp, top = 20.dp)) {
                     Surface(
                         shape = RoundedCornerShape(100.dp),
-                        color = Color(0xFFEFF4FF)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     ) {
                         Text(
-                            text = announcement.category,
-                            color = Color(0xFF2563EB),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            text = announcement.category.uppercase(),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                            letterSpacing = 0.5.sp
                         )
                     }
                 }
             }
 
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 // Title
                 Text(
                     text = announcement.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 24.sp
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -78,13 +81,13 @@ fun AnnouncementCard(
                 Text(
                     text = announcement.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Posted By & Date
                 Row(
@@ -95,8 +98,7 @@ fun AnnouncementCard(
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                         Text(
                             text = announcement.postedByName.ifBlank { "Anonymous" },
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -106,7 +108,7 @@ fun AnnouncementCard(
                             Icon(
                                 imageVector = Icons.Rounded.Verified,
                                 contentDescription = "Verified",
-                                tint = Color(0xFF2563EB),
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -114,7 +116,7 @@ fun AnnouncementCard(
                         Text(
                             text = "• ${TimeUtils.getRelativeTime(announcement.postedAt)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -125,14 +127,14 @@ fun AnnouncementCard(
                         Icon(
                             imageVector = Icons.Rounded.Attachment,
                             contentDescription = null,
-                            tint = Color.Gray,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Attachment Available",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -140,26 +142,29 @@ fun AnnouncementCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Read More Button
-                TextButton(
-                    contentPadding = PaddingValues(0.dp),
-                    onClick = onReadMoreClick,
-                    modifier = Modifier.align(Alignment.End)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Text(
-                        text = "Read More",
-                        color = Color(0xFF2563EB),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
+                    TextButton(
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        onClick = onReadMoreClick,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text(
+                            text = "Read More",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
 
-                    Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
 
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                        contentDescription = null,
-                        tint = Color(0xFF2563EB),
-                        modifier = Modifier.size(16.dp)
-                    )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }

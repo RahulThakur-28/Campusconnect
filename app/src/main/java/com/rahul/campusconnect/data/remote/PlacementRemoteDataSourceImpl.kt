@@ -67,12 +67,27 @@ class PlacementRemoteDataSourceImpl @Inject constructor(
     override fun generatePlacementId(): String = java.util.UUID.randomUUID().toString()
 
     override suspend fun deletePlacement(collegeId: String, placementId: String): Result<Unit> = try {
-        pathProvider.placements(collegeId).document(placementId).update(
-            mapOf(
-                Constants.DELETED to true,
-                Constants.UPDATED_AT to System.currentTimeMillis()
-            )
-        ).await()
+        val placementRef = pathProvider.placements(collegeId).document(placementId)
+        val placementSnapshot = placementRef.get().await()
+        val placement = placementSnapshot.toObject(Placement::class.java)
+
+        // 1. Delete logo from storage if exists
+        placement?.logoStoragePath?.let { path ->
+            if (path.isNotBlank()) {
+                storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+            }
+        }
+
+        // 2. Delete attachment from storage if exists
+        placement?.attachmentStoragePath?.let { path ->
+            if (path.isNotBlank()) {
+                storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+            }
+        }
+
+        // 3. Delete the placement document
+        placementRef.delete().await()
+
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)

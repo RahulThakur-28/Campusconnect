@@ -34,7 +34,6 @@ class NotificationViewModel @Inject constructor(
             .flatMapLatest { user ->
                 repository.getNotifications(user.collegeId, user.uid)
             }
-            .onStart { _uiState.update { it.copy(isLoading = true) } }
             .onEach { notifications ->
                 _uiState.update { it.copy(notifications = notifications, isLoading = false, isRefreshing = false) }
             }

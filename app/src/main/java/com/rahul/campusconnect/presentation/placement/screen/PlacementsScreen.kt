@@ -1,31 +1,29 @@
 package com.rahul.campusconnect.presentation.placement.screen
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WorkHistory
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.rahul.campusconnect.presentation.placement.components.*
 import com.rahul.campusconnect.presentation.placement.viewmodel.PlacementsViewModel
-import com.rahul.campusconnect.ui.components.EmptyState
-import com.rahul.campusconnect.ui.components.SectionHeader
+import com.rahul.campusconnect.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,79 +36,100 @@ fun PlacementsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 1. Automatic Refresh Logic using Navigation savedStateHandle
+    // 1. Automatic Refresh Logic
     val refreshSignal = navController.currentBackStackEntry
         ?.savedStateHandle
         ?.getLiveData<Boolean>("refresh")
         ?.observeAsState()
 
+    val snackbarMessage = navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getLiveData<String>("snackbar_message")
+        ?.observeAsState()
+
     LaunchedEffect(refreshSignal?.value) {
         if (refreshSignal?.value == true) {
             viewModel.refresh()
-            snackbarHostState.showSnackbar("Placements updated")
             navController.currentBackStackEntry?.savedStateHandle?.remove<Boolean>("refresh")
         }
     }
 
+    LaunchedEffect(snackbarMessage?.value) {
+        snackbarMessage?.value?.let {
+            snackbarHostState.showSnackbar(it)
+            navController.currentBackStackEntry?.savedStateHandle?.remove<String>("snackbar_message")
+        }
+    }
+
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                val isDelete = data.visuals.message.contains("Deleted", ignoreCase = true)
+                val isSuccess = data.visuals.message.contains("Successfully", ignoreCase = true)
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = when {
+                        isDelete -> MaterialTheme.colorScheme.error
+                        isSuccess -> Color(0xFF10B981)
+                        else -> MaterialTheme.colorScheme.inverseSurface
+                    },
+                    contentColor = when {
+                        isDelete || isSuccess -> Color.White
+                        else -> MaterialTheme.colorScheme.inverseOnSurface
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            TopAppBar(
+                title = {
                     Column {
                         Text(
                             text = "Placements",
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            )
+                        )
+                        Text(
+                            text = "Season ${uiState.season} • ${uiState.activeDrives} Active",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = "Placement Season ${uiState.season}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate(com.rahul.campusconnect.navigation.AppRoutes.Notifications.route) }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Notifications,
+                            contentDescription = "Notifications"
                         )
                     }
-                    
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = "${uiState.activeDrives} Active Drives",
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
         },
         floatingActionButton = {
             AnimatedVisibility(
                 visible = uiState.canCreatePlacement,
-                enter = fadeIn() + expandIn(),
-                exit = fadeOut()
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
             ) {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = onCreatePlacementClick,
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Create Placement")
-                }
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    icon = { Icon(Icons.Default.Add, null) },
+                    text = { Text("Post Drive", fontWeight = FontWeight.Bold) }
+                )
             }
         }
     ) { padding ->
-        // 6. Pull To Refresh Integration
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = viewModel::refresh,
@@ -118,49 +137,39 @@ fun PlacementsScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
-                // 7. Search Bar
+                // Search Bar
                 item {
-                    OutlinedTextField(
+                    SearchBar(
                         value = uiState.searchQuery,
                         onValueChange = viewModel::searchPlacements,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        placeholder = { Text("Search by company name...") },
-                        leadingIcon = { Icon(Icons.Default.Search, null) },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        ),
-                        singleLine = true
+                        hint = "Search by company, role...",
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
                     )
                 }
 
-                // 8 & 9. Filter & Sort Row
+                // Filter & Sort Row
                 item {
                     PlacementFilters(uiState = uiState, viewModel = viewModel)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // 3 & 5. Loading & Error States
+                // Loading & Error States
                 when {
                     uiState.error != null -> {
                         item {
                             EmptyState(
-                                message = uiState.error ?: "Failed to load",
-                                buttonText = "Retry",
+                                message = "Oops! Something went wrong",
+                                description = uiState.error,
+                                buttonText = "Try Again",
                                 onButtonClick = viewModel::refresh,
-                                modifier = Modifier.fillParentMaxHeight(0.7f)
+                                modifier = Modifier.fillParentMaxHeight(0.6f)
                             )
                         }
                     }
 
-                    uiState.isLoading -> {
+                    uiState.isLoading && !uiState.isRefreshing -> {
                         items(5) {
                             PlacementCardShimmer()
                         }
@@ -169,32 +178,33 @@ fun PlacementsScreen(
                     uiState.isEmpty -> {
                         item {
                             EmptyState(
-                                message = "No placements available",
-                                description = "If you're a Placement Cell member you can create one.",
+                                message = "No Drives Available",
+                                description = "Check back later for new placement opportunities",
                                 icon = Icons.Default.WorkHistory,
-                                modifier = Modifier.fillParentMaxHeight(0.7f)
+                                modifier = Modifier.fillParentMaxHeight(0.6f)
                             )
                         }
                     }
 
                     else -> {
-                        // 1. Featured Placement Section
+                        // Featured Placement Section
                         uiState.featuredPlacement?.let { featured ->
                             if (uiState.searchQuery.isBlank() && uiState.selectedCategory == "All") {
                                 item {
+                                    SectionHeader(title = "Featured Drive", actionText = null)
                                     FeaturedPlacementCard(
                                         placement = featured,
                                         onClick = { onPlacementClick(featured.id) }
                                     )
+                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
                             }
                         }
 
                         item {
-                            SectionHeader(title = "Ongoing Drives", actionText = null)
+                            SectionHeader(title = "All Opportunities", actionText = null)
                         }
 
-                        // 13. List item animations
                         items(
                             items = uiState.placements,
                             key = { it.id }

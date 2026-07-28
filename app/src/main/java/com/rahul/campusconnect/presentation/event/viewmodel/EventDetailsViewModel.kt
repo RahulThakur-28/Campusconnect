@@ -57,7 +57,11 @@ class EventDetailsViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             eventRepository.registerForEvent(eventId, userId)
                 .onSuccess {
-                    _uiState.update { it.copy(isRegistered = true, isLoading = false) }
+                    _uiState.update { it.copy(
+                        isRegistered = true, 
+                        isLoading = false,
+                        successMessage = "Registered Successfully"
+                    ) }
                     loadEvent(eventId) // Reload to update count
                 }
                 .onFailure { exception ->
@@ -89,7 +93,11 @@ class EventDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             eventRepository.deleteEvent(eventId).onSuccess {
-                _uiState.update { it.copy(isLoading = false, isDeleted = true) }
+                _uiState.update { it.copy(
+                    isLoading = false, 
+                    isDeleted = true,
+                    successMessage = "Event Deleted Successfully"
+                ) }
             }.onFailure { exception ->
                 _uiState.update { it.copy(isLoading = false, error = exception.message) }
             }
@@ -108,5 +116,9 @@ class EventDetailsViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
     }
 }

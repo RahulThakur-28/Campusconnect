@@ -34,6 +34,9 @@ class QuestionThreadViewModel @Inject constructor(
     private val _currentUserRole = MutableStateFlow("")
     val currentUserRole = _currentUserRole.asStateFlow()
 
+    private val _isDeleted = MutableStateFlow(false)
+    val isDeleted = _isDeleted.asStateFlow()
+
     init {
         sessionManager.getCurrentUser()?.let {
             _currentUserId.value = it.uid
@@ -46,7 +49,13 @@ class QuestionThreadViewModel @Inject constructor(
             _isLoading.value = true
             
             repository.getDiscussionById(questionId)
-                .onSuccess { _question.value = it }
+                .onSuccess { 
+                    if (it == null || it.isDeleted) {
+                        _isDeleted.value = true
+                    } else {
+                        _question.value = it
+                    }
+                }
                 .onFailure { _error.value = it.message }
 
             repository.getReplies(questionId)
@@ -96,7 +105,18 @@ class QuestionThreadViewModel @Inject constructor(
 
     fun deleteQuestion() {
         val id = _question.value?.discussionId ?: return
-        viewModelScope.launch { repository.deleteQuestion(id) }
+        viewModelScope.launch {
+            _isLoading.value = true
+            repository.deleteQuestion(id)
+                .onSuccess {
+                    _isDeleted.value = true
+                    _isLoading.value = false
+                }
+                .onFailure {
+                    _error.value = it.message ?: "Failed to delete discussion"
+                    _isLoading.value = false
+                }
+        }
     }
 
     fun deleteReply(replyId: String) {

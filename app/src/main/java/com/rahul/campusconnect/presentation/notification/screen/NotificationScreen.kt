@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,51 +72,60 @@ fun NotificationScreen(
             )
         }
     ) { padding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { viewModel.refresh() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            NotificationFilterChips(
-                selectedFilter = uiState.selectedFilter,
-                onFilterSelected = viewModel::onFilterSelected
-            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                NotificationFilterChips(
+                    selectedFilter = uiState.selectedFilter,
+                    onFilterSelected = viewModel::onFilterSelected
+                )
 
-            if (uiState.isLoading && !uiState.isRefreshing) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (filteredNotifications.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    EmptyState(message = "You're all caught up\nNew campus updates will appear here.")
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    listOf("Today", "Yesterday", "Earlier").forEach { groupTitle ->
-                        val groupItems = groupedNotifications[groupTitle]
-                        if (!groupItems.isNullOrEmpty()) {
-                            item {
-                                Text(
-                                    text = groupTitle,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(16.dp),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            items(groupItems, key = { it.id }) { notification ->
-                                NotificationItem(
-                                    notification = notification,
-                                    onNotificationClick = {
-                                        viewModel.markAsRead(it.id)
-                                        onNotificationClick(it)
-                                    },
-                                    onDelete = { viewModel.deleteNotification(notification.id) }
-                                )
-                                HorizontalDivider(
-                                    thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                )
+                if (uiState.isLoading && !uiState.isRefreshing) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (filteredNotifications.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        EmptyState(
+                            message = "No Notifications Yet",
+                            description = "You're all caught up.\nNew campus updates will appear here."
+                        )
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        listOf("Today", "Yesterday", "Earlier").forEach { groupTitle ->
+                            val groupItems = groupedNotifications[groupTitle]
+                            if (!groupItems.isNullOrEmpty()) {
+                                item {
+                                    Text(
+                                        text = groupTitle,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(16.dp),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                items(groupItems, key = { it.id }) { notification ->
+                                    NotificationItem(
+                                        notification = notification,
+                                        onNotificationClick = {
+                                            viewModel.markAsRead(it.id)
+                                            onNotificationClick(it)
+                                        },
+                                        onDelete = { viewModel.deleteNotification(notification.id) }
+                                    )
+                                    HorizontalDivider(
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                    )
+                                }
                             }
                         }
                     }

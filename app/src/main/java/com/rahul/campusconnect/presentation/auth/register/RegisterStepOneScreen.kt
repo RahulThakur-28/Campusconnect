@@ -116,7 +116,7 @@ fun RegisterStepOneScreen(
                     PrimaryButton(
                         text = "Continue",
                         onClick = {
-                            if (uiState.fullName.isNotBlank() && uiState.email.isNotBlank() && 
+                            if (uiState.fullName.isNotBlank() && uiState.email.isNotBlank() &&
                                 uiState.collegeId.length == 8 && uiState.enrollmentNumber.isNotBlank()) {
                                 navController.navigate(AppRoutes.RegisterStepTwo.route)
                             } else {

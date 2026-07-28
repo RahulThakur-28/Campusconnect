@@ -8,7 +8,6 @@ import com.rahul.campusconnect.domain.model.Event
 import com.rahul.campusconnect.ui.components.EventCard
 import com.rahul.campusconnect.ui.components.EventCardStyle
 
-
 @Composable
 fun FeaturedEventCard(
     event: Event,
@@ -18,13 +17,13 @@ fun FeaturedEventCard(
 ) {
     EventCard(
         event = event,
-        imageHeight = 140.dp,
+        imageHeight = 160.dp,
         showAttendance = true,
         showCategory = true,
         showRegisterButton = onRegisterClick != null,
         cardStyle = EventCardStyle.Large,
         onClick = onClick,
         onRegisterClick = onRegisterClick ?: {},
-        modifier = modifier.padding(horizontal = 16.dp)
+        modifier = modifier.padding(horizontal = 24.dp)
     )
 }

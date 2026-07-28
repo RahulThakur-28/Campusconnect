@@ -1,13 +1,20 @@
 package com.rahul.campusconnect.presentation.settings.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Gavel
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,7 +29,12 @@ fun PrivacyPolicyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Privacy Policy", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        "Privacy Policy", 
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -35,40 +47,60 @@ fun PrivacyPolicyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
-                .padding(24.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // Header Info
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Rounded.History, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = "Last Updated: July 2024",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             Text(
-                text = "Last Updated: July 2024",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PolicySection(
-                title = "1. Information We Collect",
-                content = "We collect information you provide directly to us when you create an account, such as your name, college email, student ID, and department. We also collect content you post, such as notes, announcements, and lost & found reports."
+                text = "Your privacy is important to us. This policy explains how we collect, use, and protect your personal information within CampusConnect.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            PolicySection(
-                title = "2. How We Use Your Information",
-                content = "We use the information we collect to provide, maintain, and improve CampusConnect. This includes facilitating connections between students, providing personalized content, and sending notifications about relevant campus activities."
+            PolicyCard(
+                title = "1. Information Collection",
+                content = "We collect information you provide directly to us when you create an account, such as your name, college email, student ID, and department. This helps us ensure a safe community."
             )
 
-            PolicySection(
-                title = "3. Sharing of Information",
-                content = "Your profile information (name, role, department) is visible to other registered users of CampusConnect. We do not sell your personal data to third parties."
+            PolicyCard(
+                title = "2. Use of Information",
+                content = "We use the information to provide and maintain CampusConnect, personalized content, and relevant notifications about campus activities and placement drives."
             )
 
-            PolicySection(
-                title = "4. Security",
-                content = "We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access."
+            PolicyCard(
+                title = "3. Information Sharing",
+                content = "Your profile information is visible to other verified users of CampusConnect to facilitate campus interactions. We never sell your data to third parties."
             )
 
-            PolicySection(
-                title = "5. Your Choices",
-                content = "You may update your account information at any time by logging into your account and visiting your profile settings. You can also delete your account through the settings menu."
+            PolicyCard(
+                title = "4. Data Security",
+                content = "We implement industry-standard security measures to protect your personal data from unauthorized access, loss, or misuse."
+            )
+
+            PolicyCard(
+                title = "5. Your Rights",
+                content = "You have full control over your data. You can edit your profile or delete your entire account at any time through the Settings menu."
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -77,19 +109,25 @@ fun PrivacyPolicyScreen(
 }
 
 @Composable
-fun PolicySection(title: String, content: String) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = content,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = 22.sp
-        )
+fun PolicyCard(title: String, content: String) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

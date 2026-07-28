@@ -85,15 +85,25 @@ class AnnouncementRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun deleteAnnouncement(collegeId: String, announcementId: String): Result<Unit> {
         return try {
-            pathProvider.announcements(collegeId)
-                .document(announcementId)
-                .update(
-                    mapOf(
-                        Constants.DELETED to true,
-                        Constants.UPDATED_AT to System.currentTimeMillis()
-                    )
-                )
-                .await()
+            val announcementRef = pathProvider.announcements(collegeId).document(announcementId)
+            val announcement = announcementRef.get().await().toObject(Announcement::class.java)
+
+            // Delete associated image from storage
+            announcement?.imageStoragePath?.let { path ->
+                if (path.isNotBlank()) {
+                    storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+                }
+            }
+
+            // Delete associated attachment from storage
+            announcement?.attachmentStoragePath?.let { path ->
+                if (path.isNotBlank()) {
+                    storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+                }
+            }
+
+            // Permanently delete from Firestore
+            announcementRef.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -3,19 +3,27 @@ package com.rahul.campusconnect.presentation.settings.screen
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rahul.campusconnect.presentation.settings.components.SettingItem
+import com.rahul.campusconnect.presentation.settings.components.SettingsSection
 import com.rahul.campusconnect.ui.components.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +38,12 @@ fun HelpSupportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Help & Support", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        "Help & Support", 
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -43,72 +56,102 @@ fun HelpSupportScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
+                .padding(bottom = 32.dp)
         ) {
-            SectionHeader(title = "FREQUENTLY ASKED QUESTIONS", actionText = null)
-            
-            FaqItem(
-                question = "How do I verify my student status?",
-                answer = "Go to Profile -> Verification to upload your student ID. Our team will review it within 24 hours."
-            )
-            FaqItem(
-                question = "Can I download notes for offline use?",
-                answer = "Yes, click the download button on any note card to save it to your device's storage."
-            )
-            FaqItem(
-                question = "How do I report a found item?",
-                answer = "Navigate to the Lost & Found module and click the '+' button in the bottom right corner."
-            )
+            Spacer(Modifier.height(16.dp))
 
-            SectionHeader(title = "CONTACT US", actionText = null)
-            SettingItem(
-                title = "Email Support",
-                subtitle = "support@campusconnect.com",
-                icon = Icons.Outlined.Email,
-                onClick = { openEmail(context) }
-            )
-            SettingItem(
-                title = "Report a Bug",
-                subtitle = "Let us know what's broken",
-                icon = Icons.Outlined.BugReport,
-                onClick = onBugReportClick
-            )
-            SettingItem(
-                title = "Chat Support",
-                subtitle = "Coming soon",
-                icon = Icons.Outlined.Chat,
-                onClick = { /* Future */ },
-                showChevron = false
-            )
+            // FAQ Section
+            SettingsSection(title = "Common Questions") {
+                FaqItem(
+                    question = "How do I verify my account?",
+                    answer = "Navigate to Profile -> Verification to submit your college ID. Verification usually takes 24-48 hours."
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                FaqItem(
+                    question = "Can I post study notes?",
+                    answer = "Yes, once your account is verified, you can upload PDF, Word or PPT files in the Study Notes module."
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                FaqItem(
+                    question = "How to report a bug?",
+                    answer = "Use the 'Report a Bug' button below to send details and screenshots of any issues you encounter."
+                )
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // Contact Section
+            SettingsSection(title = "Contact Us") {
+                SettingItem(
+                    title = "Email Support",
+                    subtitle = "Get assistance via email",
+                    icon = Icons.Rounded.Email,
+                    onClick = { openEmail(context) }
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                SettingItem(
+                    title = "Report an Issue",
+                    subtitle = "Tell us what's broken",
+                    icon = Icons.Rounded.BugReport,
+                    onClick = onBugReportClick
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                SettingItem(
+                    title = "Official Website",
+                    subtitle = "www.campusconnect.com",
+                    icon = Icons.Rounded.Language,
+                    onClick = { /* Open web */ }
+                )
+            }
+
+            // Community Card
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, tint = Color.White)
+                        }
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text("Still need help?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                        Text("Our team is available 24/7", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
 fun FaqItem(question: String, answer: String) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+    Column(modifier = Modifier.padding(20.dp)) {
+        Text(
+            text = question,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = question,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = answer,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = answer,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            lineHeight = 20.sp
+        )
     }
 }
 

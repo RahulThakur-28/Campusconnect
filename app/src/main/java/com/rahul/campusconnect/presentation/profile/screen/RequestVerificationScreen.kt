@@ -3,26 +3,32 @@ package com.rahul.campusconnect.presentation.profile.screen
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -30,9 +36,7 @@ import com.rahul.campusconnect.common.constant.Constants
 import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.domain.model.VerificationRequest
 import com.rahul.campusconnect.presentation.profile.viewmodel.RequestVerificationViewModel
-import com.rahul.campusconnect.ui.components.DropdownField
-import com.rahul.campusconnect.ui.components.PrimaryButton
-import com.rahul.campusconnect.ui.components.auth.AppTextField
+import com.rahul.campusconnect.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +52,7 @@ fun RequestVerificationScreen(
     var academicYear by remember { mutableStateOf("") }
     var documentUri by remember { mutableStateOf<Uri?>(null) }
     var requestedRole by remember { mutableStateOf(UserRole.VERIFIED_STUDENT) }
+    var showErrors by remember { mutableStateOf(false) }
     
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -62,7 +67,12 @@ fun RequestVerificationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Request Verification") },
+                title = { 
+                    Text(
+                        "Verification Request", 
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -82,129 +92,231 @@ fun RequestVerificationScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .imePadding()
                     .verticalScroll(scrollState)
                     .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 if (uiState.existingRequest?.status == "REJECTED") {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text("Previous Request Rejected", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
-                            Text("Reason: ${uiState.existingRequest?.rejectionReason ?: "No reason provided"}", style = MaterialTheme.typography.bodySmall)
-                            Text("You can submit a new request below.", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.Error, null, tint = MaterialTheme.colorScheme.error)
+                            Spacer(Modifier.width(16.dp))
+                            Column {
+                                Text("Previous Request Rejected", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.error)
+                                Text("Reason: ${uiState.existingRequest?.rejectionReason}", style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
 
                 Text(
-                    text = "Verify your identity to access premium campus features.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    text = "Verify your account to access exclusive features like uploading notes and creating events.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
 
-                Text("I am a:", style = MaterialTheme.typography.labelLarge)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    FilterChip(
-                        selected = requestedRole == UserRole.VERIFIED_STUDENT,
-                        onClick = { requestedRole = UserRole.VERIFIED_STUDENT },
-                        label = { Text("Student") },
-                        modifier = Modifier.weight(1f)
+                // Role Selector
+                Column {
+                    Text(
+                        text = "I am applying as a:",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
+                        modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
                     )
-                    FilterChip(
-                        selected = requestedRole == UserRole.VERIFIED_TEACHER,
-                        onClick = { requestedRole = UserRole.VERIFIED_TEACHER },
-                        label = { Text("Teacher") },
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SelectableRoleCard(
+                            label = "Student",
+                            isSelected = requestedRole == UserRole.VERIFIED_STUDENT,
+                            selectedColor = Color(0xFF7E22CE), // Purple
+                            icon = Icons.Rounded.School,
+                            onClick = { requestedRole = UserRole.VERIFIED_STUDENT },
+                            modifier = Modifier.weight(1f)
+                        )
+                        SelectableRoleCard(
+                            label = "Teacher",
+                            isSelected = requestedRole == UserRole.VERIFIED_TEACHER,
+                            selectedColor = Color(0xFF0284C7), // Blue
+                            icon = Icons.Rounded.Work,
+                            onClick = { requestedRole = UserRole.VERIFIED_TEACHER },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
 
-                AppTextField(
+                CampusTextField(
                     value = idNumber,
-                    onValueChange = { idNumber = it },
-                    label = if (requestedRole == UserRole.VERIFIED_STUDENT) "Enrollment Number" else "Employee ID",
-                    placeholder = "Enter your ID"
+                    onValueChange = { idNumber = it; if(showErrors) showErrors = false },
+                    label = if (requestedRole == UserRole.VERIFIED_STUDENT) "Enrollment Number" else "Employee / Faculty ID",
+                    placeholder = "Enter your ID",
+                    leadingIcon = Icons.Rounded.Badge,
+                    isError = showErrors && idNumber.isBlank()
                 )
 
-                DropdownField(
+                CampusDropdownField(
                     label = "Department",
                     selectedItem = department,
                     items = Constants.BRANCHES,
-                    onItemSelected = { department = it }
+                    onItemSelected = { department = it; if(showErrors) showErrors = false },
+                    isError = showErrors && department.isBlank()
                 )
 
-                if (requestedRole == UserRole.VERIFIED_STUDENT) {
-                    DropdownField(
-                        label = "Academic Year",
+                AnimatedVisibility(visible = requestedRole == UserRole.VERIFIED_STUDENT) {
+                    CampusDropdownField(
+                        label = "Current Academic Year",
                         selectedItem = academicYear,
                         items = Constants.YEARS,
-                        onItemSelected = { academicYear = it }
+                        onItemSelected = { academicYear = it; if(showErrors) showErrors = false },
+                        isError = showErrors && academicYear.isBlank()
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (requestedRole == UserRole.VERIFIED_STUDENT) "Upload Student ID Card" else "Upload Faculty ID Card",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .clickable { pickerLauncher.launch("image/*") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (documentUri != null) {
-                        AsyncImage(
-                            model = documentUri,
-                            contentDescription = "Document",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.CloudUpload, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text("Tap to select image", style = MaterialTheme.typography.labelMedium)
+                // Upload Section
+                Column {
+                    Text(
+                        text = "Upload Proof Document *",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
+                        modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
+                    )
+                    Surface(
+                        onClick = { pickerLauncher.launch("image/*") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 2.dp,
+                            color = if (showErrors && documentUri == null) MaterialTheme.colorScheme.error 
+                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                        ),
+                        tonalElevation = 1.dp
+                    ) {
+                        if (documentUri != null) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                AsyncImage(
+                                    model = documentUri,
+                                    contentDescription = "Document Preview",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.3f))
+                                )
+                                Column(
+                                    modifier = Modifier.align(Alignment.Center),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(Icons.Rounded.CloudDone, null, tint = Color.White, modifier = Modifier.size(48.dp))
+                                    Text("Image Selected", color = Color.White, fontWeight = FontWeight.Bold)
+                                    Text("Tap to change", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Rounded.FileUpload, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("Select ID Card Image", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("Supported formats: JPG, PNG", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                            }
                         }
+                    }
+                    if (showErrors && documentUri == null) {
+                        Text(
+                            "Please upload a proof document",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 12.dp, top = 8.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 PrimaryButton(
-                    text = "Submit Request",
+                    text = "Submit Verification",
                     onClick = {
-                        documentUri?.let {
-                            viewModel.submitRequest(
-                                idNumber,
-                                department,
-                                if (requestedRole == UserRole.VERIFIED_STUDENT) academicYear else null,
-                                it,
-                                requestedRole
-                            )
+                        val isValid = idNumber.isNotBlank() && department.isNotBlank() && 
+                                      (requestedRole != UserRole.VERIFIED_STUDENT || academicYear.isNotBlank()) && 
+                                      documentUri != null
+                        if (isValid) {
+                            viewModel.submitRequest(idNumber, department, if (requestedRole == UserRole.VERIFIED_STUDENT) academicYear else null, documentUri!!, requestedRole)
+                        } else {
+                            showErrors = true
                         }
                     },
-                    enabled = idNumber.isNotBlank() && department.isNotBlank() && (requestedRole != UserRole.VERIFIED_STUDENT || academicYear.isNotBlank()) && documentUri != null && !uiState.isLoading,
                     isLoading = uiState.isLoading
                 )
                 
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                }
+                Spacer(modifier = Modifier.height(48.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun SelectableRoleCard(
+    label: String,
+    isSelected: Boolean,
+    selectedColor: Color,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(110.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = if (isSelected) selectedColor.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) selectedColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+        ),
+        tonalElevation = if (isSelected) 4.dp else 0.dp
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(if (isSelected) selectedColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isSelected) selectedColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                ),
+                color = if (isSelected) selectedColor else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -216,34 +328,51 @@ fun VerificationStatusView(
     onBackClick: () -> Unit
 ) {
     Column(
-        modifier = modifier.padding(24.dp),
+        modifier = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = if (request.status == "PENDING") Color(0xFFF59E0B) else Color(0xFF10B981)
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = if (request.status == "PENDING") "Verification Pending" else "Account Verified",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = if (request.status == "PENDING") 
-                "Your verification request is currently being reviewed by your college admin." 
-                else "Your account has been successfully verified.",
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        val isPending = request.status == "PENDING"
+        
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(
+                    if (isPending) Color(0xFFFFF7ED) else Color(0xFFF0FDF4), 
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isPending) Icons.Rounded.HourglassTop else Icons.Rounded.Verified,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = if (isPending) Color(0xFFF59E0B) else Color(0xFF16A34A)
+            )
+        }
         
         Spacer(Modifier.height(32.dp))
-        Button(onClick = onBackClick) {
-            Text("Go Back")
-        }
+        
+        Text(
+            text = if (isPending) "Verification in Progress" else "Account Verified",
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(Modifier.height(16.dp))
+        
+        Text(
+            text = if (isPending) 
+                "Our administration team is currently reviewing your document. This usually takes 24-48 hours." 
+                else "Congratulations! Your account has been verified. You can now access all premium features of CampusConnect.",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            lineHeight = 24.sp
+        )
+        
+        Spacer(Modifier.height(48.dp))
+        
+        PrimaryButton(text = "Go Back", onClick = onBackClick)
     }
 }

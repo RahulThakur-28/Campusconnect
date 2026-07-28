@@ -1,13 +1,18 @@
 package com.rahul.campusconnect.presentation.settings.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,7 +27,12 @@ fun TermsConditionsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Terms & Conditions", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        "Terms of Service", 
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -35,40 +45,51 @@ fun TermsConditionsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
-                .padding(24.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                text = "By using CampusConnect, you agree to these terms.",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+            // Header
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                shape = RoundedCornerShape(24.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            ) {
+                Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Gavel, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+                    Spacer(Modifier.width(16.dp))
+                    Text(
+                        "By using CampusConnect, you agree to follow our community guidelines and terms.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
-            TermSection(
+            TermCard(
                 title = "1. Eligibility",
-                content = "You must be a student, faculty member, or staff of a registered college to use this application. Verification may be required for certain features."
+                content = "Access is restricted to verified students, faculty, and staff of registered institutions. You must maintain an active institutional status to use core services."
             )
 
-            TermSection(
-                title = "2. User Conduct",
-                content = "You agree not to post content that is illegal, offensive, or violates the intellectual property rights of others. This includes unauthorized sharing of study materials."
+            TermCard(
+                title = "2. User Responsibility",
+                content = "You are responsible for all content posted under your account. Academic integrity must be maintained; sharing prohibited exam materials is strictly forbidden."
             )
 
-            TermSection(
-                title = "3. Responsibilities",
-                content = "You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account."
+            TermCard(
+                title = "3. Community Safety",
+                content = "Harassment, hate speech, or sharing misleading information will result in immediate account suspension. We foster a respectful environment for everyone."
             )
 
-            TermSection(
-                title = "4. Termination",
-                content = "We reserve the right to suspend or terminate your account if you violate these terms or engage in behavior that harms the campus community."
+            TermCard(
+                title = "4. Account Security",
+                content = "Maintain the confidentiality of your login credentials. CampusConnect is not liable for losses resulting from shared or compromised account details."
             )
 
-            TermSection(
-                title = "5. Changes to Terms",
-                content = "We may update these terms from time to time. Your continued use of the application after such changes constitutes acceptance of the new terms."
+            TermCard(
+                title = "5. Service Updates",
+                content = "We continuously improve our platform. Some features may be added or modified to better serve the campus community. Continued use implies acceptance of updates."
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -77,19 +98,25 @@ fun TermsConditionsScreen(
 }
 
 @Composable
-fun TermSection(title: String, content: String) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = content,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = 22.sp
-        )
+fun TermCard(title: String, content: String) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

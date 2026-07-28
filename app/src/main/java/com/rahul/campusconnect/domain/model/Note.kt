@@ -14,6 +14,7 @@ data class Note(
     val fileUrl: String = "",
     val storagePath: String = "",
     val thumbnailUrl: String? = null,
+    val thumbnailStoragePath: String? = null,
     val fileType: String = "PDF",
     val fileExtension: String = "pdf",
     val fileSize: String = "",

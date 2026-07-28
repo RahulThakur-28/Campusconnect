@@ -22,6 +22,8 @@ class NotesRepositoryImpl @Inject constructor(
     override suspend fun getMyNotes(userId: String): Result<List<Note>> = remoteDataSource.getMyNotes(getCollegeId(), userId)
     override suspend fun uploadAttachment(noteId: String, fileUri: Uri, extension: String): Result<Pair<String, String>> = 
         remoteDataSource.uploadAttachment(getCollegeId(), noteId, fileUri, extension)
+    override suspend fun uploadThumbnail(noteId: String, imageUri: Uri): Result<Pair<String, String>> = 
+        remoteDataSource.uploadThumbnail(getCollegeId(), noteId, imageUri)
     override suspend fun deleteFile(path: String): Result<Unit> = remoteDataSource.deleteFile(path)
     override suspend fun incrementDownloadCount(noteId: String): Result<Unit> = remoteDataSource.incrementDownloadCount(getCollegeId(), noteId)
 }

@@ -57,9 +57,19 @@ class NotesRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun deleteNote(collegeId: String, noteId: String): Result<Unit> = try {
-        pathProvider.notes(collegeId).document(noteId).update(
-            mapOf("deleted" to true, "updatedAt" to System.currentTimeMillis())
-        ).await()
+        val noteRef = pathProvider.notes(collegeId).document(noteId)
+        val note = noteRef.get().await().toObject(Note::class.java)
+
+        // Hard delete associated files from storage
+        note?.storagePath?.let { path ->
+            if (path.isNotBlank()) storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+        }
+        note?.thumbnailStoragePath?.let { path ->
+            if (path.isNotBlank()) storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+        }
+
+        // Delete from Firestore
+        noteRef.delete().await()
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
@@ -67,7 +77,6 @@ class NotesRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getMyNotes(collegeId: String, userId: String): Result<List<Note>> = try {
         val snapshot = pathProvider.notes(collegeId)
-            .whereEqualTo(Constants.DELETED, false)
             .whereEqualTo("uploadedBy", userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
@@ -84,6 +93,17 @@ class NotesRemoteDataSourceImpl @Inject constructor(
             bucket = StorageConstants.MEDIA_BUCKET,
             path = path,
             pdfUri = fileUri
+        ).map { url -> Pair(url, path) }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun uploadThumbnail(collegeId: String, noteId: String, imageUri: Uri): Result<Pair<String, String>> = try {
+        val path = StoragePathGenerator.noteThumbnail(collegeId, noteId)
+        storageManager.uploadImage(
+            bucket = StorageConstants.MEDIA_BUCKET,
+            path = path,
+            imageUri = imageUri
         ).map { url -> Pair(url, path) }
     } catch (e: Exception) {
         Result.failure(e)

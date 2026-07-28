@@ -2,6 +2,7 @@ package com.rahul.campusconnect.presentation.lostfound.screen
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,13 +12,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,10 +29,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.domain.model.LostFoundItem
 import com.rahul.campusconnect.presentation.lostfound.viewmodel.LostFoundDetailsViewModel
 import com.rahul.campusconnect.ui.components.*
+import com.rahul.campusconnect.ui.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +47,7 @@ fun LostFoundDetailsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(itemId) {
         viewModel.loadItem(itemId)
@@ -49,6 +56,7 @@ fun LostFoundDetailsScreen(
     LaunchedEffect(uiState.isDeleted) {
         if (uiState.isDeleted) {
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            navController.previousBackStackEntry?.savedStateHandle?.set("snackbar_message", "Item deleted successfully")
             onBackClick()
             viewModel.resetDeleteState()
         }
@@ -59,14 +67,17 @@ fun LostFoundDetailsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Report") },
-            text = { Text("Are you sure you want to permanently delete this report? This action cannot be undone.") },
+            title = { Text("Delete Report Permanently", fontWeight = FontWeight.Bold) },
+            text = { Text("This will permanently remove this report from the system. This action cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    viewModel.deleteItem()
-                }, colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)) {
-                    Text("Delete")
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteItem()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete Permanently", fontWeight = FontWeight.ExtraBold)
                 }
             },
             dismissButton = {
@@ -80,21 +91,33 @@ fun LostFoundDetailsScreen(
     val scrollState = rememberScrollState()
 
     Scaffold(
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                val msg = data.visuals.message.lowercase()
+                val containerColor = if (msg.contains("success") || msg.contains("resolved")) SuccessGreen else MaterialTheme.colorScheme.error
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = containerColor,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             TopAppBar(
-                title = { Text("Item Details") },
+                title = { Text("Report Details", fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     if (uiState.canEditOrResolve) {
                         IconButton(onClick = { onEditClick(itemId) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                            Icon(imageVector = Icons.Rounded.Edit, contentDescription = "Edit")
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                            Icon(imageVector = Icons.Rounded.DeleteForever, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -102,10 +125,15 @@ fun LostFoundDetailsScreen(
         },
         bottomBar = {
             if (uiState.item != null && uiState.item!!.status == "ACTIVE") {
-                Surface(tonalElevation = 8.dp, shadowElevation = 8.dp) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 16.dp,
+                    color = MaterialTheme.colorScheme.surface
+                ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(24.dp).padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         if (uiState.canEditOrResolve) {
                             PrimaryButton(
@@ -123,138 +151,282 @@ fun LostFoundDetailsScreen(
                                 },
                                 modifier = Modifier.weight(1f)
                             )
-                            
-                            OutlinedButton(
-                                onClick = {
-                                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${uiState.item!!.contactEmail}"))
-                                    context.startActivity(intent)
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Email")
-                            }
                         }
                     }
                 }
             }
         }
     ) { padding ->
-        when {
-            uiState.isLoading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                uiState.isLoading && uiState.item == null -> {
+                    LostFoundDetailsShimmer(modifier = Modifier.padding(padding))
                 }
-            }
-            uiState.error != null -> {
-                EmptyState(
-                    message = uiState.error ?: "Error occurred",
-                    buttonText = "Retry",
-                    onButtonClick = { viewModel.loadItem(itemId) },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            uiState.item != null -> {
-                val item = uiState.item!!
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(scrollState)
-                ) {
-                    if (!item.imageUrl.isNullOrEmpty()) {
-                        CardImageHeader(
-                            imageUrl = item.imageUrl,
-                            category = item.category,
-                            categoryColor = if (item.type == "LOST") Color(0xFFDC2626) else Color(0xFF16A34A),
-                            height = 240.dp
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .background(
-                                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                                        colors = if (item.type == "LOST") 
-                                            listOf(Color(0xFFFECACA), Color(0xFFFEE2E2)) 
-                                        else 
-                                            listOf(Color(0xFFBBF7D0), Color(0xFFDCFCE7))
-                                    )
-                                )
-                                .padding(24.dp),
-                            contentAlignment = Alignment.BottomStart
-                        ) {
-                            StatusPill(
-                                text = item.category,
-                                containerColor = if (item.type == "LOST") Color(0xFFDC2626) else Color(0xFF16A34A),
-                                contentColor = Color.White
-                            )
-                        }
+                uiState.error != null -> {
+                    EmptyState(
+                        message = uiState.error ?: "Oops! Error occurred",
+                        buttonText = "Retry",
+                        onButtonClick = { viewModel.loadItem(itemId) },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                uiState.item != null -> {
+                    val item = uiState.item!!
+                    val hasImage = !item.imageUrl.isNullOrEmpty()
+                    val statusColor = when {
+                        item.status == "RESOLVED" -> Color(0xFF10B981)
+                        item.type == "LOST" -> Color(0xFFEF4444)
+                        else -> Color(0xFF3B82F6)
                     }
 
                     Column(
                         modifier = Modifier
-                            .padding(24.dp)
-                            .fillMaxWidth()
+                            .fillMaxSize()
+                            .padding(padding)
+                            .verticalScroll(scrollState)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = item.title,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(1f)
-                            )
-                            StatusPill(
-                                text = item.status,
-                                containerColor = if (item.status == "ACTIVE") Color(0xFFDCFCE7) else Color(0xFFF3F4F6),
-                                contentColor = if (item.status == "ACTIVE") Color(0xFF15803D) else Color(0xFF374151)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        LostFoundDetailInfoRow(Icons.Default.Tag, "Type", item.type)
-                        LostFoundDetailInfoRow(Icons.Default.LocationOn, "Location", item.location)
-                        LostFoundDetailInfoRow(Icons.Default.Category, "Category", item.category)
-                        LostFoundDetailInfoRow(Icons.Default.CalendarToday, "Reported", TimeUtils.getRelativeTime(item.createdAt))
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Reporter Info
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (hasImage) {
                             Box(
                                 modifier = Modifier
-                                    .size(44.dp)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .aspectRatio(16f / 9f)
+                                    .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
                             ) {
-                                Icon(Icons.Default.Person, null)
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(text = item.ownerName, fontWeight = FontWeight.Bold)
-                                Text(text = "Posted by", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                AsyncImage(
+                                    model = item.imageUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f))
+                                            )
+                                        )
+                                )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Column(
+                            modifier = Modifier
+                                .padding(24.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(100.dp),
+                                    color = statusColor.copy(alpha = 0.1f)
+                                ) {
+                                    Text(
+                                        text = item.type,
+                                        color = statusColor,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 11.sp,
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
+                                
+                                if (item.status == "RESOLVED") {
+                                    StatusPill(
+                                        text = "RESOLVED",
+                                        containerColor = Color(0xFFDCFCE7),
+                                        contentColor = Color(0xFF15803D)
+                                    )
+                                }
+                            }
 
-                        Text(text = "Description", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = item.description,
-                            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                        Spacer(modifier = Modifier.height(48.dp))
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = (-0.5).sp
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            LostFoundDetailInfoRow(Icons.Rounded.LocationOn, "Location", item.location)
+                            LostFoundDetailInfoRow(Icons.Rounded.Category, "Category", item.category)
+                            LostFoundDetailInfoRow(Icons.Rounded.EventAvailable, "Reported Date", TimeUtils.getRelativeTime(item.createdAt))
+
+                            Spacer(modifier = Modifier.height(24.dp))
+                            HorizontalDivider(modifier = Modifier.alpha(0.3f))
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Reporter Info
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Surface(
+                                    modifier = Modifier.size(44.dp),
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = item.ownerName.take(1).uppercase(),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text(
+                                        text = "Reported by: ${item.ownerName}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = item.ownerRole.ifBlank { "Verified User" },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Text(text = "Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = item.description,
+                                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            if (!item.contactPhone.isNullOrBlank() || !item.contactEmail.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(32.dp))
+                                Text(
+                                    text = "Contact Information",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    if (!item.contactPhone.isNullOrBlank()) {
+                                        Button(
+                                            onClick = {
+                                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${item.contactPhone}"))
+                                                context.startActivity(intent)
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(54.dp),
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFF16A34A),
+                                                contentColor = Color.White
+                                            )
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Phone,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Call Owner", fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    if (!item.contactEmail.isNullOrBlank()) {
+                                        Button(
+                                            onClick = {
+                                                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${item.contactEmail}"))
+                                                context.startActivity(intent)
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(54.dp),
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary,
+                                                contentColor = Color.White
+                                            )
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Email,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Email Owner", fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(120.dp))
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun LostFoundDetailsShimmer(modifier: Modifier = Modifier) {
+    val shimmerColors = listOf(
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+    )
+
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer"
+    )
+
+    val brush = androidx.compose.ui.graphics.Brush.linearGradient(
+        colors = shimmerColors,
+        start = androidx.compose.ui.geometry.Offset.Zero,
+        end = androidx.compose.ui.geometry.Offset(translateAnim.value, translateAnim.value)
+    )
+
+    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .background(brush)
+        )
+        Column(modifier = Modifier.padding(24.dp)) {
+            Box(modifier = Modifier.size(100.dp, 28.dp).background(brush, RoundedCornerShape(100.dp)))
+            Spacer(modifier = Modifier.height(16.dp))
+            Box(modifier = Modifier.fillMaxWidth(0.8f).height(32.dp).background(brush, RoundedCornerShape(4.dp)))
+            Spacer(modifier = Modifier.height(24.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(100.dp).background(brush, RoundedCornerShape(12.dp)))
+            Spacer(modifier = Modifier.height(32.dp))
+            repeat(8) {
+                Box(modifier = Modifier.fillMaxWidth().height(16.dp).background(brush, RoundedCornerShape(4.dp)))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -272,15 +444,15 @@ fun LostFoundDetailInfoRow(icon: ImageVector, label: String, value: String) {
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
         }
     }
 }

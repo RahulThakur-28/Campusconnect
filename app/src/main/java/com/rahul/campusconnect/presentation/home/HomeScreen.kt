@@ -223,7 +223,7 @@ private fun HomeScreenContent(
                                     NoteCard(
                                         note = note,
                                         onClick = { onNoteClick(note.id) },
-                                        onDownload = { onNoteClick(note.id) }
+                                        onViewNotes = { onNoteClick(note.id) }
                                     )
                                 }
                             }

@@ -48,7 +48,9 @@ class EditNoteViewModel @Inject constructor(
         tags: List<String>,
         newFileUri: Uri? = null,
         newFileExtension: String? = null,
-        newFileSize: String? = null
+        newFileSize: String? = null,
+        newThumbnailUri: Uri? = null,
+        removeThumbnail: Boolean = false
     ) {
         val currentNote = _uiState.value.note ?: return
         
@@ -60,6 +62,27 @@ class EditNoteViewModel @Inject constructor(
             var fileType = currentNote.fileType
             var fileExtension = currentNote.fileExtension
             var fileSize = currentNote.fileSize
+            var thumbnailUrl = currentNote.thumbnailUrl
+            var thumbnailPath = currentNote.thumbnailStoragePath
+
+            // Handle Thumbnail Removal
+            if (removeThumbnail && thumbnailPath != null) {
+                notesRepository.deleteFile(thumbnailPath)
+                thumbnailUrl = null
+                thumbnailPath = null
+            }
+
+            // Handle New Thumbnail Upload
+            if (newThumbnailUri != null) {
+                if (thumbnailPath != null) {
+                    notesRepository.deleteFile(thumbnailPath)
+                }
+                val thumbResult = notesRepository.uploadThumbnail(currentNote.id, newThumbnailUri)
+                if (thumbResult.isSuccess) {
+                    thumbnailUrl = thumbResult.getOrNull()?.first
+                    thumbnailPath = thumbResult.getOrNull()?.second
+                }
+            }
 
             if (newFileUri != null && newFileExtension != null && newFileSize != null) {
                 // Delete old file
@@ -89,6 +112,8 @@ class EditNoteViewModel @Inject constructor(
                 tags = tags,
                 fileUrl = fileUrl,
                 storagePath = storagePath,
+                thumbnailUrl = thumbnailUrl,
+                thumbnailStoragePath = thumbnailPath,
                 fileType = fileType,
                 fileExtension = fileExtension,
                 fileSize = fileSize,

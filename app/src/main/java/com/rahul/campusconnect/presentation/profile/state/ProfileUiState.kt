@@ -13,6 +13,7 @@ data class ProfileUiState(
     val placementsCount: Int = 0,
     val announcementsCount: Int = 0,
     val discussionsCount: Int = 0,
+    val lostFoundItemsCount: Int = 0,
     
     val myNotes: List<Note> = emptyList(),
     val myEvents: List<Event> = emptyList(),

@@ -35,7 +35,8 @@ class CreateNoteViewModel @Inject constructor(
         fileUri: Uri,
         fileExtension: String,
         fileSize: String,
-        tags: List<String>
+        tags: List<String>,
+        thumbnailUri: Uri? = null
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, isSuccess = false) }
@@ -44,6 +45,18 @@ class CreateNoteViewModel @Inject constructor(
                 val noteId = UUID.randomUUID().toString()
 
                 Log.d("NOTES_UPLOAD", "Starting attachment upload for note: $noteId")
+                
+                // Upload Thumbnail if present
+                var thumbnailUrl: String? = null
+                var thumbnailPath: String? = null
+                if (thumbnailUri != null) {
+                    val thumbResult = notesRepository.uploadThumbnail(noteId, thumbnailUri)
+                    if (thumbResult.isSuccess) {
+                        thumbnailUrl = thumbResult.getOrNull()?.first
+                        thumbnailPath = thumbResult.getOrNull()?.second
+                    }
+                }
+
                 val uploadResult = notesRepository.uploadAttachment(noteId, fileUri, fileExtension)
                 
                 if (uploadResult.isSuccess) {
@@ -62,6 +75,8 @@ class CreateNoteViewModel @Inject constructor(
                         collegeId = user.collegeId,
                         fileUrl = fileUrl,
                         storagePath = storagePath,
+                        thumbnailUrl = thumbnailUrl,
+                        thumbnailStoragePath = thumbnailPath,
                         fileType = fileExtension.uppercase(),
                         fileExtension = fileExtension,
                         fileSize = fileSize,

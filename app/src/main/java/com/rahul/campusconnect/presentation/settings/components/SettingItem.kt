@@ -1,17 +1,27 @@
 package com.rahul.campusconnect.presentation.settings.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SettingItem(
@@ -22,10 +32,20 @@ fun SettingItem(
     onClick: (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
-    showChevron: Boolean = true
+    showChevron: Boolean = true,
+    iconContainerColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+    iconTint: Color = MaterialTheme.colorScheme.primary
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
     val clickableModifier = if (onClick != null) {
-        Modifier.clickable(onClick = onClick)
+        Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = ripple(),
+            onClick = onClick
+        )
     } else {
         Modifier
     }
@@ -33,35 +53,52 @@ fun SettingItem(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .then(clickableModifier),
+            .then(clickableModifier)
+            .scale(scale),
         color = Color.Transparent
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = if (contentColor == MaterialTheme.colorScheme.error) contentColor else MaterialTheme.colorScheme.primary
-            )
+            // Icon Container
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = if (contentColor == MaterialTheme.colorScheme.error) 
+                    MaterialTheme.colorScheme.error.copy(alpha = 0.1f) 
+                else iconContainerColor
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = if (contentColor == MaterialTheme.colorScheme.error) 
+                            contentColor 
+                        else iconTint
+                    )
+                }
+            }
             
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    ),
                     color = contentColor
                 )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        lineHeight = 16.sp
                     )
                 }
             }
@@ -70,10 +107,10 @@ fun SettingItem(
                 trailingContent()
             } else if (showChevron && onClick != null) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    imageVector = Icons.Rounded.ChevronRight,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = Color.Gray.copy(alpha = 0.7f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
             }
         }
@@ -99,14 +136,49 @@ fun SettingSwitchItem(
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f),
-                    uncheckedBorderColor = Color.Transparent
-                )
+                thumbContent = if (checked) {
+                    {
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(SwitchDefaults.IconSize),
+                        )
+                    }
+                } else null
             )
         }
     )
+}
+
+@Composable
+fun SettingsSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = modifier.padding(vertical = 12.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.sp
+            ),
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 24.dp, bottom = 12.dp)
+        )
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                content()
+            }
+        }
+    }
 }

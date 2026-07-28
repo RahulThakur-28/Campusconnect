@@ -4,6 +4,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,8 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,13 +24,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.rahul.campusconnect.core.imagepicker.CropType
+import com.rahul.campusconnect.core.imagepicker.ImagePicker
 import com.rahul.campusconnect.presentation.notes.viewmodel.CreateNoteViewModel
-import com.rahul.campusconnect.ui.components.PrimaryButton
-import com.rahul.campusconnect.ui.components.auth.AppTextField
+import com.rahul.campusconnect.ui.components.*
+import com.rahul.campusconnect.ui.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +45,7 @@ fun CreateNoteScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var title by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
@@ -47,11 +53,14 @@ fun CreateNoteScreen(
     var semester by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf("") }
-    
+    var showErrors by remember { mutableStateOf(false) }
+
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var selectedFileName by remember { mutableStateOf<String?>(null) }
     var selectedFileSize by remember { mutableStateOf<String?>(null) }
     var selectedFileExt by remember { mutableStateOf<String?>(null) }
+
+    var thumbnailUri by remember { mutableStateOf<Uri?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -76,17 +85,32 @@ fun CreateNoteScreen(
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            navController.previousBackStackEntry?.savedStateHandle?.set("snackbar_message", "Study notes uploaded successfully")
             onBackClick()
             viewModel.resetSuccessState()
         }
     }
 
     val scrollState = rememberScrollState()
+    val branches = listOf("CSE", "IT", "ECE", "ME", "CE", "EE", "MBA", "MCA", "Other")
+    val semesters = listOf("1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th")
 
     Scaffold(
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                val msg = data.visuals.message.lowercase()
+                val containerColor = if (msg.contains("success")) SuccessGreen else MaterialTheme.colorScheme.error
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = containerColor,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             TopAppBar(
-                title = { Text("Upload Study Notes", fontWeight = FontWeight.Bold) },
+                title = { Text("Upload Notes", fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -100,171 +124,194 @@ fun CreateNoteScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .imePadding()
                     .verticalScroll(scrollState)
                     .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // Guidelines Card
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                // Info Section
+                Surface(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(12.dp))
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.Info, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(16.dp))
                         Text(
-                            text = "Ensure your notes are clear and follow campus guidelines. Support PDF, DOCX, PPTX, etc.",
+                            text = "Share high-quality notes to help fellow students. Supported: PDF, Word, PPT, ZIP.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // File Picker Area
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                        .clickable { filePickerLauncher.launch("*/*") }
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(20.dp)
+                // File Picker
+                Column {
+                    Text(
+                        text = "Document File *",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
+                        modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                    )
+                    Surface(
+                        onClick = { filePickerLauncher.launch("*/*") },
+                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp, 
+                            if (showErrors && selectedFileUri == null) MaterialTheme.colorScheme.error 
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                         ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.CloudUpload,
-                            null,
-                            tint = Color(0xFF2563EB),
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = selectedFileName ?: "Tap to Select File",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (selectedFileName != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                        if (selectedFileSize != null) {
-                            Text(
-                                text = "Size: $selectedFileSize",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                        tonalElevation = 2.dp
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Icon(
+                                if (selectedFileUri != null) Icons.Rounded.TaskAlt else Icons.Rounded.CloudUpload,
+                                null,
+                                tint = if (selectedFileUri != null) SuccessGreen else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
                             )
-                        } else {
+                            Spacer(Modifier.height(8.dp))
                             Text(
-                                text = "Max file size: 20MB",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                                text = selectedFileName ?: "Select PDF or Document",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
+                            if (selectedFileSize != null) {
+                                Text(
+                                    text = "$selectedFileSize • ${selectedFileExt?.uppercase()}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
                 }
 
-                AppTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = "Note Title *",
-                    placeholder = "e.g. Data Structures Unit 1"
+                // Image Picker (Optional)
+                ImagePicker(
+                    imageUri = thumbnailUri,
+                    imageUrl = null,
+                    cropType = CropType.BANNER,
+                    title = "Cover Image (Optional)",
+                    subtitle = "A visually appealing cover for your notes",
+                    onImageSelected = { thumbnailUri = it },
+                    onRemoveImage = { thumbnailUri = null }
                 )
 
-                AppTextField(
+                CampusTextField(
+                    value = title,
+                    onValueChange = { title = it; if(showErrors) showErrors = false },
+                    label = "Title *",
+                    placeholder = "e.g. Computer Networks Unit 1",
+                    leadingIcon = Icons.Rounded.Title,
+                    isError = showErrors && title.isBlank(),
+                    errorMessage = "Title is required"
+                )
+
+                CampusTextField(
                     value = subject,
-                    onValueChange = { subject = it },
+                    onValueChange = { subject = it; if(showErrors) showErrors = false },
                     label = "Subject *",
-                    placeholder = "e.g. DSA"
+                    placeholder = "e.g. Operating Systems",
+                    leadingIcon = Icons.AutoMirrored.Rounded.MenuBook,
+                    isError = showErrors && subject.isBlank(),
+                    errorMessage = "Subject is required"
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    AppTextField(
-                        value = branch,
-                        onValueChange = { branch = it },
-                        label = "Branch *",
-                        placeholder = "e.g. CSE",
-                        modifier = Modifier.weight(1f)
+                    Box(modifier = Modifier.weight(1f)) {
+                        CampusDropdownField(
+                            label = "Branch *",
+                            selectedItem = branch,
+                            items = branches,
+                            onItemSelected = { branch = it; if(showErrors) showErrors = false },
+                            placeholder = "Select Branch",
+                            isError = showErrors && branch.isBlank()
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        CampusDropdownField(
+                            label = "Semester *",
+                            selectedItem = semester,
+                            items = semesters,
+                            onItemSelected = { semester = it; if(showErrors) showErrors = false },
+                            placeholder = "Select Sem",
+                            isError = showErrors && semester.isBlank()
+                        )
+                    }
+                }
+
+                Column {
+                    CampusTextField(
+                        value = description,
+                        onValueChange = { description = it; if(showErrors) showErrors = false },
+                        label = "Summary / Description",
+                        placeholder = "What topics are covered in these notes?",
+                        leadingIcon = Icons.Rounded.Description,
+                        singleLine = false,
+                        modifier = Modifier.height(150.dp),
+                        isError = showErrors && description.length > 500,
+                        errorMessage = "Description too long"
                     )
-                    AppTextField(
-                        value = semester,
-                        onValueChange = { semester = it },
-                        label = "Semester *",
-                        placeholder = "e.g. 4th",
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        text = "${description.length}/500",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
                     )
                 }
 
-                AppTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = "Description",
-                    placeholder = "What's covered in these notes?",
-                    singleLine = false,
-                    modifier = Modifier.height(120.dp)
-                )
-
-                AppTextField(
+                CampusTextField(
                     value = tags,
                     onValueChange = { tags = it },
-                    label = "Tags (Comma separated)",
-                    placeholder = "e.g. recursion, trees, exam"
+                    label = "Tags (Optional)",
+                    placeholder = "e.g. important, exam, ip, tcp",
+                    leadingIcon = Icons.Rounded.Tag
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 PrimaryButton(
-                    text = "Upload Notes",
+                    text = "Publish Notes",
                     onClick = {
-                        viewModel.createNote(
-                            title = title,
-                            description = description,
-                            subject = subject,
-                            semester = semester,
-                            branch = branch,
-                            fileUri = selectedFileUri!!,
-                            fileExtension = selectedFileExt!!,
-                            fileSize = selectedFileSize!!,
-                            tags = tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                        )
+                        if (title.isNotBlank() && subject.isNotBlank() && branch.isNotBlank() && semester.isNotBlank() && selectedFileUri != null) {
+                            viewModel.createNote(
+                                title = title,
+                                description = description,
+                                subject = subject,
+                                semester = semester,
+                                branch = branch,
+                                fileUri = selectedFileUri!!,
+                                fileExtension = selectedFileExt!!,
+                                fileSize = selectedFileSize!!,
+                                tags = tags.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+                                thumbnailUri = thumbnailUri
+                            )
+                        } else {
+                            showErrors = true
+                        }
                     },
-                    enabled = title.isNotBlank() && subject.isNotBlank() && branch.isNotBlank() && semester.isNotBlank() && selectedFileUri != null && !uiState.isLoading
+                    isLoading = uiState.isLoading
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
-            }
-
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.1f))
-                        .clickable(enabled = false) {},
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF2563EB))
-                }
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
     }
 
     uiState.error?.let { error ->
-        AlertDialog(
-            onDismissRequest = { viewModel.clearError() },
-            title = { Text("Error") },
-            text = { Text(error) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearError() }) {
-                    Text("OK")
-                }
-            }
-        )
+        LaunchedEffect(error) {
+            snackbarHostState.showSnackbar(error)
+            viewModel.clearError()
+        }
     }
 }
 

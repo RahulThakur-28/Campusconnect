@@ -1,27 +1,29 @@
 package com.rahul.campusconnect.presentation.more.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +34,9 @@ import com.rahul.campusconnect.domain.model.UserRole
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.more.viewmodel.MoreViewModel
 import com.rahul.campusconnect.presentation.notification.navigation.navigateToNotifications
+import com.rahul.campusconnect.presentation.profile.components.ProfileSectionCard
+import com.rahul.campusconnect.presentation.profile.components.RoleBadge
+import com.rahul.campusconnect.presentation.profile.components.SettingsRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +45,7 @@ fun MoreScreen(
     viewModel: MoreViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -48,16 +54,21 @@ fun MoreScreen(
                 title = {
                     Text(
                         text = "More",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
                 ),
                 actions = {
                     IconButton(onClick = { navController.navigateToNotifications() }) {
-                        Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+                        Icon(Icons.Rounded.Notifications, contentDescription = "Notifications")
+                    }
+                    IconButton(onClick = { /* Handle logout or secondary action */ }) {
+                        Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Logout")
                     }
                 }
             )
@@ -67,359 +78,237 @@ fun MoreScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .verticalScroll(scrollState)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            ProfileCard(
-                userName = uiState.userName,
-                email = uiState.email,
-                role = uiState.role,
-                department = uiState.department,
-                academicYear = uiState.academicYear,
-                collegeName = uiState.collegeName,
-                isVerified = uiState.isVerified,
-                profileImageUrl = uiState.profilePictureUrl
-            )
+            // 1. PROFILE HEADER SECTION
+            Box(modifier = Modifier.fillMaxWidth()) {
+                // Gradient Background
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                )
+                            )
+                        )
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 60.dp)
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Elevated Profile Card
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Avatar
+                            Surface(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(CircleShape)
+                                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                tonalElevation = 8.dp,
+                                shadowElevation = 8.dp
+                            ) {
+                                if (uiState.profilePictureUrl?.isNotBlank() == true) {
+                                    AsyncImage(
+                                        model = uiState.profilePictureUrl,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Person,
+                                            contentDescription = "Profile",
+                                            modifier = Modifier.size(60.dp),
+                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = uiState.userName,
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = uiState.email,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            RoleBadge(role = uiState.role)
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Metadata Grid
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                MetadataItem(icon = Icons.Rounded.AccountBalance, value = uiState.department, label = "Department", modifier = Modifier.weight(1f))
+                                VerticalDivider(modifier = Modifier.height(30.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                                MetadataItem(icon = Icons.Rounded.School, value = uiState.academicYear, label = "Year", modifier = Modifier.weight(1f))
+                                VerticalDivider(modifier = Modifier.height(30.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                                MetadataItem(icon = Icons.Rounded.Domain, value = uiState.collegeName, label = "College", modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            MoreSectionTitle(title = "Account")
-            Spacer(modifier = Modifier.height(8.dp))
-            MoreMenuCard {
-                MoreMenuItem(
+            // 2. ACCOUNT SECTION
+            ProfileSectionCard(title = "Account") {
+                SettingsRow(
+                    icon = Icons.Rounded.AccountCircle,
                     title = "View Profile",
-                    subtitle = "Manage your public profile",
-                    icon = Icons.Outlined.Person,
-                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    iconColor = MaterialTheme.colorScheme.primary,
+                    subtitle = "Manage your public profile and bio",
                     onClick = { navController.navigate(AppRoutes.Profile.route) }
                 )
-                MoreDivider()
-                MoreMenuItem(
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.Rounded.ManageAccounts,
                     title = "Edit Profile",
-                    subtitle = "Update your profile information",
-                    icon = Icons.Outlined.Edit,
-                    iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    iconColor = MaterialTheme.colorScheme.secondary,
+                    subtitle = "Update personal and academic details",
                     onClick = { navController.navigate(AppRoutes.EditProfile.route) }
                 )
-                MoreDivider()
-                MoreMenuItem(
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.Rounded.VerifiedUser,
                     title = "Verification Status",
-                    subtitle = "Check your account verification",
-                    icon = Icons.Outlined.VerifiedUser,
-                    iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    iconColor = MaterialTheme.colorScheme.tertiary,
+                    subtitle = "Manage account verification",
                     onClick = { navController.navigate(AppRoutes.RequestVerification.route) }
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MoreSectionTitle(title = "Campus Services")
-            Spacer(modifier = Modifier.height(8.dp))
-            MoreMenuCard {
-                MoreMenuItem(
-                    title = "Notes",
-                    subtitle = "Study materials and resources",
-                    icon = Icons.Outlined.Description,
-                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    iconColor = MaterialTheme.colorScheme.primary,
+            // 3. CAMPUS SERVICES SECTION
+            ProfileSectionCard(title = "Campus Services") {
+                SettingsRow(
+                    icon = Icons.Rounded.Description,
+                    title = "Study Notes",
+                    subtitle = "Access shared materials and resources",
                     onClick = { navController.navigate(AppRoutes.Notes.route) }
                 )
-                MoreDivider()
-                MoreMenuItem(
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.Rounded.Search,
                     title = "Lost & Found",
-                    subtitle = "Recover lost belongings",
-                    icon = Icons.Outlined.Search,
-                    iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    iconColor = MaterialTheme.colorScheme.tertiary,
+                    subtitle = "Recover or report items on campus",
                     onClick = { navController.navigate(AppRoutes.LostFound.route) }
                 )
-                MoreDivider()
-                MoreMenuItem(
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.Rounded.NotificationsActive,
                     title = "Notifications",
-                    subtitle = "Stay updated with campus alerts",
-                    icon = Icons.Outlined.Notifications,
-                    iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    iconColor = MaterialTheme.colorScheme.secondary,
+                    subtitle = "Stay updated with recent alerts",
                     onClick = { navController.navigateToNotifications() }
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            MoreSectionTitle(title = "Preferences")
-            Spacer(modifier = Modifier.height(8.dp))
-            MoreMenuCard {
-                MoreMenuItem(
+            // 4. PREFERENCES SECTION
+            ProfileSectionCard(title = "Preferences") {
+                SettingsRow(
+                    icon = Icons.Rounded.Settings,
                     title = "Settings",
-                    subtitle = "App settings and preferences",
-                    icon = Icons.Outlined.Settings,
-                    iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    subtitle = "App settings and dark mode",
                     onClick = { navController.navigate(AppRoutes.Settings.route) }
                 )
-                MoreDivider()
-                MoreMenuItem(
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.AutoMirrored.Rounded.HelpOutline,
                     title = "Help & Support",
-                    subtitle = "Get help with CampusConnect",
-                    icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    iconColor = MaterialTheme.colorScheme.primary,
+                    subtitle = "FAQs and direct contact",
                     onClick = { navController.navigate(AppRoutes.HelpSupport.route) }
                 )
-                MoreDivider()
-                MoreMenuItem(
+            }
+
+            // 5. SUPPORT & ABOUT SECTION
+            ProfileSectionCard(title = "Support & About") {
+                SettingsRow(
+                    icon = Icons.Rounded.Info,
                     title = "About CampusConnect",
-                    subtitle = "App information and policies",
-                    icon = Icons.Outlined.Info,
-                    iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    subtitle = "Showcase and application info",
                     onClick = { navController.navigate(AppRoutes.About.route) }
+                )
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.Rounded.PrivacyTip,
+                    title = "Privacy Policy",
+                    onClick = { /* Handle Privacy */ }
+                )
+                ItemDivider()
+                SettingsRow(
+                    icon = Icons.Rounded.Gavel,
+                    title = "Terms & Conditions",
+                    onClick = { /* Handle Terms */ }
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
 
 @Composable
-private fun ProfileCard(
-    userName: String,
-    email: String,
-    role: UserRole,
-    department: String,
-    academicYear: String,
-    collegeName: String,
-    isVerified: Boolean,
-    profileImageUrl: String?
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(64.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    if (profileImageUrl?.isNotBlank() == true) {
-                        AsyncImage(
-                            model = profileImageUrl,
-                            contentDescription = "Profile",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Outlined.Person,
-                                contentDescription = "Profile",
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = userName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = email,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    RoleBadge(role = role)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ProfileInfoItem(value = department, label = "Dept", modifier = Modifier.weight(1f))
-                ProfileInfoDivider()
-                ProfileInfoItem(value = academicYear, label = "Year", modifier = Modifier.weight(1f))
-                ProfileInfoDivider()
-                ProfileInfoItem(value = collegeName, label = "College", modifier = Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-@Composable
-fun RoleBadge(role: UserRole) {
-    val (text, color, icon) = when (role) {
-        UserRole.STUDENT -> Triple("Student", Color(0xFF64748B), "🎓")
-        UserRole.VERIFIED_STUDENT -> Triple("Verified Student", Color(0xFF10B981), "✅")
-        UserRole.VERIFIED_TEACHER -> Triple("Verified Teacher", Color(0xFF3B82F6), "👨‍🏫")
-        UserRole.PLACEMENT_CELL -> Triple("Placement Cell", Color(0xFFF59E0B), "💼")
-        UserRole.ADMIN -> Triple("College Admin", Color(0xFFEF4444), "🛡")
-        UserRole.SUPER_ADMIN -> Triple("Super Admin", Color(0xFF8B5CF6), "🌍")
-    }
-
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = color.copy(alpha = 0.1f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = icon, fontSize = 12.sp)
-            Spacer(Modifier.width(4.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelSmall,
-                color = color,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProfileInfoItem(value: String, label: String, modifier: Modifier = Modifier) {
+private fun MetadataItem(icon: androidx.compose.ui.graphics.vector.ImageVector, value: String, label: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )
     }
 }
 
 @Composable
-private fun ProfileInfoDivider() {
-    Box(modifier = Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outlineVariant))
-}
-
-@Composable
-private fun MoreSectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(horizontal = 4.dp)
-    )
-}
-
-@Composable
-private fun MoreMenuCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(content = content)
-    }
-}
-
-@Composable
-private fun MoreMenuItem(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    iconContainerColor: Color,
-    iconColor: Color,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .background(color = iconContainerColor, shape = RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(21.dp), tint = iconColor)
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-        )
-    }
-}
-
-@Composable
-private fun MoreDivider() {
+private fun ItemDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 72.dp, end = 16.dp),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+        modifier = Modifier.padding(horizontal = 20.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
     )
-}
-
-@Composable
-private fun LogoutButton(onClick: () -> Unit) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(52.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-    ) {
-        Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "Log out", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-    }
 }

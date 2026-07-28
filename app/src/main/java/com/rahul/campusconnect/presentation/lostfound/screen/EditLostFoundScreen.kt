@@ -1,8 +1,7 @@
 package com.rahul.campusconnect.presentation.lostfound.screen
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -11,12 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.rahul.campusconnect.core.imagepicker.ImagePickerState
 import com.rahul.campusconnect.presentation.lostfound.components.LostFoundForm
 import com.rahul.campusconnect.presentation.lostfound.viewmodel.EditLostFoundViewModel
+import com.rahul.campusconnect.ui.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +28,7 @@ fun EditLostFoundScreen(
     viewModel: EditLostFoundViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var imagePickerState by remember { mutableStateOf(ImagePickerState()) }
     var removeImage by remember { mutableStateOf(false) }
@@ -47,15 +49,28 @@ fun EditLostFoundScreen(
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+            navController.previousBackStackEntry?.savedStateHandle?.set("snackbar_message", "Report updated successfully")
             onBackClick()
             viewModel.resetSuccessState()
         }
     }
 
     Scaffold(
+        snackbarHost = { 
+            SnackbarHost(snackbarHostState) { data ->
+                val msg = data.visuals.message.lowercase()
+                val containerColor = if (msg.contains("success")) SuccessGreen else MaterialTheme.colorScheme.error
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = containerColor,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         topBar = {
             TopAppBar(
-                title = { Text("Edit Item Report", fontWeight = FontWeight.Bold) },
+                title = { Text("Edit Report", fontWeight = FontWeight.ExtraBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -65,8 +80,10 @@ fun EditLostFoundScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            if (uiState.isLoading && uiState.item == null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(strokeWidth = 3.dp)
+                }
             } else if (uiState.item != null) {
                 LostFoundForm(
                     initialItem = uiState.item,
@@ -92,36 +109,18 @@ fun EditLostFoundScreen(
                             removeImage = removeImage
                         )
                     },
-                    buttonText = "Update Report",
+                    buttonText = "Save Changes",
                     isLoading = uiState.isSubmitting,
                     modifier = Modifier.padding(padding)
                 )
-            }
-
-            if (uiState.isSubmitting) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.1f))
-                        .clickable(enabled = false) {},
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
             }
         }
     }
 
     uiState.error?.let { error ->
-        AlertDialog(
-            onDismissRequest = { viewModel.clearError() },
-            title = { Text("Error") },
-            text = { Text(error) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearError() }) {
-                    Text("OK")
-                }
-            }
-        )
+        LaunchedEffect(error) {
+            snackbarHostState.showSnackbar(error)
+            viewModel.clearError()
+        }
     }
 }

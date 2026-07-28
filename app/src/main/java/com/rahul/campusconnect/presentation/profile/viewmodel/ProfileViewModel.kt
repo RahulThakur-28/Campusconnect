@@ -93,6 +93,7 @@ class ProfileViewModel @Inject constructor(
                     placementsCount = placements.size,
                     announcementsCount = announcements.size,
                     discussionsCount = discussions.size,
+                    lostFoundItemsCount = lostFound.size,
                     myNotes = notes,
                     myEvents = events,
                     myPlacements = placements,

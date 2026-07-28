@@ -13,12 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.rahul.campusconnect.presentation.notes.viewmodel.MyNotesViewModel
-import com.rahul.campusconnect.ui.components.EmptyState
-import com.rahul.campusconnect.ui.components.NoteCard
+import com.rahul.campusconnect.ui.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,12 +46,23 @@ fun MyNotesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Uploads", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        text = "My Uploads", 
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { padding ->
@@ -60,31 +71,35 @@ fun MyNotesScreen(
             onRefresh = viewModel::refresh,
             modifier = Modifier.padding(padding)
         ) {
-            if (uiState.isLoading && !uiState.isRefreshing) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+            when {
+                uiState.isLoading && !uiState.isRefreshing -> {
+                    NoteLoadingShimmer()
                 }
-            } else if (uiState.isEmpty) {
-                EmptyState(
-                    message = "You haven't uploaded any notes yet.",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(
-                        items = uiState.notes,
-                        key = { it.id }
-                    ) { note ->
-                        NoteCard(
-                            note = note,
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { onNoteClick(note.id) },
-                            onDownload = { onNoteClick(note.id) }
-                        )
+                uiState.isEmpty -> {
+                    EmptyState(
+                        message = "No uploads yet",
+                        description = "Notes you contribute will appear here for management.",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 24.dp)
+                    ) {
+                        items(
+                            items = uiState.notes,
+                            key = { it.id }
+                        ) { note ->
+                            NoteCard(
+                                note = note,
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .animateItem(),
+                                onClick = { onNoteClick(note.id) },
+                                onViewNotes = { onNoteClick(note.id) }
+                            )
+                        }
                     }
                 }
             }

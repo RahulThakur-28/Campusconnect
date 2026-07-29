@@ -299,7 +299,7 @@ fun HighlightChip(text: String) {
 fun AppInfoCard(version: String, build: String) {
     ElevatedCard(shape = RoundedCornerShape(24.dp)) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            InfoRow("Release Date", "October 2024")
+            InfoRow("Release Date", "JULY 2026")
             InfoRow("Current Version", version)
             InfoRow("Build Number", build)
             InfoRow("Compatibility", "Android 8.0+")

@@ -1,4 +1,4 @@
-<div align="center">
+<img width="720" height="1545" alt="registration_screen" src="https://github.com/user-attachments/assets/ba837159-d1f2-4923-ac77-e8db3347a9cb" /><div align="center">
 
 <img src="assets/logo.png" width="180"/>
 
@@ -401,9 +401,21 @@ CampusConnect
 
 | Settings | About | Dark Theme |
 |:--------:|:-----:|:----------:|
-| <img src="assets/screenshots/setting_screen.jpg" width="240"/> | <img src="assets/screenshots/about_screen.jpg" width="240"/> | <img src="assets/screenshots/darktheme_screen.jpg" width="240"/> |
+| <img src="assets/screenshots/setting_screen.jpg" width="240"/> | <img src="assets/screenshots/about_screen.jpg" width="240"/> | <img src="assets/screenshotsdarktheme_screenn.jpg" width="240"/> |
 
 </div>
+
+
+# 📥 Download APK
+
+Want to try CampusConnect?
+
+👉 **[Download the Latest APK](https://drive.google.com/drive/folders/1sgXCUkP7bvnpJKxfayX1Sx95xAPdJ7iV)**
+
+> **Requirements**
+> - Android 7.0 (API 24) or above
+> - Allow installation from unknown sources if prompted
+
 
 # ⚙️ Getting Started
 
@@ -521,19 +533,14 @@ https://github.com/RahulThakur-28
 
 LinkedIn:
 
-(Add your LinkedIn Profile)
+(https://www.linkedin.com/in/rahul-39440b30a/)
 
 Email:
 
-(Add your Email)
+(RahulThakur28vt@gmail.com)
 
 ---
 
-# 📄 License
-
-This project is licensed under the MIT License.
-
----
 
 # ⭐ Support
 

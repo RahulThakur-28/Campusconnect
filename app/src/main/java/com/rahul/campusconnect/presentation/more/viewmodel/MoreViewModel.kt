@@ -57,5 +57,6 @@ class MoreViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+
     }
 }

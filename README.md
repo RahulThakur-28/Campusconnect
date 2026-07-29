@@ -1,5 +1,6 @@
 
-
+<div align="center">
+  
 <img src="assets/logo.png" width="180"/>
 
 # 🎓 CampusConnect
@@ -401,7 +402,7 @@ CampusConnect
 
 | Settings | About | Dark Theme |
 |:--------:|:-----:|:----------:|
-| <img src="assets/screenshots/setting_screen.jpg" width="240"/> | <img src="assets/screenshots/about_screen.jpg" width="240"/> | <img src="assets/screenshots/darktheme_screenn..jpg" width="240"/> |
+| <img src="assets/screenshots/setting_screen.jpg" width="240"/> | <img src="assets/screenshots/about_screen.jpg" width="240"/> | <img src="assets/screenshots/darktheme_screen.jpg" width="240"/> |
 
 </div>
 

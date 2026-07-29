@@ -409,7 +409,7 @@ CampusConnect
 
 # 📥 Download APK
 
-Want to try CampusConnect?
+Want to try CampusConnect?  (plz Use the College id :- 88825228 for login in the app)
 
 👉 **[Download the Latest APK](https://drive.google.com/drive/folders/1sgXCUkP7bvnpJKxfayX1Sx95xAPdJ7iV)**
 

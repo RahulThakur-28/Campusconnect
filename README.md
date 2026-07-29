@@ -1,6 +1,5 @@
 <div align="center">
 
-<img src="assets/logo.png" width="180"/>
 
 # 🎓 CampusConnect
 ### **A Modern Smart Campus Management Platform for Educational Institutions**
@@ -9,15 +8,40 @@
 
 <p align="center">
 
-![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
-![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
-![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge)
-![Firebase](https://img.shields.io/badge/Firebase-Backend-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![Firestore](https://img.shields.io/badge/Cloud%20Firestore-Database-FFCA28?style=for-the-badge)
-![Supabase](https://img.shields.io/badge/Supabase-Storage-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Material3](https://img.shields.io/badge/Material%203-UI-6750A4?style=for-the-badge)
-![MVVM](https://img.shields.io/badge/Architecture-MVVM-blue?style=for-the-badge)
-![Hilt](https://img.shields.io/badge/Hilt-DI-red?style=for-the-badge)
+
+### 🚀 Authentication
+
+<img src="assets/screenshots/splash_screen.jpg" width="220"/>
+<img src="assets/screenshots/onboarding_screen.jpg" width="220"/>
+<img src="assets/screenshots/login_screen.jpg" width="220"/>
+
+<br><br>
+
+<img src="assets/screenshots/registeration_screen.jpg" width="220"/>
+<img src="assets/screenshots/profile_screen.jpg" width="220"/>
+<img src="assets/screenshots/about_screen.jpg" width="220"/>
+
+<br><br>
+
+### 🏠 Core Modules
+
+<img src="assets/screenshots/home_screen.jpg" width="220"/>
+<img src="assets/screenshots/announcement.jpg" width="220"/>
+<img src="assets/screenshots/placement_screen.jpg" width="220"/>
+
+<br><br>
+
+<img src="assets/screenshots/events_screen.jpg" width="220"/>
+<img src="assets/screenshots/notes_screen.jpg" width="220"/>
+<img src="assets/screenshots/lost_found.jpg" width="220"/>
+
+<br><br>
+
+### 🎨 UI & Settings
+
+<img src="assets/screenshots/more_screen.jpg" width="220"/>
+<img src="assets/screenshots/darktheme_screen.jpg" width="220"/>
+
 
 </p>
 

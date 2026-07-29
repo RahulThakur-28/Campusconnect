@@ -157,7 +157,7 @@ fun FaqItem(question: String, answer: String) {
 
 private fun openEmail(context: Context) {
     val intent = Intent(Intent.ACTION_SENDTO).apply {
-        data = Uri.parse("mailto:support@campusconnect.com")
+        data = Uri.parse("mailto:RahulThakur28vt@gmail.com")
         putExtra(Intent.EXTRA_SUBJECT, "CampusConnect Support Request")
     }
     context.startActivity(intent)

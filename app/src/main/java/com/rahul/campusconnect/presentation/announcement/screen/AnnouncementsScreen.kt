@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -208,9 +209,11 @@ fun AnnouncementsScreen(
                         ) { announcement ->
                             AnnouncementCard(
                                 announcement = announcement,
+                                cardWidth = Dp.Unspecified,
                                 onCardClick = { onAnnouncementClick(announcement.id) },
                                 modifier = Modifier
-                                    .padding(vertical = 8.dp)
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp, vertical = 8.dp)
                                     .animateItem()
                             )
                         }

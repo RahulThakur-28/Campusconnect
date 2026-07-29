@@ -80,27 +80,31 @@ class HomeViewModel @Inject constructor(
                 val notesDeferred = async { notesRepository.getNotes() }
                 val lostFoundDeferred = async { lostFoundRepository.getItems() }
 
-                val announcements = announcementsDeferred.await().getOrDefault(emptyList()).take(3)
-                val events = eventsDeferred.await().getOrDefault(emptyList()).take(3)
-                val placements = placementsDeferred.await().getOrDefault(emptyList()).take(3)
-                val notes = notesDeferred.await().getOrDefault(emptyList()).take(3)
-                val lostFound = lostFoundDeferred.await().getOrDefault(emptyList())
+                val announcementsFull = announcementsDeferred.await().getOrDefault(emptyList())
+                val eventsFull = eventsDeferred.await().getOrDefault(emptyList())
+                val placementsFull = placementsDeferred.await().getOrDefault(emptyList())
+                val notesFull = notesDeferred.await().getOrDefault(emptyList())
+                val lostFoundFull = lostFoundDeferred.await().getOrDefault(emptyList())
                     .filter { it.status == "ACTIVE" }
-                    .take(3)
 
                 _uiState.update {
                     it.copy(
-                        announcements = announcements,
-                        events = events,
-                        placements = placements,
-                        notes = notes,
-                        lostFoundItems = lostFound,
+                        announcements = announcementsFull.take(5),
+                        announcementsCount = announcementsFull.size,
+                        events = eventsFull.take(5),
+                        eventsCount = eventsFull.size,
+                        placements = placementsFull.take(5),
+                        placementsCount = placementsFull.size,
+                        notes = notesFull.take(5),
+                        notesCount = notesFull.size,
+                        lostFoundItems = lostFoundFull.take(5),
+                        lostFoundItemsCount = lostFoundFull.size,
                         isLoading = false,
                         isRefreshing = false
                     )
                 }
 
-                Log.d("HOME_QUERY", "Home dashboard data refreshed")
+                Log.d("HOME_QUERY", "Home dashboard data refreshed with counts")
 
             } catch (e: Exception) {
                 Log.e("HOME_ERROR", "Error loading home data", e)

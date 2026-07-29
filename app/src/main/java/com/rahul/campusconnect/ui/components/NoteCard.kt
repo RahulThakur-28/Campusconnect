@@ -3,10 +3,11 @@ package com.rahul.campusconnect.ui.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,11 +17,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.rahul.campusconnect.common.utils.TimeUtils
 import com.rahul.campusconnect.domain.model.Note
 import java.util.Locale
 
@@ -28,21 +32,30 @@ import java.util.Locale
 fun NoteCard(
     note: Note,
     modifier: Modifier = Modifier,
+    fillMaxWidth: Boolean = false,
     onClick: () -> Unit = {},
-    onViewNotes: () -> Unit = onClick
+    onViewNotes: () -> Unit = {}
 ) {
     val downloadsText = formatDownloads(note.downloadCount)
     val hasImage = !note.thumbnailUrl.isNullOrEmpty()
 
+    val cardModifier =
+        if (fillMaxWidth) {
+            modifier.fillMaxWidth()
+        } else {
+            modifier.width(CardConstants.HomeCardWidth)
+        }
+
     ElevatedCard(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(360.dp) // Uniform card height
-            .padding(horizontal = 16.dp),
+        modifier = cardModifier.height(380.dp),
         shape = RoundedCornerShape(CardConstants.CornerRadius),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardConstants.Elevation),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = CardConstants.Elevation
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (hasImage) {
@@ -50,14 +63,13 @@ fun NoteCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
+                        .aspectRatio(16f / 7f) // Consistent banner ratio
                         .clip(RoundedCornerShape(topStart = CardConstants.CornerRadius, topEnd = CardConstants.CornerRadius))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
                     CardImageHeader(
                         imageUrl = note.thumbnailUrl,
                         category = note.subject,
-                        categoryColor = MaterialTheme.colorScheme.primary,
+                        categoryColor = MaterialTheme.colorScheme.secondary,
                         height = Dp.Unspecified
                     )
                 }
@@ -65,19 +77,19 @@ fun NoteCard(
 
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(20.dp) // Consistent horizontal padding
                     .weight(1f)
             ) {
                 if (!hasImage) {
-                    // Category Chip at top if no image
+                    // Subject Chip at top if no image
                     Surface(
                         shape = RoundedCornerShape(100.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
                         modifier = Modifier.padding(bottom = 12.dp)
                     ) {
                         Text(
                             text = note.subject.uppercase(),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 10.sp,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
@@ -86,7 +98,7 @@ fun NoteCard(
                     }
                 }
 
-                // Title
+                // Title - Max 2 lines
                 Text(
                     text = note.title,
                     style = MaterialTheme.typography.titleLarge.copy(
@@ -100,102 +112,141 @@ fun NoteCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Short Description
+                // Short Description - Max 2 lines
                 Text(
-                    text = note.description.ifBlank { "No description provided." },
+                    text = note.description.ifBlank { "Study materials for ${note.subject}." },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     maxLines = 2,
-                    minLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 20.sp
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Subject • Semester Metadata
-                Text(
-                    text = "${note.subject} • ${note.branch} • Sem ${note.semester}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                // Metadata Row: Dept • Sem • Time
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.Description,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${note.branch} • Sem ${note.semester} • ${TimeUtils.getRelativeTime(note.createdAt)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Author Section
+                // Posted By Section
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Surface(
+                        modifier = Modifier.size(36.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = note.uploadedByName.take(1).uppercase(),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Posted by: ${note.uploadedByName.ifBlank { "Anonymous" }}",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
-                            color = MaterialTheme.colorScheme.onSurface,
+                            text = note.uploadedByName.ifBlank { "Anonymous" },
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+
+                        val roleText = when(note.uploadedByRole) {
+                            "ADMIN" -> "Admin"
+                            "VERIFIED_TEACHER" -> "Teacher"
+                            "PLACEMENT_CELL" -> "Placement"
+                            else -> "Student"
+                        }
+                        val roleColor = when(note.uploadedByRole) {
+                            "ADMIN" -> Color(0xFF0369A1)
+                            "VERIFIED_TEACHER" -> Color(0xFF15803D)
+                            "PLACEMENT_CELL" -> Color(0xFFC2410C)
+                            else -> Color(0xFF7E22CE)
+                        }
+
                         Text(
-                            text = when(note.uploadedByRole) {
-                                "ADMIN" -> "Administrator"
-                                "VERIFIED_TEACHER" -> "Verified Teacher"
-                                "PLACEMENT_CELL" -> "Placement Cell"
-                                else -> "Verified Student"
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            fontSize = 10.sp
-                        )
-                    }
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Download, 
-                            contentDescription = null, 
-                            modifier = Modifier.size(12.dp), 
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "$downloadsText • ${note.fileSize}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            text = roleText,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+                            color = roleColor
                         )
                     }
                 }
             }
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
-
-            Box(
+            // Bottom Row
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                contentAlignment = Alignment.CenterEnd
+                    .padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = 8.dp,
+                        bottom = 20.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                TextButton(
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "⬇ $downloadsText Downloads",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1
+                    )
+                }
+
+                FilledTonalButton(
                     onClick = onViewNotes,
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                    modifier = Modifier.height(40.dp)
                 ) {
                     Text(
-                        text = "View Notes",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 14.sp
+                        text = "Download Notes",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp
+                        ),
+                        maxLines = 1,
+                        softWrap = false
                     )
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }

@@ -1,100 +1,152 @@
 package com.rahul.campusconnect.presentation.bottomnavigation
 
-
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
 fun BottomBar(
-    navController: NavController
+    selectedIndex: Int,
+    onItemSelected: (Int) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
 
-    // Observe the current navigation destination.
-    // Whenever the route changes, this composable automatically recomposes.
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-
-    // Get the route of the currently visible screen.
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = NavigationBarDefaults.Elevation
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 12.dp) // Responsive padding
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(24.dp),
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            ),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+        tonalElevation = 8.dp
     ) {
-
-        bottomNavigationItems.forEach { item ->
-
-            // Check whether this bottom navigation item
-            // represents the currently selected destination.
-            val isSelected = currentRoute == item.route
-
-            NavigationBarItem(
-                selected = isSelected,
-
-                onClick = {
-
-                    // Avoid navigating again if the user
-                    // taps the already selected tab.
-                    if (!isSelected) {
-
-                        navController.navigate(item.route) {
-
-                            // Keep only one instance of each
-                            // top-level destination.
-                            launchSingleTop = true
-
-                            // Restore the previous state of the tab.
-                            restoreState = true
-
-                            // Save the state when switching tabs.
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(68.dp) // Slightly more compact
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            bottomNavigationItems.forEachIndexed { index, item ->
+                val isSelected = selectedIndex == index
+                
+                CustomNavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        if (!isSelected) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onItemSelected(index)
                         }
-                    }
-                },
-
-                icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.title
-                    )
-                },
-
-                label = {
-                    Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                },
-
-                alwaysShowLabel = true,
-
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor =
-                        MaterialTheme.colorScheme.onSecondaryContainer,
-
-                    selectedTextColor =
-                        MaterialTheme.colorScheme.onSurface,
-
-                    indicatorColor =
-                        MaterialTheme.colorScheme.secondaryContainer,
-
-                    unselectedIconColor =
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-
-                    unselectedTextColor =
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.title,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    label = item.title
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun RowScope.CustomNavigationBarItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+    label: String
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.15f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
+    val color by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        label = "color"
+    )
+
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (selected) {
+                    Surface(
+                        modifier = Modifier
+                            .size(width = 44.dp, height = 32.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    ) {}
+                }
+                CompositionLocalProvider(LocalContentColor provides color) {
+                    icon()
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
+                    fontSize = 8.5.sp, // Slightly more reduced to guarantee no truncation
+                    letterSpacing = (-0.2).sp
+                ),
+                color = color,
+                maxLines = 1,
+                softWrap = false
             )
         }
     }

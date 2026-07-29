@@ -266,13 +266,20 @@ fun PlacementCard(
                     )
                 }
 
-                TextButton(
-                    onClick = onClick
+                FilledTonalButton(
+                    onClick = onClick,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                    modifier = Modifier.height(36.dp),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-
                     Text(
                         text = "View Details",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp
+                        ),
+                        maxLines = 1,
+                        softWrap = false
                     )
 
                     Spacer(modifier = Modifier.width(4.dp))

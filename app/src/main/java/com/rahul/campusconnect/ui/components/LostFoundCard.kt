@@ -44,7 +44,7 @@ fun LostFoundCard(
 ) {
     val context = LocalContext.current
     val hasImage = !item.imageUrl.isNullOrEmpty()
-    
+
     val semanticColor = when {
         item.status == "RESOLVED" -> Color(0xFF10B981) // Green
         item.type == "LOST" -> Color(0xFFEF4444) // Red
@@ -62,7 +62,7 @@ fun LostFoundCard(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(if (hasImage) 360.dp else 240.dp)
+            .height(if (hasImage) 380.dp else 260.dp) // Increased height (approx +20dp)
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .scale(scale),
         shape = RoundedCornerShape(CardConstants.CornerRadius),
@@ -79,8 +79,13 @@ fun LostFoundCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
-                        .clip(RoundedCornerShape(topStart = CardConstants.CornerRadius, topEnd = CardConstants.CornerRadius))
+                        .aspectRatio(16f / 8.5f) // Adjusted ratio to allow more space for content
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = CardConstants.CornerRadius,
+                                topEnd = CardConstants.CornerRadius
+                            )
+                        )
                 ) {
                     CardImageHeader(
                         imageUrl = item.imageUrl,
@@ -94,7 +99,7 @@ fun LostFoundCard(
             // CONTENT SECTION
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
                     .weight(1f)
             ) {
                 // STATUS & TIME ROW
@@ -107,7 +112,10 @@ fun LostFoundCard(
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = semanticColor.copy(alpha = 0.1f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, semanticColor.copy(alpha = 0.2f))
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            semanticColor.copy(alpha = 0.2f)
+                        )
                     ) {
                         Text(
                             text = item.type,
@@ -128,7 +136,7 @@ fun LostFoundCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // TITLE
+                // TITLE - Max 2 lines
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -136,14 +144,14 @@ fun LostFoundCard(
                         fontSize = 17.sp,
                         lineHeight = 22.sp
                     ),
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // DESCRIPTION
+                // DESCRIPTION - Max 2 lines
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 18.sp),
@@ -174,23 +182,29 @@ fun LostFoundCard(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // BOTTOM ACTION ROW
+                // REPORTER & ACTIONS ROW
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     // LEFT: REPORTER & CALL ACTION
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         // Quick Call Action (Circular)
                         if (!item.contactPhone.isNullOrBlank()) {
                             Surface(
                                 onClick = {
-                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${item.contactPhone}"))
+                                    val intent = Intent(
+                                        Intent.ACTION_DIAL,
+                                        Uri.parse("tel:${item.contactPhone}")
+                                    )
                                     context.startActivity(intent)
                                 },
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
@@ -198,7 +212,7 @@ fun LostFoundCard(
                                         imageVector = Icons.Rounded.Call,
                                         contentDescription = "Call Owner",
                                         modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     )
                                 }
                             }
@@ -211,12 +225,15 @@ fun LostFoundCard(
                                 text = item.ownerName,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = item.ownerRole.ifBlank { "Verified Student" },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -224,16 +241,19 @@ fun LostFoundCard(
                     // RIGHT: PRIMARY ACTION
                     FilledTonalButton(
                         onClick = onClick,
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.height(38.dp)
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
                         Text(
-                            text = "View Details",
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                            fontSize = 13.sp
+                            text = "Details",
+                            fontWeight = FontWeight.Bold
                         )
-                        Spacer(Modifier.width(6.dp))
+
+                        Spacer(Modifier.width(4.dp))
+
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
@@ -246,85 +266,113 @@ fun LostFoundCard(
     }
 }
 
-/**
- * SHIMMER STATES FOR REDESIGNED CARD
- */
-@Composable
-fun LostFoundLoadingShimmer(
-    modifier: Modifier = Modifier
-) {
-    val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-    )
+    /**
+     * SHIMMER STATES FOR REDESIGNED CARD
+     */
+    @Composable
+    fun LostFoundLoadingShimmer(
+        modifier: Modifier = Modifier
+    ) {
+        val shimmerColors = listOf(
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        )
 
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val translateAnim = transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer"
-    )
+        val transition = rememberInfiniteTransition(label = "shimmer")
+        val translateAnim = transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1000f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "shimmer"
+        )
 
-    val brush = Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset.Zero,
-        end = Offset(x = translateAnim.value, y = translateAnim.value)
-    )
+        val brush = Brush.linearGradient(
+            colors = shimmerColors,
+            start = Offset.Zero,
+            end = Offset(x = translateAnim.value, y = translateAnim.value)
+        )
 
-    Column(modifier = modifier.padding(vertical = 8.dp)) {
-        repeat(3) {
-            ShimmerLostFoundCard(brush = brush)
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = modifier.padding(vertical = 8.dp)) {
+            repeat(3) {
+                ShimmerLostFoundCard(brush = brush)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
-}
 
-@Composable
-fun ShimmerLostFoundCard(brush: Brush) {
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(360.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(CardConstants.CornerRadius),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .background(brush)
-            )
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Box(modifier = Modifier.size(60.dp, 20.dp).background(brush, RoundedCornerShape(4.dp)))
-                    Box(modifier = Modifier.size(40.dp, 14.dp).background(brush, RoundedCornerShape(4.dp)))
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Box(modifier = Modifier.fillMaxWidth(0.7f).height(22.dp).background(brush, RoundedCornerShape(4.dp)))
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(modifier = Modifier.fillMaxWidth().height(16.dp).background(brush, RoundedCornerShape(4.dp)))
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(modifier = Modifier.fillMaxWidth(0.9f).height(16.dp).background(brush, RoundedCornerShape(4.dp)))
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(36.dp).background(brush, CircleShape))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(modifier = Modifier.size(80.dp, 14.dp).background(brush, RoundedCornerShape(4.dp)))
+    @Composable
+    fun ShimmerLostFoundCard(brush: Brush) {
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(360.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(CardConstants.CornerRadius),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .background(brush)
+                )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Box(
+                            modifier = Modifier.size(60.dp, 20.dp)
+                                .background(brush, RoundedCornerShape(4.dp))
+                        )
+                        Box(
+                            modifier = Modifier.size(40.dp, 14.dp)
+                                .background(brush, RoundedCornerShape(4.dp))
+                        )
                     }
-                    Box(modifier = Modifier.size(100.dp, 36.dp).background(brush, RoundedCornerShape(12.dp)))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth(0.7f).height(22.dp)
+                            .background(brush, RoundedCornerShape(4.dp))
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(16.dp)
+                            .background(brush, RoundedCornerShape(4.dp))
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth(0.9f).height(16.dp)
+                            .background(brush, RoundedCornerShape(4.dp))
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(36.dp).background(brush, CircleShape))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier.size(80.dp, 14.dp)
+                                    .background(brush, RoundedCornerShape(4.dp))
+                            )
+                        }
+                        Box(
+                            modifier = Modifier.size(100.dp, 36.dp)
+                                .background(brush, RoundedCornerShape(12.dp))
+                        )
+                    }
                 }
             }
         }
     }
-}

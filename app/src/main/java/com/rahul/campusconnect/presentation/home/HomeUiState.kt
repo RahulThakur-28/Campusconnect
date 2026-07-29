@@ -17,19 +17,16 @@ data class HomeUiState(
     val role: String = "",
     val notificationCount: Int = 0,
     val announcements: List<Announcement> = emptyList(),
+    val announcementsCount: Int = 0,
     val events: List<Event> = emptyList(),
+    val eventsCount: Int = 0,
     val placements: List<Placement> = emptyList(),
+    val placementsCount: Int = 0,
     val notes: List<Note> = emptyList(),
+    val notesCount: Int = 0,
     val lostFoundItems: List<LostFoundItem> = emptyList(),
+    val lostFoundItemsCount: Int = 0,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null
-) {
-    val greeting: String
-        get() = when (java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)) {
-            in 0..11 -> "Good Morning 👋"
-            in 12..15 -> "Good Afternoon ☀️"
-            in 16..20 -> "Good Evening 🌆"
-            else -> "Good Night 🌙"
-        }
-}
+)

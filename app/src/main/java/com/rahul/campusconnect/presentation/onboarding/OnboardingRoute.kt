@@ -4,6 +4,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rahul.campusconnect.navigation.AppRoutes
 import kotlinx.coroutines.launch
@@ -16,6 +17,8 @@ fun OnboardingRoute(
     val pagerState = rememberPagerState {
         onboardingPages.size
     }
+
+    val viewModel: OnboardingViewModel = hiltViewModel()
 
     val scope = rememberCoroutineScope()
 
@@ -36,12 +39,18 @@ fun OnboardingRoute(
                         val nextPage = pagerState.currentPage + 1
 
                         if (nextPage < pagerState.pageCount) {
+
                             pagerState.animateScrollToPage(nextPage)
+
                         } else {
+
+                            viewModel.completeOnboarding()
+
                             navController.navigate(AppRoutes.Login.route) {
                                 popUpTo(AppRoutes.Onboarding.route) {
                                     inclusive = true
                                 }
+                                launchSingleTop = true
                             }
                         }
                     }
@@ -52,14 +61,14 @@ fun OnboardingRoute(
 
             onSkipClick = {
 
-                scope.launch {
+                viewModel.completeOnboarding()
 
-                    pagerState.animateScrollToPage(
-                        onboardingPages.lastIndex
-                    )
-
+                navController.navigate(AppRoutes.Login.route) {
+                    popUpTo(AppRoutes.Onboarding.route) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
                 }
-
             }
 
         )

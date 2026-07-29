@@ -44,4 +44,18 @@ class MoreViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun logout() {
+        if (_uiState.value.isLoading) return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val result = authRepository.logout()
+            if (result.isSuccess) {
+                userRepository.clearSession()
+                _uiState.update { it.copy(isLoading = false, isLoggedOut = true) }
+            } else {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
 }

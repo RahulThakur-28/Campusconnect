@@ -10,5 +10,7 @@ data class MoreUiState(
     val academicYear: String = "",
     val collegeName: String = "",
     val profilePictureUrl: String? = null,
-    val isVerified: Boolean = false
+    val isVerified: Boolean = false,
+    val isLoading: Boolean = false,
+    val isLoggedOut: Boolean = false
 )

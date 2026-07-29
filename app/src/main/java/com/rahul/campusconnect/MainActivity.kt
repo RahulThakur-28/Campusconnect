@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.rahul.campusconnect.domain.model.AppTheme
 import com.rahul.campusconnect.navigation.AppNavGraph
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
@@ -24,15 +23,22 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        installSplashScreen()
+        Log.d("STARTUP", "1. onCreate started")
+
+
 
         super.onCreate(savedInstanceState)
+
+        Log.d("STARTUP", "2. super completed")
 
         enableEdgeToEdge()
 
         setContent {
+
+            Log.d("STARTUP", "3. setContent called")
+
             val theme by viewModel.theme.collectAsState()
-            
+
             val isDarkTheme = when (theme) {
                 AppTheme.SYSTEM -> isSystemInDarkTheme()
                 AppTheme.LIGHT -> false

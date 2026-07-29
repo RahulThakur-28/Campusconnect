@@ -1,9 +1,13 @@
 package com.rahul.campusconnect.presentation.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -12,14 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.presentation.announcement.navigation.navigateToAnnouncementDetails
 import com.rahul.campusconnect.presentation.event.navigation.navigateToEventDetails
@@ -45,7 +46,6 @@ fun HomeScreen(
         onNotificationClick = { navController.navigateToNotifications() },
         onSearchClick = { navController.navigateToSearch() },
         onProfileClick = { navController.navigate(AppRoutes.Profile.route) },
-        onActionClick = { route -> navController.navigate(route) },
         onAnnouncementClick = { id -> navController.navigateToAnnouncementDetails(id) },
         onEventClick = { id -> navController.navigateToEventDetails(id) },
         onPlacementClick = { id -> navController.navigateToPlacementDetails(id) },
@@ -67,7 +67,6 @@ private fun HomeScreenContent(
     onNotificationClick: () -> Unit,
     onSearchClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onActionClick: (String) -> Unit,
     onAnnouncementClick: (String) -> Unit,
     onEventClick: (String) -> Unit,
     onPlacementClick: (String) -> Unit,
@@ -85,7 +84,7 @@ private fun HomeScreenContent(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 32.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             // ---------------- Header ----------------
             item {
@@ -95,7 +94,6 @@ private fun HomeScreenContent(
                     academicYear = state.academicYear,
                     isVerified = state.isVerified,
                     profileImageUrl = state.profileImageUrl,
-                    greeting = state.greeting,
                     notificationCount = state.notificationCount,
                     onNotificationClick = onNotificationClick,
                     onProfileClick = onProfileClick
@@ -105,160 +103,193 @@ private fun HomeScreenContent(
             // ---------------- Search ----------------
             item {
                 SearchBar(
-                    hint = "Search CampusConnect...",
+                    hint = "Search announcements, events...",
                     readOnly = true,
                     onClick = onSearchClick,
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
             }
 
-            // ---------------- Quick Actions ----------------
-
-
             if (state.isLoading && !state.isRefreshing) {
                 item {
-                    Box(
-                        modifier = Modifier.fillParentMaxHeight(0.6f).fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    HomeShimmerEffect()
                 }
             } else if (state.error != null) {
                 item {
                     EmptyState(
-                        message = "Something went wrong",
+                        message = "Oops! Something went wrong",
                         description = state.error,
                         buttonText = "Retry",
                         onButtonClick = onRefresh,
-                        modifier = Modifier.fillParentMaxHeight(0.5f)
+                        modifier = Modifier.fillParentMaxHeight(0.6f)
                     )
                 }
             } else {
                 // ---------------- Latest Announcements ----------------
                 item {
+                    val listState = rememberLazyListState()
                     HomeSection(
                         title = "Latest Announcements",
+                        itemCount = state.announcementsCount,
                         onSeeAllClick = onSeeAllAnnouncements
                     ) {
                         if (state.announcements.isNotEmpty()) {
-                            Column(
-                                modifier = Modifier.padding(horizontal = 24.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            LazyRow(
+                                state = listState,
+                                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+                                contentPadding = PaddingValues(horizontal = 24.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                state.announcements.forEach { announcement ->
+                                items(
+                                    items = state.announcements.take(5),
+                                    key = { it.id }
+                                ) { announcement ->
                                     AnnouncementCard(
                                         announcement = announcement,
                                         onCardClick = { onAnnouncementClick(announcement.id) },
-                                        onReadMoreClick = { onAnnouncementClick(announcement.id) }
+                                        modifier = Modifier.width(300.dp) // PEEK effect
                                     )
                                 }
                             }
                         } else {
-                            EmptyState(message = "No announcements yet", modifier = Modifier.height(150.dp))
+                            EmptyState(message = "No announcements yet", modifier = Modifier.height(180.dp))
                         }
                     }
                 }
 
                 // ---------------- Upcoming Events ----------------
                 item {
+                    val listState = rememberLazyListState()
                     HomeSection(
                         title = "Upcoming Events",
+                        itemCount = state.eventsCount,
                         onSeeAllClick = onSeeAllEvents
                     ) {
                         if (state.events.isNotEmpty()) {
                             LazyRow(
+                                state = listState,
+                                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
                                 contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                items(items = state.events, key = { it.id }) { event ->
+                                items(items = state.events.take(5), key = { it.id }) { event ->
                                     EventCard(
                                         event = event,
-                                        onClick = { onEventClick(event.id) }
+                                        onClick = { onEventClick(event.id) },
+                                        modifier = Modifier.width(280.dp) // PEEK effect
                                     )
                                 }
                             }
                         } else {
-                            EmptyState(message = "No upcoming events", modifier = Modifier.height(150.dp))
+                            EmptyState(message = "No upcoming events", modifier = Modifier.height(180.dp))
                         }
                     }
                 }
 
                 // ---------------- Placement Updates ----------------
                 item {
+                    val listState = rememberLazyListState()
                     HomeSection(
                         title = "Placement Updates",
+                        itemCount = state.placementsCount,
                         onSeeAllClick = onSeeAllPlacements
                     ) {
                         if (state.placements.isNotEmpty()) {
                             LazyRow(
+                                state = listState,
+                                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
                                 contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                items(items = state.placements, key = { it.id }) { placement ->
+                                items(items = state.placements.take(5), key = { it.id }) { placement ->
                                     PlacementCard(
                                         placement = placement,
-                                        onClick = { onPlacementClick(placement.id) }
+                                        onClick = { onPlacementClick(placement.id) },
+                                        modifier = Modifier.width(280.dp) // PEEK effect
                                     )
                                 }
                             }
                         } else {
-                            EmptyState(message = "No active drives", modifier = Modifier.height(150.dp))
+                            EmptyState(message = "No active drives", modifier = Modifier.height(180.dp))
                         }
                     }
                 }
 
                 // ---------------- Trending Notes ----------------
                 item {
+                    val listState = rememberLazyListState()
                     HomeSection(
                         title = "Trending Notes",
+                        itemCount = state.notesCount,
                         onSeeAllClick = onSeeAllNotes
                     ) {
                         if (state.notes.isNotEmpty()) {
                             LazyRow(
+                                state = listState,
+                                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
                                 contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                items(items = state.notes, key = { it.id }) { note ->
+                                items(items = state.notes.take(5), key = { it.id }) { note ->
                                     NoteCard(
                                         note = note,
                                         onClick = { onNoteClick(note.id) },
-                                        onViewNotes = { onNoteClick(note.id) }
+                                        onViewNotes = { onNoteClick(note.id) },
+                                        modifier = Modifier.width(CardConstants.HomeCardWidth) // Increased width
                                     )
                                 }
                             }
                         } else {
-                            EmptyState(message = "No trending notes", modifier = Modifier.height(150.dp))
+                            EmptyState(message = "No trending notes", modifier = Modifier.height(180.dp))
                         }
                     }
                 }
 
                 // ---------------- Lost & Found ----------------
                 item {
+                    val listState = rememberLazyListState()
                     HomeSection(
                         title = "Lost & Found",
+                        itemCount = state.lostFoundItemsCount,
                         onSeeAllClick = onSeeAllLostFound
                     ) {
                         if (state.lostFoundItems.isNotEmpty()) {
                             LazyRow(
+                                state = listState,
+                                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
                                 contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                items(items = state.lostFoundItems, key = { it.id }) { item ->
+                                items(items = state.lostFoundItems.take(5), key = { it.id }) { item ->
                                     LostFoundCard(
                                         item = item,
-                                        onClick = { onLostFoundClick(item.id) }
+                                        onClick = { onLostFoundClick(item.id) },
+                                        modifier = Modifier.width(280.dp) // PEEK effect
                                     )
                                 }
                             }
                         } else {
-                            EmptyState(message = "No items reported", modifier = Modifier.height(150.dp))
+                            EmptyState(message = "No items reported", modifier = Modifier.height(180.dp))
                         }
                     }
                 }
             }
+        }
+    }
+}
 
-            item { Spacer(modifier = Modifier.height(48.dp)) }
+@Composable
+fun HomeShimmerEffect() {
+    Column(modifier = Modifier.padding(24.dp)) {
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(vertical = 8.dp)
+                    .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
+            )
         }
     }
 }

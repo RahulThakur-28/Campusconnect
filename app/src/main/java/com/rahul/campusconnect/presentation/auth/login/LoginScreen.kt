@@ -29,7 +29,7 @@ import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.auth.AppTextField
 import com.rahul.campusconnect.ui.components.auth.PasswordTextField
-import com.rahul.campusconnect.ui.components.auth.SocialButton
+import androidx.compose.foundation.layout.imePadding
 
 @Composable
 fun LoginScreen(
@@ -59,6 +59,7 @@ fun LoginScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
             HeaderSection()
             Card(
@@ -149,14 +150,7 @@ fun LoginScreen(
                     }
 
                     Spacer(modifier = Modifier.height(22.dp))
-                    OrDivider()
-                    Spacer(modifier = Modifier.height(22.dp))
 
-                    SocialButton(
-                        text = "Continue with Google",
-                        icon = painterResource(R.drawable.google),
-                        onClick = { /* TODO */ }
-                    )
 
                     Spacer(modifier = Modifier.height(28.dp))
                     RegisterText(onRegisterClick = { navController.navigate(AppRoutes.RegisterStepOne.route) })
@@ -182,14 +176,6 @@ private fun HeaderSection() {
     }
 }
 
-@Composable
-private fun OrDivider() {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-        Text(text = " OR ", modifier = Modifier.padding(horizontal = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-    }
-}
 
 @Composable
 private fun RegisterText(onRegisterClick: () -> Unit) {

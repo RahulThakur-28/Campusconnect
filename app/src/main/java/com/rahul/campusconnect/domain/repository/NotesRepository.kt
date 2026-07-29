@@ -14,4 +14,5 @@ interface NotesRepository {
     suspend fun uploadThumbnail(noteId: String, imageUri: Uri): Result<Pair<String, String>>
     suspend fun deleteFile(path: String): Result<Unit>
     suspend fun incrementDownloadCount(noteId: String): Result<Unit>
+
 }

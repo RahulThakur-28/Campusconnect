@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.components.PrimaryButton
 import com.rahul.campusconnect.ui.components.auth.AppTextField
+import androidx.compose.foundation.layout.imePadding
 
 @Composable
 fun RegisterStepOneScreen(
@@ -53,6 +54,8 @@ fun RegisterStepOneScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
+                .imePadding()
+
         ) {
             HeaderSection()
             Card(
@@ -67,6 +70,7 @@ fun RegisterStepOneScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
+
                 ) {
                     RegistrationProgressIndicator(step = 1)
                     Spacer(modifier = Modifier.height(32.dp))

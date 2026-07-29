@@ -29,102 +29,104 @@ import com.rahul.campusconnect.domain.model.Announcement
 fun AnnouncementCard(
     announcement: Announcement,
     modifier: Modifier = Modifier,
+    cardWidth: Dp = CardConstants.HomeCardWidth,
     onCardClick: () -> Unit = {},
     onReadMoreClick: () -> Unit = onCardClick
 ){
+    val hasImage = !announcement.imageUrl.isNullOrEmpty()
+
     ElevatedCard(
         onClick = onCardClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(280.dp) // Reduced height (approx 20% from 350dp)
-            .padding(horizontal = 16.dp),
+        modifier =
+            if (cardWidth == Dp.Unspecified) {
+                modifier.fillMaxWidth()
+            } else {
+                modifier.width(cardWidth)
+            }
+                .height(380.dp),
         shape = RoundedCornerShape(CardConstants.CornerRadius),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = CardConstants.Elevation),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = CardConstants.Elevation
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ){
         Column(modifier = Modifier.fillMaxSize()) {
-            // banner image 16:9 ratio
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 5.5f) // Slightly reduced banner height
-                    .clip(RoundedCornerShape(topStart = CardConstants.CornerRadius, topEnd = CardConstants.CornerRadius))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                if (!announcement.imageUrl.isNullOrEmpty()) {
+            if (hasImage) {
+                // banner image 16:9 ratio
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 7f) // Proportional to other cards
+                        .clip(RoundedCornerShape(topStart = CardConstants.CornerRadius, topEnd = CardConstants.CornerRadius))
+                ) {
                     CardImageHeader(
                         imageUrl = announcement.imageUrl,
                         category = announcement.category,
                         categoryColor = MaterialTheme.colorScheme.primary,
                         height = Dp.Unspecified 
                     )
-                } else {
-                    // Category Chip when no image
-                    Row(modifier = Modifier.padding(start = 12.dp, top = 12.dp)) {
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                        ) {
-                            Text(
-                                text = announcement.category.uppercase(),
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 9.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-                    }
                 }
             }
 
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(20.dp) // Consistent horizontal padding
+                    .fillMaxWidth()
                     .weight(1f)
             ) {
+                if (!hasImage) {
+                    // Category Chip at the top when no image
+                    Surface(
+                        shape = RoundedCornerShape(100.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    ) {
+                        Text(
+                            text = announcement.category.uppercase(),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                }
+
                 // Title - Max 2 lines
                 Text(
                     text = announcement.title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 15.sp,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        lineHeight = 18.sp
+                        lineHeight = 24.sp
                     ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Short Description - max 2 lines
+                // Description - Max 2 lines
                 Text(
                     text = announcement.description,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 13.sp,
-                        lineHeight = 16.sp
-                    ),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     maxLines = 2,
-                    minLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 20.sp
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Posted By & Role & Date
+                // Posted By & Info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom,
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Posted by:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            fontSize = 10.sp
-                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = announcement.postedByName.ifBlank { "Anonymous" },
@@ -139,52 +141,51 @@ fun AnnouncementCard(
                                     imageVector = Icons.Rounded.Verified,
                                     contentDescription = "Verified",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(12.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         }
                         Text(
                             text = announcement.postedByRole,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                     }
                     Text(
                         text = TimeUtils.getRelativeTime(announcement.postedAt),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(bottom = 2.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
             }
 
-            // Read More Button - Moved slightly upward
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                thickness = 0.5.dp, 
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+
+            // Read More Button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 0.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 TextButton(
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                     onClick = onReadMoreClick,
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                    modifier = Modifier.height(36.dp)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text(
                         text = "Read More",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
+                        fontSize = 14.sp
                     )
-
                     Spacer(modifier = Modifier.width(4.dp))
-
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }

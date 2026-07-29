@@ -26,4 +26,5 @@ class NotesRepositoryImpl @Inject constructor(
         remoteDataSource.uploadThumbnail(getCollegeId(), noteId, imageUri)
     override suspend fun deleteFile(path: String): Result<Unit> = remoteDataSource.deleteFile(path)
     override suspend fun incrementDownloadCount(noteId: String): Result<Unit> = remoteDataSource.incrementDownloadCount(getCollegeId(), noteId)
+
 }

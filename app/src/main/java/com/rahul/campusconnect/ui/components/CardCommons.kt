@@ -23,6 +23,7 @@ object CardConstants {
     val CornerRadius = 24.dp
     val Elevation = 4.dp
     val Padding = 16.dp
+    val HomeCardWidth = 280.dp
 }
 
 @Composable

@@ -1,6 +1,5 @@
 package com.rahul.campusconnect.presentation.settings.screen
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,11 +14,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.rahul.campusconnect.R
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,11 +40,11 @@ fun AboutScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
+                title = { 
                     Text(
-                        "About CampusConnect",
+                        "About CampusConnect", 
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
-                    )
+                    ) 
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -83,25 +83,15 @@ fun AboutScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Surface(
-                        modifier = Modifier.size(120.dp),
-                        shape = RoundedCornerShape(32.dp),
-                        color = Color.White,
-                        tonalElevation = 8.dp,
-                        shadowElevation = 12.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Rounded.School,
-                                contentDescription = null,
-                                modifier = Modifier.size(80.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    Image(
+                        painter = painterResource(R.drawable.campusconnect_icon),
+                        contentDescription = "CampusConnect Logo",
+                        modifier = Modifier.size(150.dp)
+                    )
                     Text(
                         text = "CampusConnect",
                         style = MaterialTheme.typography.headlineMedium.copy(
@@ -110,32 +100,27 @@ fun AboutScreen(
                         ),
                         color = Color.White
                     )
+                    
+                    Text(
+                        text = "\"One Platform. Every Campus Activity.\"",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = Color.White.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
 
                     Surface(
                         color = Color.White.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(100.dp),
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 16.dp)
                     ) {
                         Text(
                             text = "v${uiState.appVersion} (${uiState.buildNumber})",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "\"One Platform. Every Campus Activity.\"",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontStyle = FontStyle.Italic,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = Color.White.copy(alpha = 0.9f),
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
 
@@ -145,277 +130,187 @@ fun AboutScreen(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                // 2. ABOUT
-                AboutSection(
-                    title = "What is CampusConnect?",
-                    description = "CampusConnect is a production-level College Operating System designed to digitize and streamline institution-wide communications, resource sharing, and professional growth opportunities into a single, cohesive mobile experience."
-                )
+                // 2. MISSION & VISION
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ShowcaseCard(title = "Mission", desc = "Digitize every campus activity inside one modern application.", modifier = Modifier.weight(1f))
+                    ShowcaseCard(title = "Vision", desc = "Build a connected and efficient campus ecosystem for everyone.", modifier = Modifier.weight(1f))
+                }
 
                 // 3. KEY FEATURES
-                ShowcaseTitle(title = "Key Features")
+                AboutHeader(title = "Key Features")
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     maxItemsInEachRow = 2
                 ) {
-                    FeatureCard(Icons.Rounded.Campaign, "Notices", "Instant alerts and announcements.", Modifier.weight(1f))
-                    FeatureCard(Icons.Rounded.Event, "Events", "Join workshops, fests and seminars.", Modifier.weight(1f))
-                    FeatureCard(Icons.Rounded.BusinessCenter, "Placements", "Track jobs and drive alerts.", Modifier.weight(1f))
-                    FeatureCard(Icons.AutoMirrored.Rounded.MenuBook, "Notes", "Access shared study materials.", Modifier.weight(1f))
-                    FeatureCard(Icons.Rounded.Search, "Lost & Found", "Recover reported campus items.", Modifier.weight(1f))
-                    FeatureCard(Icons.Rounded.QuestionAnswer, "Discussions", "Engage in campus conversations.", Modifier.weight(1f))
+                    val featureModifier = Modifier.weight(1f)
+                    FeatureItem(Icons.Rounded.Campaign, "Notices", featureModifier)
+                    FeatureItem(Icons.Rounded.Event, "Events", featureModifier)
+                    FeatureItem(Icons.Rounded.BusinessCenter, "Placements", featureModifier)
+                    FeatureItem(Icons.AutoMirrored.Rounded.MenuBook, "Notes", featureModifier)
+                    FeatureItem(Icons.Rounded.Search, "Lost & Found", featureModifier)
+                    FeatureItem(Icons.Rounded.QuestionAnswer, "Discussions", featureModifier)
                 }
 
                 // 4. HOW IT WORKS
-                ShowcaseTitle(title = "How It Works")
-                HowItWorksCard()
-
-                // 5. WHO CAN USE
-                ShowcaseTitle(title = "Users & Roles")
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    RoleSmallCard("Student", Icons.Rounded.Person, Modifier.weight(1f))
-                    RoleSmallCard("Teacher", Icons.Rounded.School, Modifier.weight(1f))
-                    RoleSmallCard("Admin", Icons.Rounded.AdminPanelSettings, Modifier.weight(1f))
+                AboutHeader(title = "How CampusConnect Works")
+                ElevatedCard(shape = RoundedCornerShape(24.dp)) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        StepRow("1", "Create Account", "Sign up using your institutional email address.")
+                        StepRow("2", "Verify Identity", "Submit your ID for administrator verification.")
+                        StepRow("3", "Access Services", "Instantly access notes, events, and placements.")
+                        StepRow("4", "Stay Connected", "Receive real-time alerts about campus activities.")
+                    }
                 }
 
-                // 6. TECH STACK
-                ShowcaseTitle(title = "Technology Stack")
-                TechStackSection()
+                // 5. TECH STACK
+                AboutHeader(title = "Technology Stack")
+                ElevatedCard(shape = RoundedCornerShape(24.dp)) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        TechRow(Icons.Rounded.Code, "Kotlin & Jetpack Compose")
+                        TechRow(Icons.Rounded.Animation, "Material 3 & Motion")
+                        TechRow(Icons.Rounded.Storage, "Firebase & Supabase Storage")
+                        TechRow(Icons.Rounded.AccountTree, "MVVM Clean Architecture")
+                    }
+                }
 
-                // 7. ARCHITECTURE
-                ShowcaseTitle(title = "Architecture")
-                ArchitectureCard()
-
-                // 8. PROJECT HIGHLIGHTS
-                ShowcaseTitle(title = "Project Highlights")
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                // 5. PROJECT HIGHLIGHTS
+                AboutHeader(title = "Project Highlights")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     HighlightChip("🚀 Multi-College Ready")
                     HighlightChip("🔐 Secure Auth")
-                    HighlightChip("⚡ Real-Time Firestore")
-                    HighlightChip("🎨 Material 3")
-                    HighlightChip("🗂 Clean Architecture")
-                    HighlightChip("📱 Native Android")
+                    HighlightChip("⚡ Real-Time Data")
+                    HighlightChip("🗂 Modular Components")
+                    HighlightChip("📱 Native Performance")
                 }
 
-                // 9. MISSION & VISION
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    ElevatedCard(modifier = Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text("Mission", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                            Text("Digitize every campus activity inside one application.", style = MaterialTheme.typography.bodySmall)
+                // 6. DEVELOPER
+                AboutHeader(title = "Developer")
+                ElevatedCard(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("RT", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
                         }
-                    }
-                    ElevatedCard(modifier = Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text("Vision", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                            Text("Build a connected and efficient campus ecosystem.", style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text("Rahul Thakur", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                            Text("Lead Android Developer", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
 
-                // 10. DEVELOPER
-                DeveloperCard()
+                // 7. APP INFO
+                AboutHeader(title = "Application Information")
+                AppInfoCard(uiState.appVersion, uiState.buildNumber)
 
-                // 11. LEGAL & INFO
-                ApplicationInfoSection(uiState.appVersion, uiState.buildNumber)
-
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 }
 
 @Composable
-private fun AboutSection(title: String, description: String) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun ShowcaseTitle(title: String) {
-    Text(
-        text = title.uppercase(),
-        style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 1.2.sp),
-        fontWeight = FontWeight.ExtraBold,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-    )
-}
-
-@Composable
-private fun FeatureCard(icon: ImageVector, title: String, desc: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.height(120.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Icon(icon, null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-            Text(desc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
-        }
-    }
-}
-
-@Composable
-private fun RoleSmallCard(label: String, icon: ImageVector, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-    ) {
-        Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(4.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun HowItWorksCard() {
-    ElevatedCard(shape = RoundedCornerShape(24.dp)) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            StepRow("1", "Create Account", "Institutional email required.")
-            StepRow("2", "Verify Identity", "Upload ID for admin approval.")
-            StepRow("3", "Access Services", "Join events, notes and more.")
-            StepRow("4", "Stay Connected", "Real-time alerts and notices.")
-        }
-    }
-}
-
-@Composable
-private fun StepRow(num: String, title: String, desc: String) {
+fun StepRow(num: String, title: String, desc: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp)) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(28.dp)
+        ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(num, color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                Text(num, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(Modifier.width(16.dp))
         Column {
             Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-            Text(desc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun TechStackSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        TechGroupCard("Language & UI", listOf("Kotlin", "Jetpack Compose", "Material 3", "Coil"))
-        TechGroupCard("Architecture", listOf("MVVM", "Clean Architecture", "Repository Pattern", "StateFlow", "Coroutines", "Hilt"))
-        TechGroupCard("Backend & Storage", listOf("Firebase Auth", "Firestore", "Firebase Rules", "Supabase Storage"))
-    }
+fun AboutHeader(title: String) {
+    Text(
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 1.2.sp),
+        fontWeight = FontWeight.ExtraBold,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+        modifier = Modifier.padding(start = 4.dp)
+    )
 }
 
 @Composable
-private fun TechGroupCard(title: String, techs: List<String>) {
-    Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+fun ShowcaseCard(title: String, desc: String, modifier: Modifier = Modifier) {
+    ElevatedCard(modifier = modifier, shape = RoundedCornerShape(20.dp)) {
         Column(Modifier.padding(16.dp)) {
-            Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                techs.forEach { t ->
-                    SuggestionChip(onClick = {}, label = { Text(t) })
-                }
-            }
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(4.dp))
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun ArchitectureCard() {
-    ElevatedCard(shape = RoundedCornerShape(24.dp)) {
-        Column(Modifier.padding(20.dp)) {
-            Text(
-                "Modern Android Architecture",
-                fontWeight = FontWeight.ExtraBold,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Built on SOLID principles using the recommended Android Architecture components. Separates concerns into UI, Domain, and Data layers for maximum testability and scale.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+fun FeatureItem(icon: ImageVector, label: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+    ) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(12.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         }
     }
 }
 
 @Composable
-private fun HighlightChip(text: String) {
+fun TechRow(icon: ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+        Spacer(Modifier.width(12.dp))
+        Text(text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+fun HighlightChip(text: String) {
     Surface(
         shape = RoundedCornerShape(100.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-        modifier = Modifier.padding(2.dp)
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
     ) {
         Text(text, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun DeveloperCard() {
-    ElevatedCard(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-    ) {
-        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Surface(modifier = Modifier.size(64.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("RT", color = Color.White, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.headlineSmall)
-                }
-            }
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text("Rahul Thakur", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                Text("Lead Android Engineer", style = MaterialTheme.typography.bodyMedium)
-                Text("Built with ❤️ using Kotlin", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-            }
+fun AppInfoCard(version: String, build: String) {
+    ElevatedCard(shape = RoundedCornerShape(24.dp)) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            InfoRow("Release Date", "October 2024")
+            InfoRow("Current Version", version)
+            InfoRow("Build Number", build)
+            InfoRow("Compatibility", "Android 8.0+")
         }
     }
 }
 
 @Composable
-private fun ApplicationInfoSection(version: String, build: String) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        ShowcaseTitle(title = "App Information")
-        Spacer(Modifier.height(12.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            InfoValue("Version", version)
-            InfoValue("Build", build)
-            InfoValue("SDK", "34")
-        }
-        Spacer(Modifier.height(24.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            TextButton(onClick = {}) { Text("Privacy Policy") }
-            TextButton(onClick = {}) { Text("Terms & Conditions") }
-            TextButton(onClick = {}) { Text("Licenses") }
-        }
-    }
-}
-
-@Composable
-private fun InfoValue(label: String, value: String) {
-    Column {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+fun InfoRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
     }
 }

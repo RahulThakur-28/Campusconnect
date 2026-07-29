@@ -128,7 +128,13 @@ fun NotesScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 100.dp)
+                contentPadding = PaddingValues(
+                    start = 24.dp,
+                    end = 24.dp,
+                    top = 8.dp,
+                    bottom = 100.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Search Bar
                 item {
@@ -136,7 +142,7 @@ fun NotesScreen(
                         value = uiState.searchQuery,
                         onValueChange = viewModel::onSearchQueryChanged,
                         hint = "Search subjects, titles or tags...",
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                        modifier = Modifier.padding(vertical = 12.dp)
                     )
                 }
 
@@ -144,7 +150,7 @@ fun NotesScreen(
                 item {
                     LazyRow(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        contentPadding = PaddingValues(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -246,11 +252,14 @@ fun NotesScreen(
                         ) { note ->
                             NoteCard(
                                 note = note,
-                                modifier = Modifier
-                                    .padding(vertical = 8.dp)
-                                    .animateItem(),
-                                onClick = { onNoteClick(note.id) },
-                                onViewNotes = { onNoteClick(note.id) }
+                                fillMaxWidth = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    onNoteClick(note.id)
+                                },
+                                onViewNotes = {
+                                    onNoteClick(note.id)
+                                }
                             )
                         }
                     }

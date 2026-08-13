@@ -15,6 +15,17 @@ class SupabaseStorageManager @Inject constructor(
     private val supabaseClient: SupabaseClient
 ) : StorageManager {
 
+    companion object {
+        private const val TAG = "SUPABASE_STORAGE"
+    }
+
+    /**
+     * Upload image to Supabase Storage.
+     *
+     * Example:
+     * bucket = "media"
+     * path   = "colleges/88825228/events/banners/uuid.jpg"
+     */
     override suspend fun uploadImage(
         bucket: String,
         path: String,
@@ -23,50 +34,91 @@ class SupabaseStorageManager @Inject constructor(
 
         return try {
 
-            Log.d("SUPABASE_DEBUG", "===================================")
-            Log.d("SUPABASE_DEBUG", "Bucket = $bucket")
-            Log.d("SUPABASE_DEBUG", "Path = $path")
-            Log.d("SUPABASE_DEBUG", "Image Uri = $imageUri")
-            Log.d("SUPABASE_DEBUG", "Reading image...")
+            Log.d(TAG, "======================================")
+            Log.d(TAG, "IMAGE UPLOAD START")
+            Log.d(TAG, "Bucket: $bucket")
+            Log.d(TAG, "Path: $path")
+            Log.d(TAG, "Uri: $imageUri")
+
+            // ----------------------------------------------------
+            // Read image bytes
+            // ----------------------------------------------------
 
             val bytes = context.contentResolver
                 .openInputStream(imageUri)
-                ?.use { it.readBytes() }
-                ?: return Result.failure(IOException("Unable to read image"))
+                ?.use { inputStream ->
+                    inputStream.readBytes()
+                }
+                ?: return Result.failure(
+                    IOException("Unable to read selected image")
+                )
 
-            Log.d("SUPABASE_DEBUG", "Bytes = ${bytes.size}")
+            if (bytes.isEmpty()) {
+                return Result.failure(
+                    IOException("Selected image is empty")
+                )
+            }
+
+            Log.d(TAG, "Image bytes: ${bytes.size}")
+
+            // ----------------------------------------------------
+            // Get Supabase Storage bucket
+            // ----------------------------------------------------
 
             val storage = supabaseClient.storage.from(bucket)
 
-            Log.d("SUPABASE_DEBUG", "Using bucket = $bucket")
-            Log.d("SUPABASE_DEBUG", "Uploading to -> $bucket/$path")
+            // ----------------------------------------------------
+            // Upload
+            //
+            // IMPORTANT:
+            // upsert = false
+            //
+            // Files generated with UUID paths should be new files.
+            // This avoids unnecessary UPDATE permission requirements.
+            // ----------------------------------------------------
 
             storage.upload(
                 path = path,
                 data = bytes
             ) {
-                upsert = true
+                upsert = false
             }
 
-            val url = storage.publicUrl(path)
+            Log.d(TAG, "Image upload successful")
 
-            Log.d("SUPABASE_DEBUG", "Public URL = $url")
-            Log.d("SUPABASE_DEBUG", "===================================")
+            // ----------------------------------------------------
+            // Public URL
+            // ----------------------------------------------------
 
-            Result.success(url)
+            val publicUrl = storage.publicUrl(path)
+
+            Log.d(TAG, "Public URL: $publicUrl")
+            Log.d(TAG, "IMAGE UPLOAD END")
+            Log.d(TAG, "======================================")
+
+            Result.success(publicUrl)
 
         } catch (e: Exception) {
 
-            Log.e("SUPABASE_DEBUG", "===================================")
-            Log.e("SUPABASE_DEBUG", "Bucket = $bucket")
-            Log.e("SUPABASE_DEBUG", "Path = $path")
-            Log.e("SUPABASE_DEBUG", "Exception = ${e.message}", e)
-            Log.e("SUPABASE_DEBUG", "===================================")
+            Log.e(TAG, "======================================")
+            Log.e(TAG, "IMAGE UPLOAD FAILED")
+            Log.e(TAG, "Bucket: $bucket")
+            Log.e(TAG, "Path: $path")
+            Log.e(TAG, "Error: ${e.message}", e)
+            Log.e(TAG, "======================================")
 
             Result.failure(e)
         }
     }
 
+
+    /**
+     * Upload PDF/file to Supabase Storage.
+     *
+     * Example:
+     * bucket = "media"
+     * path   = "colleges/88825228/notes/uuid.pdf"
+     */
     override suspend fun uploadPdf(
         bucket: String,
         path: String,
@@ -75,27 +127,81 @@ class SupabaseStorageManager @Inject constructor(
 
         return try {
 
+            Log.d(TAG, "======================================")
+            Log.d(TAG, "PDF UPLOAD START")
+            Log.d(TAG, "Bucket: $bucket")
+            Log.d(TAG, "Path: $path")
+            Log.d(TAG, "Uri: $pdfUri")
+
+            // ----------------------------------------------------
+            // Read PDF bytes
+            // ----------------------------------------------------
+
             val bytes = context.contentResolver
                 .openInputStream(pdfUri)
-                ?.use { it.readBytes() }
-                ?: return Result.failure(IOException("Unable to read pdf"))
+                ?.use { inputStream ->
+                    inputStream.readBytes()
+                }
+                ?: return Result.failure(
+                    IOException("Unable to read selected PDF")
+                )
+
+            if (bytes.isEmpty()) {
+                return Result.failure(
+                    IOException("Selected PDF is empty")
+                )
+            }
+
+            Log.d(TAG, "PDF bytes: ${bytes.size}")
+
+            // ----------------------------------------------------
+            // Get Storage bucket
+            // ----------------------------------------------------
 
             val storage = supabaseClient.storage.from(bucket)
+
+            // ----------------------------------------------------
+            // Upload
+            // ----------------------------------------------------
 
             storage.upload(
                 path = path,
                 data = bytes
             ) {
-                upsert = true
+                upsert = false
             }
 
-            Result.success(storage.publicUrl(path))
+            Log.d(TAG, "PDF upload successful")
+
+            // ----------------------------------------------------
+            // Public URL
+            // ----------------------------------------------------
+
+            val publicUrl = storage.publicUrl(path)
+
+            Log.d(TAG, "Public URL: $publicUrl")
+            Log.d(TAG, "PDF UPLOAD END")
+            Log.d(TAG, "======================================")
+
+            Result.success(publicUrl)
 
         } catch (e: Exception) {
+
+            Log.e(TAG, "======================================")
+            Log.e(TAG, "PDF UPLOAD FAILED")
+            Log.e(TAG, "Bucket: $bucket")
+            Log.e(TAG, "Path: $path")
+            Log.e(TAG, "Error: ${e.message}", e)
+            Log.e(TAG, "======================================")
+
             Result.failure(e)
         }
     }
 
+
+    /**
+     * Delete a file from Supabase Storage.
+     */
     override suspend fun deleteFile(
         bucket: String,
         path: String
@@ -103,13 +209,29 @@ class SupabaseStorageManager @Inject constructor(
 
         return try {
 
+            Log.d(TAG, "======================================")
+            Log.d(TAG, "DELETE FILE START")
+            Log.d(TAG, "Bucket: $bucket")
+            Log.d(TAG, "Path: $path")
+
             supabaseClient.storage
                 .from(bucket)
                 .delete(path)
 
+            Log.d(TAG, "File deleted successfully")
+            Log.d(TAG, "======================================")
+
             Result.success(Unit)
 
         } catch (e: Exception) {
+
+            Log.e(TAG, "======================================")
+            Log.e(TAG, "DELETE FILE FAILED")
+            Log.e(TAG, "Bucket: $bucket")
+            Log.e(TAG, "Path: $path")
+            Log.e(TAG, "Error: ${e.message}", e)
+            Log.e(TAG, "======================================")
+
             Result.failure(e)
         }
     }

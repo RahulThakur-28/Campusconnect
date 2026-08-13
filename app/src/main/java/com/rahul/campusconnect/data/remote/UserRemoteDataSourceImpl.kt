@@ -73,6 +73,7 @@ class UserRemoteDataSourceImpl @Inject constructor(
         return try {
             val query = pathProvider.users(collegeId)
                 .whereEqualTo("enrollmentNumber", enrollmentNumber)
+                .limit(1)
                 .get()
                 .await()
             !query.isEmpty
@@ -92,9 +93,19 @@ class UserRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun updateProfile(user: User): Result<Unit> {
         return try {
+            val updates = mapOf(
+                "fullName" to user.fullName,
+                "phone" to user.phone,
+                "bio" to user.bio,
+                "profileImage" to user.profileImage,
+                "department" to user.department,
+                "academicYear" to user.academicYear,
+                "section" to user.section,
+                "updatedAt" to System.currentTimeMillis()
+            )
             pathProvider.users(user.collegeId)
                 .document(user.uid)
-                .set(user)
+                .update(updates)
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {

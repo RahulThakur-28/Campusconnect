@@ -73,16 +73,21 @@ class DiscussionRemoteDataSourceImpl @Inject constructor(
         val discussionRef = pathProvider.discussions(collegeId).document(reply.discussionId)
         val replyRef = discussionRef.collection("replies").document()
         
+        val currentTime = System.currentTimeMillis()
         val finalReply = reply.copy(
             replyId = replyRef.id,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            createdAt = currentTime,
+            updatedAt = currentTime
         )
 
         pathProvider.colleges().firestore.runTransaction { transaction ->
             transaction.set(replyRef, finalReply)
-            transaction.update(discussionRef, "replyCount", FieldValue.increment(1))
-            transaction.update(discussionRef, "updatedAt", System.currentTimeMillis())
+            transaction.update(discussionRef, 
+                mapOf(
+                    "replyCount" to FieldValue.increment(1),
+                    "updatedAt" to currentTime
+                )
+            )
         }.await()
         
         Result.success(Unit)

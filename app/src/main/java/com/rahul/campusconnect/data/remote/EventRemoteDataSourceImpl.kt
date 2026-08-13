@@ -162,8 +162,12 @@ class EventRemoteDataSourceImpl @Inject constructor(
 
             if (registeredCount >= maxParticipants) throw IllegalStateException("Event full")
 
-            transaction.set(registrationRef, mapOf("userId" to userId, "registeredAt" to System.currentTimeMillis()))
-            transaction.update(eventRef, "registeredCount", registeredCount + 1)
+            val currentTime = System.currentTimeMillis()
+            transaction.set(registrationRef, mapOf("userId" to userId, "registeredAt" to currentTime))
+            transaction.update(eventRef, mapOf(
+                "registeredCount" to registeredCount + 1,
+                "updatedAt" to currentTime
+            ))
         }.await()
         Result.success(Unit)
     } catch (e: Exception) {

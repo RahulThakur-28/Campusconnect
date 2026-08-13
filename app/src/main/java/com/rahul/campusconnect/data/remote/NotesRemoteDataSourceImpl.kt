@@ -115,7 +115,11 @@ class NotesRemoteDataSourceImpl @Inject constructor(
     )
 
     override suspend fun incrementDownloadCount(collegeId: String, noteId: String): Result<Unit> = try {
-        pathProvider.notes(collegeId).document(noteId).update("downloadCount", FieldValue.increment(1)).await()
+        val updates = mapOf(
+            "downloadCount" to FieldValue.increment(1),
+            "updatedAt" to System.currentTimeMillis()
+        )
+        pathProvider.notes(collegeId).document(noteId).update(updates).await()
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)

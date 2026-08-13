@@ -2,11 +2,8 @@ package com.rahul.campusconnect.presentation.splash
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,7 +11,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -29,7 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import com.rahul.campusconnect.R
 import com.rahul.campusconnect.navigation.AppRoutes
 import com.rahul.campusconnect.ui.theme.CampusconnectTheme
-import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
@@ -40,13 +35,9 @@ fun SplashScreen(
     val destination by viewModel.destination.collectAsState()
 
     LaunchedEffect(destination) {
-
         if (destination == null) return@LaunchedEffect
 
-        delay(2000)
-
         when (destination) {
-
             SplashDestination.Onboarding -> {
                 navController.navigate(AppRoutes.Onboarding.route) {
                     popUpTo(AppRoutes.Splash.route) {
@@ -93,15 +84,11 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            GlassCard {
-
-                Image(
-                    painter = painterResource(R.drawable.campusconnect_icon),
-                    contentDescription = "CampusConnect Logo",
-                    modifier = Modifier.size(180.dp)
-                )
-
-            }
+            Image(
+                painter = painterResource(R.drawable.campusconnect_icon),
+                contentDescription = "CampusConnect Logo",
+                modifier = Modifier.size(180.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -128,20 +115,6 @@ fun SplashScreen(
         }
 
     }
-}
-
-@Composable
-fun GlassCard(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-
-
-        Image(
-            painter = painterResource(R.drawable.campusconnect_icon),
-            contentDescription = "CampusConnect Logo",
-            modifier = Modifier.size(300.dp)
-        )
 }
 
 @Preview(showBackground = true, showSystemUi = true)

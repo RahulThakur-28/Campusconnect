@@ -51,8 +51,21 @@ class EventRepositoryImpl @Inject constructor(
 
     override suspend fun getMyEvents(userId: String): Result<List<Event>> = remoteDataSource.getMyEvents(getCollegeId(), userId)
 
-    override suspend fun uploadEventImage(eventId: String, imageUri: Uri): Result<Pair<String, String>> =
-        remoteDataSource.uploadEventImage(getCollegeId(), eventId, imageUri)
+    override suspend fun uploadEventImage(
+        eventId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>> = try {
+        uploadEventImage(getCollegeId(), eventId, imageUri)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun uploadEventImage(
+        collegeId: String,
+        eventId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>> =
+        remoteDataSource.uploadEventImage(collegeId, eventId, imageUri)
 
     override suspend fun deleteFile(path: String): Result<Unit> = remoteDataSource.deleteFile(path)
 

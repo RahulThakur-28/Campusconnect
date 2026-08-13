@@ -89,7 +89,7 @@ fun PlacementDetailsScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Hard Delete", fontWeight = FontWeight.ExtraBold)
+                    Text("Delete", fontWeight = FontWeight.ExtraBold)
                 }
             },
             dismissButton = {

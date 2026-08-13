@@ -60,16 +60,34 @@ class AnnouncementRepositoryImpl @Inject constructor(
     override suspend fun uploadAnnouncementImage(
         announcementId: String,
         imageUri: Uri
-    ): Result<Pair<String, String>> {
-        return remoteDataSource.uploadAnnouncementImage(getCollegeId(), announcementId, imageUri)
+    ): Result<Pair<String, String>> = try {
+        uploadAnnouncementImage(getCollegeId(), announcementId, imageUri)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
+
+    override suspend fun uploadAnnouncementImage(
+        collegeId: String,
+        announcementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>> =
+        remoteDataSource.uploadAnnouncementImage(collegeId, announcementId, imageUri)
 
     override suspend fun uploadAnnouncementAttachment(
         announcementId: String,
         attachmentUri: Uri
-    ): Result<Pair<String, String>> {
-        return remoteDataSource.uploadAnnouncementAttachment(getCollegeId(), announcementId, attachmentUri)
+    ): Result<Pair<String, String>> = try {
+        uploadAnnouncementAttachment(getCollegeId(), announcementId, attachmentUri)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
+
+    override suspend fun uploadAnnouncementAttachment(
+        collegeId: String,
+        announcementId: String,
+        attachmentUri: Uri
+    ): Result<Pair<String, String>> =
+        remoteDataSource.uploadAnnouncementAttachment(collegeId, announcementId, attachmentUri)
 
     override suspend fun deleteFile(path: String): Result<Unit> {
         return remoteDataSource.deleteFile(path)

@@ -38,8 +38,21 @@ interface PlacementRepository {
     ): Result<List<Placement>>
 
     suspend fun uploadPlacementLogo(
+        collegeId: String,
         placementId: String,
         imageUri: Uri
+    ): Result<Pair<String, String>>
+
+    suspend fun uploadPlacementLogo(
+        placementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>>
+
+    suspend fun uploadPlacementAttachment(
+        collegeId: String,
+        placementId: String,
+        fileUri: Uri,
+        extension: String
     ): Result<Pair<String, String>>
 
     suspend fun uploadPlacementAttachment(

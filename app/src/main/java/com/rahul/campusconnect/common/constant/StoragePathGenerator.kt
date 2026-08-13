@@ -1,6 +1,7 @@
 package com.rahul.campusconnect.common.storage
 
 import com.rahul.campusconnect.common.constant.StorageConstants
+import java.util.UUID
 
 object StoragePathGenerator {
 
@@ -8,20 +9,8 @@ object StoragePathGenerator {
         collegeId: String,
         placementId: String
     ): String {
-
-        return buildString {
-
-            append("colleges/")
-            append(collegeId)
-            append("/")
-            append(StorageConstants.Folder.PLACEMENTS)
-            append("/")
-            append(StorageConstants.Folder.LOGOS)
-            append("/")
-            append(placementId)
-            append(".jpg")
-
-        }
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.PLACEMENTS}/${StorageConstants.Folder.LOGOS}/$placementId/$uniqueFileId.jpg"
     }
 
     fun placementAttachment(
@@ -29,13 +18,17 @@ object StoragePathGenerator {
         placementId: String,
         extension: String
     ): String {
-        return "colleges/$collegeId/${StorageConstants.Folder.PLACEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$placementId.$extension"
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.PLACEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$placementId/$uniqueFileId.$extension"
     }
+
 
     fun eventBanner(
         collegeId: String,
         eventId: String
     ): String {
+
+        val uniqueFileId = UUID.randomUUID()
 
         return buildString {
 
@@ -47,8 +40,9 @@ object StoragePathGenerator {
             append(StorageConstants.Folder.BANNERS)
             append("/")
             append(eventId)
+            append("/")
+            append(uniqueFileId)
             append(".jpg")
-
         }
     }
 
@@ -56,25 +50,16 @@ object StoragePathGenerator {
         collegeId: String,
         userId: String
     ): String {
-
-        return buildString {
-
-            append("colleges/")
-            append(collegeId)
-            append("/")
-            append(StorageConstants.Folder.PROFILE)
-            append("/")
-            append(userId)
-            append(".jpg")
-
-        }
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.PROFILE}/$userId/$uniqueFileId.jpg"
     }
 
     fun announcementBanner(
         collegeId: String,
         announcementId: String
     ): String {
-        return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.BANNERS}/$announcementId.jpg"
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.BANNERS}/$announcementId/$uniqueFileId.jpg"
     }
 
     fun announcementAttachment(
@@ -82,7 +67,8 @@ object StoragePathGenerator {
         announcementId: String,
         extension: String
     ): String {
-        return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$announcementId.$extension"
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.ANNOUNCEMENTS}/${StorageConstants.Folder.DOCUMENTS}/$announcementId/$uniqueFileId.$extension"
     }
 
     fun noteFile(
@@ -90,21 +76,24 @@ object StoragePathGenerator {
         noteId: String,
         extension: String
     ): String {
-        return "colleges/$collegeId/${StorageConstants.Folder.NOTES}/${StorageConstants.Folder.DOCUMENTS}/$noteId.$extension"
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.NOTES}/${StorageConstants.Folder.DOCUMENTS}/$noteId/$uniqueFileId.$extension"
     }
 
     fun noteThumbnail(
         collegeId: String,
         noteId: String
     ): String {
-        return "colleges/$collegeId/${StorageConstants.Folder.NOTES}/${StorageConstants.Folder.BANNERS}/$noteId.jpg"
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.NOTES}/${StorageConstants.Folder.BANNERS}/$noteId/$uniqueFileId.jpg"
     }
 
     fun lostFoundImage(
         collegeId: String,
         itemId: String
     ): String {
-        return "colleges/$collegeId/${StorageConstants.Folder.LOST_FOUND}/$itemId.jpg"
+        val uniqueFileId = UUID.randomUUID()
+        return "colleges/$collegeId/${StorageConstants.Folder.LOST_FOUND}/$itemId/$uniqueFileId.jpg"
     }
 
     fun verificationDocument(

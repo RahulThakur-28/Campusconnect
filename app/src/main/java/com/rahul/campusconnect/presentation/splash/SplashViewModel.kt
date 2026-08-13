@@ -30,30 +30,26 @@ class SplashViewModel @Inject constructor(
     }
 
     private fun checkAuth() {
+        viewModelScope.launch {
+            // First launch -> Onboarding
+            if (!preferenceManager.isOnboardingCompleted()) {
+                _destination.value = SplashDestination.Onboarding
+                return@launch
+            }
 
-        // First launch -> Onboarding
-        if (!preferenceManager.isOnboardingCompleted()) {
-            _destination.value = SplashDestination.Onboarding
-            return
-        }
+            val isAuthLoggedIn = authRepository.isUserLoggedIn()
+            val hasCollegeId = preferenceManager.getCollegeId() != null
 
-        val isAuthLoggedIn = authRepository.isUserLoggedIn()
-        val hasCollegeId = preferenceManager.getCollegeId() != null
-
-        if (isAuthLoggedIn && hasCollegeId) {
-
-            _destination.value = SplashDestination.Main
-
-            viewModelScope.launch {
+            if (isAuthLoggedIn && hasCollegeId) {
+                // Ensure session is loaded before navigating
                 try {
                     userRepository.loadUserSession()
                 } catch (_: Exception) {
                 }
+                _destination.value = SplashDestination.Main
+            } else {
+                _destination.value = SplashDestination.Login
             }
-
-        } else {
-
-            _destination.value = SplashDestination.Login
         }
     }
 }

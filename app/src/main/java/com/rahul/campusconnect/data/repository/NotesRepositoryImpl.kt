@@ -20,10 +20,23 @@ class NotesRepositoryImpl @Inject constructor(
     override suspend fun updateNote(note: Note): Result<Unit> = remoteDataSource.updateNote(getCollegeId(), note)
     override suspend fun deleteNote(noteId: String): Result<Unit> = remoteDataSource.deleteNote(getCollegeId(), noteId)
     override suspend fun getMyNotes(userId: String): Result<List<Note>> = remoteDataSource.getMyNotes(getCollegeId(), userId)
-    override suspend fun uploadAttachment(noteId: String, fileUri: Uri, extension: String): Result<Pair<String, String>> = 
-        remoteDataSource.uploadAttachment(getCollegeId(), noteId, fileUri, extension)
-    override suspend fun uploadThumbnail(noteId: String, imageUri: Uri): Result<Pair<String, String>> = 
-        remoteDataSource.uploadThumbnail(getCollegeId(), noteId, imageUri)
+    override suspend fun uploadAttachment(noteId: String, fileUri: Uri, extension: String): Result<Pair<String, String>> = try {
+        uploadAttachment(getCollegeId(), noteId, fileUri, extension)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun uploadAttachment(collegeId: String, noteId: String, fileUri: Uri, extension: String): Result<Pair<String, String>> = 
+        remoteDataSource.uploadAttachment(collegeId, noteId, fileUri, extension)
+
+    override suspend fun uploadThumbnail(noteId: String, imageUri: Uri): Result<Pair<String, String>> = try {
+        uploadThumbnail(getCollegeId(), noteId, imageUri)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun uploadThumbnail(collegeId: String, noteId: String, imageUri: Uri): Result<Pair<String, String>> = 
+        remoteDataSource.uploadThumbnail(collegeId, noteId, imageUri)
     override suspend fun deleteFile(path: String): Result<Unit> = remoteDataSource.deleteFile(path)
     override suspend fun incrementDownloadCount(noteId: String): Result<Unit> = remoteDataSource.incrementDownloadCount(getCollegeId(), noteId)
 

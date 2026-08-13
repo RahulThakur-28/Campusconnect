@@ -2,7 +2,7 @@ package com.rahul.campusconnect.presentation.notification.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +22,7 @@ fun NotificationFilterChips(
 ) {
     LazyRow(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(NotificationFilter.entries.toTypedArray()) { filter ->
@@ -35,23 +35,25 @@ fun NotificationFilterChips(
                     Text(
                         text = filter.label,
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-                            fontSize = 13.sp
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
+                            fontSize = 12.sp,
+                            letterSpacing = 0.5.sp
                         )
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(100.dp),
+                modifier = Modifier.height(34.dp),
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    selectedLabelColor = MaterialTheme.colorScheme.primary,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f),
-                    selectedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                    selectedBorderColor = MaterialTheme.colorScheme.primary,
                     borderWidth = 1.dp
                 )
             )

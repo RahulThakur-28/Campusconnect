@@ -18,6 +18,7 @@ data class User(
     val verifiedAt: Long? = null,
     val verifiedCollegeId: String? = null,
     val profileImage: String = "",
+    val profileImageStoragePath: String? = null,
     val phone: String = "",
     val bio: String = "",
     val createdAt: Long = System.currentTimeMillis(),

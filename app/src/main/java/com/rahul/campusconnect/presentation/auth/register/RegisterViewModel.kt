@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -81,10 +82,12 @@ class RegisterViewModel @Inject constructor(
 
             // 3. Optional: Upload Profile Image
             var profileImageUrl = ""
+            var profileImagePath: String? = null
             state.profileImage?.let { uri ->
-                val uploadResult = userRepository.uploadProfileImage(uri)
+                val uploadResult = userRepository.uploadProfileImage(state.collegeId, "temp_${UUID.randomUUID()}", uri)
                 if (uploadResult.isSuccess) {
-                    profileImageUrl = uploadResult.getOrThrow()
+                    profileImageUrl = uploadResult.getOrThrow().first
+                    profileImagePath = uploadResult.getOrThrow().second
                 }
             }
 
@@ -99,6 +102,7 @@ class RegisterViewModel @Inject constructor(
                 academicYear = state.academicYear,
                 section = state.section,
                 profileImage = profileImageUrl,
+                profileImageStoragePath = profileImagePath,
                 role = UserRole.STUDENT,
                 verificationStatus = "PENDING",
                 createdAt = System.currentTimeMillis(),
@@ -106,6 +110,11 @@ class RegisterViewModel @Inject constructor(
             )
 
             val result = authRepository.register(user, state.password)
+            
+            // If registration fails and we uploaded an image, cleanup
+            if (result.isFailure && profileImagePath != null) {
+                userRepository.deleteFile(profileImagePath)
+            }
             
             _uiState.update { 
                 it.copy(

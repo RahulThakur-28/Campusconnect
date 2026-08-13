@@ -1,6 +1,7 @@
 package com.rahul.campusconnect.presentation.notes.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.campusconnect.domain.model.Note
@@ -55,8 +56,11 @@ class EditNoteViewModel @Inject constructor(
         val currentNote = _uiState.value.note ?: return
         
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, error = null) }
+            _uiState.update { it.copy(isSubmitting = true, error = null, isSuccess = false) }
             
+            val oldFilePath = currentNote.storagePath
+            val oldThumbnailPath = currentNote.thumbnailStoragePath
+
             var fileUrl = currentNote.fileUrl
             var storagePath = currentNote.storagePath
             var fileType = currentNote.fileType
@@ -65,65 +69,95 @@ class EditNoteViewModel @Inject constructor(
             var thumbnailUrl = currentNote.thumbnailUrl
             var thumbnailPath = currentNote.thumbnailStoragePath
 
-            // Handle Thumbnail Removal
-            if (removeThumbnail && thumbnailPath != null) {
-                notesRepository.deleteFile(thumbnailPath)
-                thumbnailUrl = null
-                thumbnailPath = null
-            }
-
-            // Handle New Thumbnail Upload
-            if (newThumbnailUri != null) {
-                if (thumbnailPath != null) {
-                    notesRepository.deleteFile(thumbnailPath)
-                }
-                val thumbResult = notesRepository.uploadThumbnail(currentNote.id, newThumbnailUri)
-                if (thumbResult.isSuccess) {
-                    thumbnailUrl = thumbResult.getOrNull()?.first
-                    thumbnailPath = thumbResult.getOrNull()?.second
-                }
-            }
-
-            if (newFileUri != null && newFileExtension != null && newFileSize != null) {
-                // Delete old file
-                notesRepository.deleteFile(storagePath)
+            try {
+                // ====================================================
+                // THUMBNAIL HANDLING
+                // ====================================================
                 
-                // Upload new file
-                val uploadResult = notesRepository.uploadAttachment(currentNote.id, newFileUri, newFileExtension)
-                if (uploadResult.isSuccess) {
-                    val (newUrl, newPath) = uploadResult.getOrThrow()
-                    fileUrl = newUrl
-                    storagePath = newPath
-                    fileType = newFileExtension.uppercase()
-                    fileExtension = newFileExtension
-                    fileSize = newFileSize
-                } else {
-                    _uiState.update { it.copy(isSubmitting = false, error = "Failed to upload new file") }
-                    return@launch
+                if (removeThumbnail && newThumbnailUri == null) {
+                    thumbnailUrl = null
+                    thumbnailPath = null
                 }
-            }
 
-            val updatedNote = currentNote.copy(
-                title = title,
-                description = description,
-                subject = subject,
-                semester = semester,
-                branch = branch,
-                tags = tags,
-                fileUrl = fileUrl,
-                storagePath = storagePath,
-                thumbnailUrl = thumbnailUrl,
-                thumbnailStoragePath = thumbnailPath,
-                fileType = fileType,
-                fileExtension = fileExtension,
-                fileSize = fileSize,
-                updatedAt = System.currentTimeMillis()
-            )
+                if (newThumbnailUri != null) {
+                    Log.d("NOTES_UPLOAD", "Uploading new thumbnail for note: ${currentNote.id}")
+                    val thumbResult = notesRepository.uploadThumbnail(currentNote.collegeId, currentNote.id, newThumbnailUri)
+                    if (thumbResult.isSuccess) {
+                        thumbnailUrl = thumbResult.getOrNull()?.first
+                        thumbnailPath = thumbResult.getOrNull()?.second
+                    } else {
+                        throw thumbResult.exceptionOrNull() ?: Exception("Thumbnail upload failed")
+                    }
+                }
 
-            notesRepository.updateNote(updatedNote).onSuccess {
-                _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
-            }.onFailure { e ->
-                _uiState.update { it.copy(isSubmitting = false, error = e.message) }
+                // ====================================================
+                // FILE HANDLING
+                // ====================================================
+
+                if (newFileUri != null && newFileExtension != null && newFileSize != null) {
+                    Log.d("NOTES_UPLOAD", "Uploading new file for note: ${currentNote.id}")
+                    val uploadResult = notesRepository.uploadAttachment(currentNote.collegeId, currentNote.id, newFileUri, newFileExtension)
+                    if (uploadResult.isSuccess) {
+                        val (newUrl, newPath) = uploadResult.getOrThrow()
+                        fileUrl = newUrl
+                        storagePath = newPath
+                        fileType = newFileExtension.uppercase()
+                        fileExtension = newFileExtension
+                        fileSize = newFileSize
+                    } else {
+                        throw uploadResult.exceptionOrNull() ?: Exception("File upload failed")
+                    }
+                }
+
+                val updatedNote = currentNote.copy(
+                    title = title,
+                    description = description,
+                    subject = subject,
+                    semester = semester,
+                    branch = branch,
+                    tags = tags,
+                    fileUrl = fileUrl,
+                    storagePath = storagePath,
+                    thumbnailUrl = thumbnailUrl,
+                    thumbnailStoragePath = thumbnailPath,
+                    fileType = fileType,
+                    fileExtension = fileExtension,
+                    fileSize = fileSize,
+                    updatedAt = System.currentTimeMillis()
+                )
+
+                // ====================================================
+                // FIRESTORE UPDATE
+                // ====================================================
+
+                notesRepository.updateNote(updatedNote).onSuccess {
+                    Log.d("NOTES_UPDATE", "Note updated successfully: ${currentNote.id}")
+
+                    // Cleanup old thumbnail
+                    if (thumbnailPath != oldThumbnailPath && oldThumbnailPath != null) {
+                        notesRepository.deleteFile(oldThumbnailPath)
+                    }
+
+                    // Cleanup old file
+                    if (storagePath != oldFilePath) {
+                        notesRepository.deleteFile(oldFilePath)
+                    }
+
+                    _uiState.update { it.copy(isSubmitting = false, isSuccess = true, note = updatedNote) }
+                }.onFailure { e ->
+                    // Rollback newly uploaded files if Firestore fails
+                    if (thumbnailPath != oldThumbnailPath && thumbnailPath != null) {
+                        notesRepository.deleteFile(thumbnailPath)
+                    }
+                    if (storagePath != oldFilePath) {
+                        notesRepository.deleteFile(storagePath)
+                    }
+                    throw e
+                }
+
+            } catch (e: Exception) {
+                Log.e("NOTES_UPDATE", "Error updating note", e)
+                _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to update note") }
             }
         }
     }

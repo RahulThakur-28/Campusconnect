@@ -84,6 +84,47 @@ fun EditProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Profile Image Section
+            var showImageOptions by remember { mutableStateOf(false) }
+
+            if (showImageOptions) {
+                ModalBottomSheet(
+                    onDismissRequest = { showImageOptions = false },
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 48.dp, top = 16.dp)
+                    ) {
+                        Text(
+                            "Profile Photo",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                        )
+                        
+                        ListItem(
+                            headlineContent = { Text("Upload New Photo") },
+                            leadingContent = { Icon(Icons.Rounded.CloudUpload, null, tint = MaterialTheme.colorScheme.primary) },
+                            modifier = Modifier.clickable {
+                                showImageOptions = false
+                                launcher.launch("image/*")
+                            }
+                        )
+                        
+                        if (user.profileImage.isNotBlank()) {
+                            ListItem(
+                                headlineContent = { Text("Remove Photo", color = MaterialTheme.colorScheme.error) },
+                                leadingContent = { Icon(Icons.Rounded.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) },
+                                modifier = Modifier.clickable {
+                                    showImageOptions = false
+                                    viewModel.removeProfileImage()
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +137,7 @@ fun EditProfileScreen(
                             .size(140.dp)
                             .clip(CircleShape)
                             .border(4.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                            .clickable { launcher.launch("image/*") },
+                            .clickable { showImageOptions = true },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {

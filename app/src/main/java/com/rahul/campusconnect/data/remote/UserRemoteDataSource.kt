@@ -17,7 +17,9 @@ interface UserRemoteDataSource {
 
     suspend fun isEnrollmentRegistered(collegeId: String, enrollmentNumber: String): Boolean
 
-    suspend fun uploadProfileImage(imageUri: Uri): Result<String>
+    suspend fun uploadProfileImage(collegeId: String, userId: String, imageUri: Uri): Result<Pair<String, String>>
+
+    suspend fun deleteFile(path: String): Result<Unit>
 
     suspend fun updateProfile(user: User): Result<Unit>
 

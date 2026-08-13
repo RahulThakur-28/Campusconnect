@@ -59,11 +59,39 @@ class PlacementRepositoryImpl @Inject constructor(
 
     override suspend fun generatePlacementId(): String = remoteDataSource.generatePlacementId()
 
-    override suspend fun uploadPlacementLogo(placementId: String, imageUri: Uri): Result<Pair<String, String>> = 
-        remoteDataSource.uploadPlacementLogo(getCollegeId(), placementId, imageUri)
+    override suspend fun uploadPlacementLogo(
+        placementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>> = try {
+        uploadPlacementLogo(getCollegeId(), placementId, imageUri)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 
-    override suspend fun uploadPlacementAttachment(placementId: String, fileUri: Uri, extension: String): Result<Pair<String, String>> = 
-        remoteDataSource.uploadPlacementAttachment(getCollegeId(), placementId, fileUri, extension)
+    override suspend fun uploadPlacementLogo(
+        collegeId: String,
+        placementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>> =
+        remoteDataSource.uploadPlacementLogo(collegeId, placementId, imageUri)
+
+    override suspend fun uploadPlacementAttachment(
+        placementId: String,
+        fileUri: Uri,
+        extension: String
+    ): Result<Pair<String, String>> = try {
+        uploadPlacementAttachment(getCollegeId(), placementId, fileUri, extension)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun uploadPlacementAttachment(
+        collegeId: String,
+        placementId: String,
+        fileUri: Uri,
+        extension: String
+    ): Result<Pair<String, String>> =
+        remoteDataSource.uploadPlacementAttachment(collegeId, placementId, fileUri, extension)
 
     override suspend fun deleteFile(path: String): Result<Unit> = remoteDataSource.deleteFile(path)
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rahul.campusconnect.common.session.SessionManager
 import com.rahul.campusconnect.domain.model.Notification
+import com.rahul.campusconnect.domain.model.NotificationType
 import com.rahul.campusconnect.domain.repository.NotificationRepository
 import com.rahul.campusconnect.presentation.notification.state.NotificationFilter
 import com.rahul.campusconnect.presentation.notification.state.NotificationUiState
@@ -22,6 +23,19 @@ class NotificationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(NotificationUiState())
     val uiState: StateFlow<NotificationUiState> = _uiState.asStateFlow()
 
+    private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val filteredNotifications = combine(_notifications, _uiState.map { it.selectedFilter }.distinctUntilChanged()) { notifications, filter ->
+        when (filter) {
+            NotificationFilter.ALL -> notifications
+            NotificationFilter.UNREAD -> notifications.filter { !it.isRead }
+            NotificationFilter.ANNOUNCEMENTS -> notifications.filter { it.type == NotificationType.ANNOUNCEMENT }
+            NotificationFilter.EVENTS -> notifications.filter { it.type == NotificationType.EVENT }
+            NotificationFilter.PLACEMENTS -> notifications.filter { it.type == NotificationType.PLACEMENT }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         observeNotifications()
         observeUnreadCount()
@@ -35,7 +49,8 @@ class NotificationViewModel @Inject constructor(
                 repository.getNotifications(user.collegeId, user.uid)
             }
             .onEach { notifications ->
-                _uiState.update { it.copy(notifications = notifications, isLoading = false, isRefreshing = false) }
+                _notifications.value = notifications
+                _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
             }
             .catch { e ->
                 _uiState.update { it.copy(isLoading = false, isRefreshing = false, error = e.message) }
@@ -83,6 +98,5 @@ class NotificationViewModel @Inject constructor(
 
     fun refresh() {
         _uiState.update { it.copy(isRefreshing = true) }
-        // The listener will automatically refresh, we just show indicator
     }
 }

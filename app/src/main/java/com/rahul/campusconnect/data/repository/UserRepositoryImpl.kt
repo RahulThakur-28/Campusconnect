@@ -90,8 +90,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun uploadProfileImage(imageUri: Uri): Result<String> {
-        return remoteDataSource.uploadProfileImage(imageUri)
+    override suspend fun uploadProfileImage(collegeId: String, userId: String, imageUri: Uri): Result<Pair<String, String>> {
+        return remoteDataSource.uploadProfileImage(collegeId, userId, imageUri)
+    }
+
+    override suspend fun deleteFile(path: String): Result<Unit> {
+        return remoteDataSource.deleteFile(path)
     }
 
     override suspend fun getUsersByCollege(collegeId: String): Result<List<User>> {

@@ -82,13 +82,13 @@ class UserRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun uploadProfileImage(imageUri: Uri): Result<String> {
-        val fileName = "profile_${UUID.randomUUID()}.jpg"
+    override suspend fun uploadProfileImage(collegeId: String, userId: String, imageUri: Uri): Result<Pair<String, String>> {
+        val path = StoragePathGenerator.profileImage(collegeId, userId)
         return storageManager.uploadImage(
             bucket = StorageConstants.MEDIA_BUCKET,
-            path = "${StorageConstants.Folder.PROFILE}/$fileName",
+            path = path,
             imageUri = imageUri
-        )
+        ).map { url -> Pair(url, path) }
     }
 
     override suspend fun updateProfile(user: User): Result<Unit> {
@@ -98,6 +98,7 @@ class UserRemoteDataSourceImpl @Inject constructor(
                 "phone" to user.phone,
                 "bio" to user.bio,
                 "profileImage" to user.profileImage,
+                "profileImageStoragePath" to user.profileImageStoragePath,
                 "department" to user.department,
                 "academicYear" to user.academicYear,
                 "section" to user.section,
@@ -130,14 +131,21 @@ class UserRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun deleteUser(uid: String, collegeId: String): Result<Unit> {
         return try {
-            // Delete profile image if exists
-            val path = StoragePathGenerator.profileImage(collegeId, uid)
-            storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+            val user = getUserProfile(uid, collegeId)
+            user?.profileImageStoragePath?.let { path ->
+                if (path.isNotBlank()) {
+                    storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
+                }
+            }
 
             pathProvider.users(collegeId).document(uid).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun deleteFile(path: String): Result<Unit> {
+        return storageManager.deleteFile(StorageConstants.MEDIA_BUCKET, path)
     }
 }

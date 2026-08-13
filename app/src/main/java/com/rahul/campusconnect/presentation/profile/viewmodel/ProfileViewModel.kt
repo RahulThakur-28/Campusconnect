@@ -108,22 +108,65 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun uploadProfileImage(uri: Uri) {
+        val currentUser = _uiState.value.user
+        if (currentUser.uid.isBlank()) return
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            userRepository.uploadProfileImage(uri)
-                .onSuccess { url ->
-                    val currentUser = _uiState.value.user
-                    val updatedUser = currentUser.copy(profileImage = url)
+            
+            val oldPath = currentUser.profileImageStoragePath
+
+            Log.d("PROFILE_UPLOAD", "Uploading new profile image for user: ${currentUser.uid}")
+            userRepository.uploadProfileImage(currentUser.collegeId, currentUser.uid, uri)
+                .onSuccess { (url, newPath) ->
+                    val updatedUser = currentUser.copy(
+                        profileImage = url,
+                        profileImageStoragePath = newPath
+                    )
+                    
                     userRepository.updateProfile(updatedUser)
                         .onSuccess {
-                            _uiState.update { it.copy(isLoading = false, successMessage = "Image Updated") }
+                            Log.d("PROFILE_UPLOAD", "Profile image updated in Firestore")
+                            // Delete old image if it exists
+                            if (oldPath != null && oldPath.isNotBlank()) {
+                                userRepository.deleteFile(oldPath)
+                            }
+                            _uiState.update { it.copy(isLoading = false, successMessage = "Profile picture updated") }
                         }
                         .onFailure { e ->
-                            _uiState.update { it.copy(isLoading = false, error = e.message) }
+                            Log.e("PROFILE_UPLOAD", "Firestore update failed, rolling back new image", e)
+                            // Rollback newly uploaded image
+                            userRepository.deleteFile(newPath)
+                            _uiState.update { it.copy(isLoading = false, error = "Failed to update profile: ${e.message}") }
                         }
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    Log.e("PROFILE_UPLOAD", "Supabase upload failed", e)
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to upload image: ${e.message}") }
+                }
+        }
+    }
+
+    fun removeProfileImage() {
+        val currentUser = _uiState.value.user
+        val oldPath = currentUser.profileImageStoragePath ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            val updatedUser = currentUser.copy(
+                profileImage = "",
+                profileImageStoragePath = null
+            )
+
+            userRepository.updateProfile(updatedUser)
+                .onSuccess {
+                    Log.d("PROFILE_IMAGE", "Image removed from Firestore, deleting file: $oldPath")
+                    userRepository.deleteFile(oldPath)
+                    _uiState.update { it.copy(isLoading = false, successMessage = "Profile picture removed") }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to remove image: ${e.message}") }
                 }
         }
     }

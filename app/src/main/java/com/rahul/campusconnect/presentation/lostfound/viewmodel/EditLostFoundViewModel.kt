@@ -53,53 +53,74 @@ class EditLostFoundViewModel @Inject constructor(
         val currentItem = _uiState.value.item ?: return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, error = null) }
+            _uiState.update { it.copy(isSubmitting = true, error = null, isSuccess = false) }
+
+            val oldImagePath = currentItem.imageStoragePath
 
             var imageUrl = currentItem.imageUrl
             var imagePath = currentItem.imageStoragePath
 
-            if (removeImage && imagePath != null) {
-                lostFoundRepository.deleteFile(imagePath)
-                imageUrl = null
-                imagePath = null
+            try {
+                // ====================================================
+                // IMAGE HANDLING
+                // ====================================================
+
+                if (removeImage && newImageUri == null) {
+                    imageUrl = null
+                    imagePath = null
+                }
+
+                if (newImageUri != null) {
+                    Log.d("LOST_FOUND_UPLOAD", "Uploading new image for item: ${currentItem.id}")
+                    val uploadResult = lostFoundRepository.uploadImage(currentItem.collegeId, currentItem.id, newImageUri)
+                    if (uploadResult.isSuccess) {
+                        imageUrl = uploadResult.getOrNull()?.first
+                        imagePath = uploadResult.getOrNull()?.second
+                    } else {
+                        throw uploadResult.exceptionOrNull() ?: Exception("Image upload failed")
+                    }
+                }
+
+                val updatedItem = currentItem.copy(
+                    title = title,
+                    description = description,
+                    category = category,
+                    type = type,
+                    location = location,
+                    contactEmail = contactEmail,
+                    contactPhone = contactPhone,
+                    imageUrl = imageUrl,
+                    imageStoragePath = imagePath,
+                    updatedAt = System.currentTimeMillis()
+                )
+
+                // ====================================================
+                // FIRESTORE UPDATE
+                // ====================================================
+
+                lostFoundRepository.updateItem(updatedItem)
+                    .onSuccess {
+                        Log.d("LOST_FOUND_UPDATE", "Item report updated: ${currentItem.id}")
+
+                        // Cleanup old image
+                        if (imagePath != oldImagePath && oldImagePath != null) {
+                            lostFoundRepository.deleteFile(oldImagePath)
+                        }
+
+                        _uiState.update { it.copy(isSubmitting = false, isSuccess = true, item = updatedItem) }
+                    }
+                    .onFailure { exception ->
+                        // Rollback newly uploaded file
+                        if (imagePath != oldImagePath && imagePath != null) {
+                            lostFoundRepository.deleteFile(imagePath)
+                        }
+                        throw exception
+                    }
+
+            } catch (e: Exception) {
+                Log.e("LOST_FOUND_UPDATE", "Error updating item", e)
+                _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to update item") }
             }
-
-            if (newImageUri != null) {
-                if (imagePath != null) {
-                    lostFoundRepository.deleteFile(imagePath)
-                }
-                Log.d("LOST_FOUND_UPLOAD", "Uploading new image for item: ${currentItem.id}")
-                val uploadResult = lostFoundRepository.uploadImage(currentItem.id, newImageUri)
-                if (uploadResult.isSuccess) {
-                    imageUrl = uploadResult.getOrNull()?.first
-                    imagePath = uploadResult.getOrNull()?.second
-                } else {
-                    _uiState.update { it.copy(isSubmitting = false, error = "Failed to upload image") }
-                    return@launch
-                }
-            }
-
-            val updatedItem = currentItem.copy(
-                title = title,
-                description = description,
-                category = category,
-                type = type,
-                location = location,
-                contactEmail = contactEmail,
-                contactPhone = contactPhone,
-                imageUrl = imageUrl,
-                imageStoragePath = imagePath,
-                updatedAt = System.currentTimeMillis()
-            )
-
-            lostFoundRepository.updateItem(updatedItem)
-                .onSuccess {
-                    Log.d("LOST_FOUND_UPDATE", "Item report updated: ${currentItem.id}")
-                    _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
-                }
-                .onFailure { exception ->
-                    _uiState.update { it.copy(isSubmitting = false, error = exception.message) }
-                }
         }
     }
 

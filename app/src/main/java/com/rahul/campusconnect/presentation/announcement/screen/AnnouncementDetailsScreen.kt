@@ -66,7 +66,7 @@ fun AnnouncementDetailsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Hard Delete Announcement", fontWeight = FontWeight.Bold) },
+            title = { Text("Delete Announcement", fontWeight = FontWeight.Bold) },
             text = { Text("Are you sure you want to PERMANENTLY delete this announcement? This action cannot be undone.") },
             confirmButton = {
                 TextButton(

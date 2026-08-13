@@ -50,25 +50,29 @@ class EditPlacementViewModel @Inject constructor(
         val currentPlacement = _uiState.value.placement ?: return
         
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, error = null) }
+            _uiState.update { it.copy(isSubmitting = true, error = null, isSuccess = false) }
+
+            val oldLogoPath = currentPlacement.logoStoragePath
+            val oldAttachmentPath = currentPlacement.attachmentStoragePath
+
+            var logoUrl = currentPlacement.logoUrl
+            var logoPath = currentPlacement.logoStoragePath
+            var attachmentUrl = currentPlacement.attachmentUrl
+            var attachmentPath = currentPlacement.attachmentStoragePath
 
             try {
-                var logoUrl = currentPlacement.logoUrl
-                var logoPath = currentPlacement.logoStoragePath
-                var attachmentUrl = currentPlacement.attachmentUrl
-                var attachmentPath = currentPlacement.attachmentStoragePath
-
-                // Handle Logo Update
-                if (removeLogo && logoPath.isNotBlank()) {
-                    placementRepository.deleteFile(logoPath)
+                // ====================================================
+                // LOGO HANDLING
+                // ====================================================
+                
+                if (removeLogo && logoUri == null) {
                     logoUrl = ""
                     logoPath = ""
                 }
 
                 if (logoUri != null) {
-                    if (logoPath.isNotBlank()) placementRepository.deleteFile(logoPath)
-                    Log.d("PLACEMENT_UPLOAD", "Uploading new logo for placement: ${placement.id}")
-                    val result = placementRepository.uploadPlacementLogo(placement.id, logoUri)
+                    Log.d("PLACEMENT_UPLOAD", "Uploading new logo for placement: ${currentPlacement.id}")
+                    val result = placementRepository.uploadPlacementLogo(currentPlacement.collegeId, currentPlacement.id, logoUri)
                     if (result.isSuccess) {
                         logoUrl = result.getOrThrow().first
                         logoPath = result.getOrThrow().second
@@ -77,17 +81,18 @@ class EditPlacementViewModel @Inject constructor(
                     }
                 }
 
-                // Handle Attachment Update
-                if (removeAttachment && attachmentPath != null) {
-                    placementRepository.deleteFile(attachmentPath)
+                // ====================================================
+                // ATTACHMENT HANDLING
+                // ====================================================
+
+                if (removeAttachment && attachmentUri == null) {
                     attachmentUrl = null
                     attachmentPath = null
                 }
 
                 if (attachmentUri != null) {
-                    if (attachmentPath != null) placementRepository.deleteFile(attachmentPath)
-                    Log.d("PLACEMENT_UPLOAD", "Uploading new attachment for placement: ${placement.id}")
-                    val result = placementRepository.uploadPlacementAttachment(placement.id, attachmentUri, "pdf")
+                    Log.d("PLACEMENT_UPLOAD", "Uploading new attachment for placement: ${currentPlacement.id}")
+                    val result = placementRepository.uploadPlacementAttachment(currentPlacement.collegeId, currentPlacement.id, attachmentUri, "pdf")
                     if (result.isSuccess) {
                         attachmentUrl = result.getOrThrow().first
                         attachmentPath = result.getOrThrow().second
@@ -104,10 +109,32 @@ class EditPlacementViewModel @Inject constructor(
                     updatedAt = System.currentTimeMillis()
                 )
 
+                // ====================================================
+                // FIRESTORE UPDATE
+                // ====================================================
+
                 placementRepository.updatePlacement(updatedPlacement).onSuccess {
-                    Log.d("PLACEMENT_UPDATE", "Placement updated: ${placement.id}")
+                    Log.d("PLACEMENT_UPDATE", "Placement updated: ${currentPlacement.id}")
+                    
+                    // Cleanup newly orphaned logo
+                    if (logoPath != oldLogoPath && oldLogoPath.isNotBlank()) {
+                        placementRepository.deleteFile(oldLogoPath)
+                    }
+
+                    // Cleanup newly orphaned attachment
+                    if (attachmentPath != oldAttachmentPath && oldAttachmentPath != null) {
+                        placementRepository.deleteFile(oldAttachmentPath)
+                    }
+
                     _uiState.update { it.copy(isSubmitting = false, isSuccess = true, placement = updatedPlacement) }
                 }.onFailure { e ->
+                    // Rollback newly uploaded files if Firestore fails
+                    if (logoPath != oldLogoPath && logoPath.isNotBlank()) {
+                        placementRepository.deleteFile(logoPath)
+                    }
+                    if (attachmentPath != oldAttachmentPath && attachmentPath != null) {
+                        placementRepository.deleteFile(attachmentPath)
+                    }
                     throw e
                 }
 

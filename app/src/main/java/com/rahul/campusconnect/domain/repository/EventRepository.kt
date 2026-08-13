@@ -23,6 +23,8 @@ interface EventRepository {
 
     suspend fun uploadEventImage(eventId: String, imageUri: Uri): Result<Pair<String, String>>
 
+    suspend fun uploadEventImage(collegeId: String, eventId: String, imageUri: Uri): Result<Pair<String, String>>
+
     suspend fun deleteFile(path: String): Result<Unit>
 
     suspend fun registerForEvent(eventId: String, userId: String): Result<Unit>

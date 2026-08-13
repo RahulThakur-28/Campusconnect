@@ -32,7 +32,19 @@ interface AnnouncementRepository {
         imageUri: Uri
     ): Result<Pair<String, String>>
 
+    suspend fun uploadAnnouncementImage(
+        collegeId: String,
+        announcementId: String,
+        imageUri: Uri
+    ): Result<Pair<String, String>>
+
     suspend fun uploadAnnouncementAttachment(
+        announcementId: String,
+        attachmentUri: Uri
+    ): Result<Pair<String, String>>
+
+    suspend fun uploadAnnouncementAttachment(
+        collegeId: String,
         announcementId: String,
         attachmentUri: Uri
     ): Result<Pair<String, String>>

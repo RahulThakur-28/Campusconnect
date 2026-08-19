@@ -1,7 +1,7 @@
 
 <div align="center">
   
-<img src="assets/logo.png" width="180"/>
+<img src="assets/screenshots/logo.png" width="180"/>
 
 # 🎓 CampusConnect
 
@@ -383,7 +383,7 @@ CampusConnect
 
 | Registration | Home | Profile |
 |:------------:|:----:|:-------:|
-| <img src="assets/screenshots/registration_screen.jpg" width="240"/> | <img src="assets/screenshots/home_screen.jpg" width="240"/> | <img src="assets/screenshots/profile_screen.jpg" width="240"/> |
+| <img src="assets/screenshots/registration_screen.jpg.jpg" width="240"/> | <img src="assets/screenshots/home_screen.jpg" width="240"/> | <img src="assets/screenshots/profile_screen.jpg" width="240"/> |
 
 ---
 
@@ -391,7 +391,7 @@ CampusConnect
 
 | Announcements | Placements | Events |
 |:-------------:|:----------:|:------:|
-| <img src="assets/screenshots/announcement.jpg" width="240"/> | <img src="assets/screenshots/placement_screen.jpg" width="240"/> | <img src="assets/screenshots/events_screen.jpg" width="240"/> |
+| <img src="assets/screenshots/announcement.jpg" width="240"/> | <img src="assets/screenshots/placement_screen..jpg" width="240"/> | <img src="assets/screenshots/events_screen.jpg" width="240"/> |
 
 | Notes | Lost & Found | More |
 |:-----:|:------------:|:----:|
@@ -403,7 +403,7 @@ CampusConnect
 
 | Settings | About | Dark Theme |
 |:--------:|:-----:|:----------:|
-| <img src="assets/screenshots/setting_screen.jpg" width="240"/> | <img src="assets/screenshots/about_screen.jpg" width="240"/> | <img src="assets/screenshots/darktheme_screen.jpg" width="240"/> |
+| <img src="assets/screenshots/setting_screen.jpg" width="240"/> | <img src="assets/screenshots/about_screen..jpg" width="240"/> | <img src="assets/screenshots/darktheme_screen.jpg" width="240"/> |
 
 </div>
 

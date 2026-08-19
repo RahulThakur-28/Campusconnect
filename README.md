@@ -4,6 +4,7 @@
 <img src="assets/logo.png" width="180"/>
 
 # 🎓 CampusConnect
+
 ### **A Modern Smart Campus Management Platform for Educational Institutions**
 
 *Empowering Students, Faculty, Placement Cells, and Administrators with a unified digital campus experience.*

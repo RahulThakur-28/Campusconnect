@@ -11,6 +11,7 @@
 
 *Empowering Students, Faculty, Placement Cells, and Administrators with a unified digital campus experience.*
 
+
 <p align="center">
 
 ![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
